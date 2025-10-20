@@ -1,4 +1,4 @@
-"""Core package for the pdfa CLI skeleton."""
+"""Core package for the pdfa CLI that wraps OCRmyPDF."""
 
 __all__ = ["__version__"]
 

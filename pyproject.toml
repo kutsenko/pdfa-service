@@ -5,10 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pdfa"
 version = "0.1.0"
-description = "Command-line interface scaffold for interacting with AI backends."
+description = "Command-line interface for converting PDFs to PDF/A using OCRmyPDF."
 requires-python = ">=3.11"
 readme = "README.md"
-dependencies = []
+dependencies = [
+    "ocrmypdf>=16.0",
+]
 
 [project.optional-dependencies]
 dev = [
