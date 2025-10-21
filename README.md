@@ -13,6 +13,17 @@ Command-line tool that converts regular PDF documents into PDF/A files using [OC
 - Python 3.11+
 - OCRmyPDF runtime dependencies (Tesseract, Ghostscript, etc.) installed on your system. Refer to the [OCRmyPDF installation guide](https://ocrmypdf.readthedocs.io/en/latest/installation.html).
 
+### Ubuntu 24.04
+
+Install the system dependencies with APT before setting up the virtual environment:
+
+```bash
+sudo apt update
+sudo apt install python3.11-venv python3-pip tesseract-ocr tesseract-ocr-eng ghostscript qpdf
+```
+
+Add extra `tesseract-ocr-<lang>` packages if you need OCR support for additional languages.
+
 ## Getting Started
 
 ```bash
