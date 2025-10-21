@@ -16,11 +16,12 @@ Command-line tool that converts regular PDF documents into PDF/A files using [OC
 ## Getting Started
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
-pdfa --help
+python3 -m venv .venv
+./.venv/bin/python -m pip install -e ".[dev]"
+./.venv/bin/pdfa --help
 ```
+
+> Tip: If you prefer to add `.venv/bin` to your `PATH`, activate the environment with `source .venv/bin/activate` before running the commands above.
 
 ## Usage
 
@@ -33,7 +34,7 @@ This command converts `input.pdf` into a PDF/A file written to `output.pdf`, enf
 ## Testing
 
 ```bash
-pytest
+./.venv/bin/pytest
 ```
 
 ## Project Layout
