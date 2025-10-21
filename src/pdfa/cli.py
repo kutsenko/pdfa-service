@@ -14,7 +14,7 @@ from ocrmypdf import exceptions as ocrmypdf_exceptions
 def build_parser() -> argparse.ArgumentParser:
     """Create and configure the argument parser for the CLI."""
     parser = argparse.ArgumentParser(
-        prog="pdfa",
+        prog="pdfa-cli",
         description="Convert PDF files to PDF/A-2 with OCR using OCRmyPDF.",
     )
     parser.add_argument(

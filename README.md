@@ -28,16 +28,17 @@ Add extra `tesseract-ocr-<lang>` packages if you need OCR support for additional
 
 ```bash
 python3 -m venv .venv
-./.venv/bin/python -m pip install -e ".[dev]"
-./.venv/bin/pdfa --help
+source .venv/bin/activate
+pip install -e ".[dev]"
+pdfa-cli --help
 ```
 
-> Tip: If you prefer to add `.venv/bin` to your `PATH`, activate the environment with `source .venv/bin/activate` before running the commands above.
+> Tip: Activating the virtual environment adds `.venv/bin` to your `PATH`, so `pdfa-cli` is available directly.
 
 ## Usage
 
 ```bash
-pdfa input.pdf output.pdf --language deu+eng --pdfa-level 3
+pdfa-cli input.pdf output.pdf --language deu+eng --pdfa-level 3
 ```
 
 This command converts `input.pdf` into a PDF/A file written to `output.pdf`, enforcing OCR with the specified Tesseract languages.
@@ -45,7 +46,7 @@ This command converts `input.pdf` into a PDF/A file written to `output.pdf`, enf
 ## Testing
 
 ```bash
-./.venv/bin/pytest
+pytest
 ```
 
 ## Project Layout

@@ -20,7 +20,7 @@ dev = [
 ]
 
 [project.scripts]
-pdfa = "pdfa.cli:main"
+pdfa-cli = "pdfa.cli:main"
 
 [tool.black]
 line-length = 88
