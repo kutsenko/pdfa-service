@@ -19,7 +19,7 @@ Install the system dependencies with APT before setting up the virtual environme
 
 ```bash
 sudo apt update
-sudo apt install python3-venv python3-pip tesseract-ocr tesseract-ocr-eng ghostscript qpdf
+sudo apt install python3-venv python3-pip tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu ghostscript qpdf
 ```
 
 Add extra `tesseract-ocr-<lang>` packages if you need OCR support for additional languages.
