@@ -70,6 +70,47 @@ The service validates the upload, converts it to PDF/A using OCRmyPDF, and retur
 pytest
 ```
 
+## Deployment
+
+### Docker
+
+Build the Docker image:
+
+```bash
+docker build -t pdfa-service:latest .
+```
+
+Run the API service in a container:
+
+```bash
+docker run -p 8000:8000 pdfa-service:latest
+```
+
+Convert a PDF using the containerized CLI:
+
+```bash
+docker run --rm -v $(pwd):/data pdfa-service:latest \
+  pdfa-cli /data/input.pdf /data/output.pdf --language eng
+```
+
+### Docker Compose
+
+The simplest way to run the service locally:
+
+```bash
+docker-compose up
+```
+
+This starts the REST API on `http://localhost:8000`. Upload PDFs via:
+
+```bash
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@input.pdf;type=application/pdf" \
+  -F "language=eng" \
+  -F "pdfa_level=2" \
+  --output output.pdf
+```
+
 ## Project Layout
 
 ```
