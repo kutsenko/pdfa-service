@@ -6,6 +6,7 @@ Command-line tool that converts regular PDF documents into PDF/A files using [OC
 
 - Wraps OCRmyPDF to generate PDF/A-2 compliant files with OCR enforced.
 - Accepts input/output paths along with configurable OCR language and PDF/A level.
+- Offers a FastAPI REST endpoint for PDF to PDF/A conversions.
 - Ships with tests, `black`, and `ruff` configurations for streamlined development.
 
 ## Requirements
@@ -43,6 +44,26 @@ pdfa-cli input.pdf output.pdf --language deu+eng --pdfa-level 3
 
 This command converts `input.pdf` into a PDF/A file written to `output.pdf`, enforcing OCR with the specified Tesseract languages.
 
+### Running the REST API
+
+Start the REST service with [uvicorn](https://www.uvicorn.org/):
+
+```bash
+uvicorn pdfa.api:app --host 0.0.0.0 --port 8000
+```
+
+Once running, upload a PDF via `POST /convert` with a `multipart/form-data` request:
+
+```bash
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@input.pdf;type=application/pdf" \
+  -F "language=deu+eng" \
+  -F "pdfa_level=2" \
+  --output output.pdf
+```
+
+The service validates the upload, converts it to PDF/A using OCRmyPDF, and returns the converted document as the HTTP response body.
+
 ## Testing
 
 ```bash
@@ -58,8 +79,12 @@ pytest
 ├── src
 │   └── pdfa
 │       ├── __init__.py
-│       └── cli.py
+│       ├── api.py
+│       ├── cli.py
+│       └── converter.py
 └── tests
     ├── __init__.py
+    ├── conftest.py
+    ├── test_api.py
     └── test_cli.py
 ```
