@@ -1,39 +1,11 @@
 """Tests for the pdfa CLI that wraps OCRmyPDF."""
 
 from typing import Any
-import importlib.util
-import sys
-import types
 
 import pytest
-
-if importlib.util.find_spec("ocrmypdf") is None:
-    exceptions_module = types.ModuleType("ocrmypdf.exceptions")
-
-    class ExitCodeException(Exception):
-        """Fallback ExitCodeException used when OCRmyPDF is absent."""
-
-        exit_code = 1
-
-    class OCRmyPDFError(ExitCodeException):
-        """Backward-compatible alias matching older OCRmyPDF documentation."""
-
-        pass
-
-    exceptions_module.ExitCodeException = ExitCodeException
-    exceptions_module.OCRmyPDFError = OCRmyPDFError
-
-    ocrmypdf_stub = types.ModuleType("ocrmypdf")
-    ocrmypdf_stub.ocr = lambda *args, **kwargs: None  # type: ignore[assignment]
-    ocrmypdf_stub.exceptions = exceptions_module
-
-    sys.modules["ocrmypdf"] = ocrmypdf_stub
-    sys.modules["ocrmypdf.exceptions"] = exceptions_module
-
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
-from pdfa import __version__
-from pdfa import cli
+from pdfa import __version__, cli, converter
 
 
 def test_version() -> None:
@@ -50,13 +22,13 @@ def test_convert_to_pdfa_invokes_ocrmypdf(monkeypatch, tmp_path) -> None:
         calls["output"] = output_file
         calls["kwargs"] = kwargs
 
-    monkeypatch.setattr(cli.ocrmypdf, "ocr", fake_ocr)
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
 
     input_pdf = tmp_path / "input.pdf"
     input_pdf.write_bytes(b"%PDF-1.4 test")
     output_pdf = tmp_path / "result" / "output.pdf"
 
-    cli.convert_to_pdfa(
+    converter.convert_to_pdfa(
         input_pdf,
         output_pdf,
         language="eng",
@@ -77,7 +49,7 @@ def test_convert_to_pdfa_missing_input(tmp_path) -> None:
     output_pdf = tmp_path / "out.pdf"
 
     with pytest.raises(FileNotFoundError):
-        cli.convert_to_pdfa(
+        converter.convert_to_pdfa(
             input_pdf,
             output_pdf,
             language="eng",
@@ -94,7 +66,7 @@ def test_main_success(monkeypatch, tmp_path, capsys) -> None:
         calls["output"] = output_file
         calls["kwargs"] = kwargs
 
-    monkeypatch.setattr(cli.ocrmypdf, "ocr", fake_ocr)
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
 
     input_pdf = tmp_path / "input.pdf"
     input_pdf.write_bytes(b"%PDF-1.4 test")

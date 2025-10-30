@@ -10,13 +10,18 @@ requires-python = ">=3.11"
 readme = "README.md"
 dependencies = [
     "ocrmypdf>=16.0",
+    "fastapi>=0.110",
+    "uvicorn[standard]>=0.27",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=7.4",
+    "pytest-timeout>=2.1.0",
     "black>=24.0",
     "ruff>=0.2.0",
+    "httpx>=0.27",
 ]
 
 [project.scripts]
@@ -35,3 +40,5 @@ ignore = ["D100", "D101", "D102", "D103", "D104", "D105"]
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 addopts = "-ra"
+timeout = 300
+timeout_method = "thread"

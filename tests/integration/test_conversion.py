@@ -5,8 +5,8 @@ from __future__ import annotations
 import shutil
 
 import pytest
-from PIL import Image, ImageDraw
 from ocrmypdf.pdfa import file_claims_pdfa
+from PIL import Image, ImageDraw
 
 from pdfa import cli
 
@@ -16,7 +16,8 @@ pytestmark = [
     pytest.mark.skipif(
         any(shutil.which(binary) is None for binary in REQUIRED_BINARIES),
         reason="Integration tests require Tesseract and Ghostscript binaries.",
-    )
+    ),
+    pytest.mark.timeout(120),
 ]
 
 
