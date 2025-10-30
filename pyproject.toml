@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "pdfa"
 version = "0.1.0"
-description = "Command-line interface for converting PDFs to PDF/A using OCRmyPDF."
+description = "REST and Command-line interface for converting PDFs to PDF/A using OCRmyPDF."
 requires-python = ">=3.11"
 readme = "README.md"
 dependencies = [
