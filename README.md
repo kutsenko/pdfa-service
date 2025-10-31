@@ -1,4 +1,4 @@
-# pdfa
+# pdfa service
 
 Command-line tool that converts regular PDF documents into PDF/A files using [OCRmyPDF](https://ocrmypdf.readthedocs.io/) with built-in OCR.
 
