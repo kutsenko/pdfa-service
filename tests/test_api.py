@@ -20,13 +20,16 @@ def client() -> TestClient:
 def test_convert_endpoint_success(monkeypatch, client: TestClient) -> None:
     """The endpoint should convert files and return a PDF response."""
 
-    def fake_convert(input_pdf, output_pdf, *, language, pdfa_level) -> None:
+    def fake_convert(
+        input_pdf, output_pdf, *, language, pdfa_level, ocr_enabled
+    ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         fake_convert.called_with = {  # type: ignore[attr-defined]
             "input": input_pdf,
             "output": output_pdf,
             "language": language,
             "pdfa_level": pdfa_level,
+            "ocr_enabled": ocr_enabled,
         }
 
     monkeypatch.setattr(api, "convert_to_pdfa", fake_convert)
@@ -43,6 +46,32 @@ def test_convert_endpoint_success(monkeypatch, client: TestClient) -> None:
     assert response.content.startswith(b"%PDF-1.4")
     assert fake_convert.called_with["language"] == "eng"  # type: ignore[attr-defined]
     assert fake_convert.called_with["pdfa_level"] == "1"  # type: ignore[attr-defined]
+    assert fake_convert.called_with["ocr_enabled"] is True  # type: ignore[attr-defined]
+
+
+def test_convert_endpoint_with_ocr_disabled(
+    monkeypatch, client: TestClient
+) -> None:
+    """The endpoint should pass ocr_enabled=False when requested."""
+
+    def fake_convert(
+        input_pdf, output_pdf, *, language, pdfa_level, ocr_enabled
+    ) -> None:
+        output_pdf.write_bytes(b"%PDF-1.4 converted")
+        fake_convert.called_with = {  # type: ignore[attr-defined]
+            "ocr_enabled": ocr_enabled,
+        }
+
+    monkeypatch.setattr(api, "convert_to_pdfa", fake_convert)
+
+    response = client.post(
+        "/convert",
+        data={"ocr_enabled": False},
+        files={"file": ("sample.pdf", b"%PDF-1.4 fake", "application/pdf")},
+    )
+
+    assert response.status_code == 200
+    assert fake_convert.called_with["ocr_enabled"] is False  # type: ignore[attr-defined]
 
 
 def test_convert_endpoint_rejects_non_pdf(client: TestClient) -> None:

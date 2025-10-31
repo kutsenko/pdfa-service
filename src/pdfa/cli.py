@@ -43,6 +43,11 @@ def build_parser() -> argparse.ArgumentParser:
         default="2",
         help="PDF/A compliance level to target. Defaults to '2'.",
     )
+    parser.add_argument(
+        "--no-ocr",
+        action="store_true",
+        help="Disable OCR and convert PDF to PDF/A without text recognition.",
+    )
     return parser
 
 
@@ -56,6 +61,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             args.output_pdf,
             language=args.language,
             pdfa_level=args.pdfa_level,
+            ocr_enabled=not args.no_ocr,
         )
     except FileNotFoundError as error:
         print(error, file=sys.stderr)

@@ -44,6 +44,12 @@ pdfa-cli input.pdf output.pdf --language deu+eng --pdfa-level 3
 
 This command converts `input.pdf` into a PDF/A file written to `output.pdf`, enforcing OCR with the specified Tesseract languages.
 
+To convert without OCR, use the `--no-ocr` flag:
+
+```bash
+pdfa-cli input.pdf output.pdf --no-ocr
+```
+
 ### Running the REST API
 
 Start the REST service with [uvicorn](https://www.uvicorn.org/):
@@ -63,6 +69,22 @@ curl -X POST "http://localhost:8000/convert" \
 ```
 
 The service validates the upload, converts it to PDF/A using OCRmyPDF, and returns the converted document as the HTTP response body.
+
+#### Available Parameters
+
+- `file` (required): PDF file to convert
+- `language` (optional): Tesseract language codes (default: `deu+eng`)
+- `pdfa_level` (optional): PDF/A compliance level: `1`, `2`, or `3` (default: `2`)
+- `ocr_enabled` (optional): Whether to perform OCR (default: `true`). Set to `false` to skip OCR.
+
+Example without OCR:
+
+```bash
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@input.pdf;type=application/pdf" \
+  -F "ocr_enabled=false" \
+  --output output.pdf
+```
 
 ## Testing
 

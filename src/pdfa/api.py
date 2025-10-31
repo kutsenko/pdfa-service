@@ -33,8 +33,17 @@ async def convert_endpoint(
     file: UploadFile = File(...),
     language: str = Form("deu+eng"),
     pdfa_level: PdfaLevel = Form("2"),
+    ocr_enabled: bool = Form(True),
 ) -> Response:
-    """Convert the uploaded PDF into a PDF/A document and return the result."""
+    """Convert the uploaded PDF into a PDF/A document and return the result.
+
+    Args:
+        file: PDF file to convert.
+        language: Tesseract language codes for OCR (default: 'deu+eng').
+        pdfa_level: PDF/A compliance level (default: '2').
+        ocr_enabled: Whether to perform OCR (default: True).
+
+    """
     if file.content_type not in {"application/pdf", "application/octet-stream"}:
         raise HTTPException(status_code=400, detail="Only PDF uploads are supported.")
 
@@ -54,6 +63,7 @@ async def convert_endpoint(
                 output_path,
                 language=language,
                 pdfa_level=pdfa_level,
+                ocr_enabled=ocr_enabled,
             )
         except FileNotFoundError as error:
             raise HTTPException(status_code=400, detail=str(error)) from error

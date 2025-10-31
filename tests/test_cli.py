@@ -57,6 +57,32 @@ def test_convert_to_pdfa_missing_input(tmp_path) -> None:
         )
 
 
+def test_convert_to_pdfa_ocr_disabled(monkeypatch, tmp_path) -> None:
+    """convert_to_pdfa with ocr_enabled=False should set force_ocr=False."""
+    calls: dict[str, Any] = {}
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
+        calls["input"] = input_file
+        calls["output"] = output_file
+        calls["kwargs"] = kwargs
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    converter.convert_to_pdfa(
+        input_pdf,
+        output_pdf,
+        language="eng",
+        pdfa_level="2",
+        ocr_enabled=False,
+    )
+
+    assert calls["kwargs"]["force_ocr"] is False
+
+
 def test_main_success(monkeypatch, tmp_path, capsys) -> None:
     """CLI should exit cleanly on successful conversion."""
     calls: dict[str, Any] = {}
@@ -89,6 +115,35 @@ def test_main_success(monkeypatch, tmp_path, capsys) -> None:
     assert calls["kwargs"]["language"] == "deu"
     assert calls["kwargs"]["output_type"] == "pdfa-1"
     assert calls["kwargs"]["force_ocr"] is True
+
+
+def test_main_with_no_ocr_flag(monkeypatch, tmp_path, capsys) -> None:
+    """CLI with --no-ocr flag should pass ocr_enabled=False."""
+    calls: dict[str, Any] = {}
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
+        calls["input"] = input_file
+        calls["output"] = output_file
+        calls["kwargs"] = kwargs
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    exit_code = cli.main(
+        [
+            str(input_pdf),
+            str(output_pdf),
+            "--no-ocr",
+        ]
+    )
+
+    captured = capsys.readouterr()
+    assert exit_code == 0
+    assert "Successfully created PDF/A file" in captured.out
+    assert calls["kwargs"]["force_ocr"] is False
 
 
 def test_main_handles_ocrmypdf_error(monkeypatch, tmp_path, capsys) -> None:
