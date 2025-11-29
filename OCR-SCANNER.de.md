@@ -23,15 +23,45 @@ Dieses Setup eliminiert die Notwendigkeit für teure Dokumentenmanagementsoftwar
 
 ### Voraussetzungen
 
-- **Docker & Docker Compose** installiert
+- **Docker** installiert (Version 20.10+)
+- **Docker Compose** installiert (entweder Standalone oder Plugin Version 2.0+)
 - **Netzwerkzugriff**: Gerät mit Scannfunktion und Netzwerkverbindung
 - **Speicher**: USB-Laufwerk, NAS oder lokaler Ordner für Dateiaustausch
 
+### Docker Compose Installation
+
+Wählen Sie eine dieser Methoden:
+
+**Option 1: Docker Compose Plugin (Empfohlen)**
+```bash
+# Teil von Docker Desktop oder separat installiert
+docker compose version  # Überprüfen Sie die Installation
+```
+
+**Option 2: Standalone Docker Compose**
+```bash
+# Ältere Standalone-Version
+docker-compose version  # Überprüfen Sie die Installation
+```
+
+Beide funktionieren identisch; diese Anleitung verwendet `docker compose` (Plugin-Version).
+
 ### Basis-Setup (x86_64 Linux / Windows mit Docker Desktop)
 
-1. **Service starten**:
+1. **Repository klonen**:
 
 ```bash
+git clone https://github.com/kutsenko/pdfa-service.git
+cd pdfa-service
+```
+
+2. **Service starten**:
+
+```bash
+# Docker Compose Plugin (empfohlen)
+docker compose up -d
+
+# Oder Standalone docker-compose
 docker-compose up -d
 ```
 
@@ -77,14 +107,18 @@ newgrp docker
 
 ```bash
 # Repository klonen
-git clone https://github.com/anthropics/pdfa-service.git
+git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
 
-# Mit docker-compose starten
+# Mit Docker Compose Plugin starten (empfohlen)
+docker compose up -d
+
+# Oder mit Standalone docker-compose
 docker-compose up -d
 
 # Service-Status überprüfen
-docker-compose logs -f
+docker compose logs -f
+# oder: docker-compose logs -f
 ```
 
 Service verfügbar unter: `http://localhost:8000`
@@ -160,9 +194,10 @@ services:
 6. **Service starten**:
 
 ```bash
-git clone https://github.com/anthropics/pdfa-service.git
+git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
-docker-compose up -d
+docker compose up -d
+# oder: docker-compose up -d
 ```
 
 7. **Raspberry Pi IP-Adresse finden**:
@@ -219,8 +254,13 @@ sudo usermod -aG docker $USER
 4. **Repository klonen und Service starten**:
 
 ```bash
-git clone https://github.com/anthropics/pdfa-service.git
+git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
+
+# Docker Compose Plugin (empfohlen)
+docker compose up -d
+
+# Oder Standalone docker-compose
 docker-compose up -d
 ```
 
@@ -246,13 +286,17 @@ wsl hostname -I
 
 ```powershell
 # Mit PowerShell oder Git Bash
-git clone https://github.com/anthropics/pdfa-service.git
+git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
 ```
 
 3. **Service starten**:
 
 ```powershell
+# Docker Compose Plugin (empfohlen)
+docker compose up -d
+
+# Oder Standalone docker-compose
 docker-compose up -d
 ```
 
@@ -642,23 +686,27 @@ environment:
 
 ```bash
 # Protokolle überprüfen
-docker-compose logs pdfa
+docker compose logs pdfa
+# oder: docker-compose logs pdfa
 
 # Häufiges Problem: Port bereits in Verwendung
 sudo lsof -i :8000  # Prozess finden, der Port 8000 verwendet
 
 # Prozess beenden und neu starten
-docker-compose restart
+docker compose restart
+# oder: docker-compose restart
 ```
 
 ### OCR-Fehler
 
 ```bash
 # Überprüfen, ob Tesseract verfügbar ist
-docker-compose exec pdfa which tesseract
+docker compose exec pdfa which tesseract
+# oder: docker-compose exec pdfa which tesseract
 
 # Fehlendes Sprachpaket installieren (im Container)
-docker-compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
+docker compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
+# oder: docker-compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
 ```
 
 ### Langsame Verarbeitung
@@ -676,8 +724,10 @@ ping 192.168.1.50  # Raspberry Pi anpingen
 curl http://192.168.1.50:8000/docs  # API testen
 
 # Von Pi aus, Service-Status überprüfen
-docker-compose ps
-docker-compose logs pdfa
+docker compose ps
+# oder: docker-compose ps
+docker compose logs pdfa
+# oder: docker-compose logs pdfa
 ```
 
 ---
@@ -711,11 +761,13 @@ docker volume prune
 
 ```bash
 # Neuestes Image abrufen
-docker-compose pull
+docker compose pull
+# oder: docker-compose pull
 
 # Mit neuer Version neu starten
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
+# oder: docker-compose down && docker-compose up -d
 ```
 
 ---

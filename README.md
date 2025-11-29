@@ -155,7 +155,19 @@ Start the REST service with [uvicorn](https://www.uvicorn.org/):
 uvicorn pdfa.api:app --host 0.0.0.0 --port 8000
 ```
 
-Once running, upload a document via `POST /convert` with a `multipart/form-data` request:
+#### Web-Based Test Interface
+
+Once the API is running, visit **`http://localhost:8000`** to access the interactive web interface where you can:
+- Upload documents (PDF, Office, OpenDocument formats)
+- Select OCR language and PDF/A compliance level
+- Toggle OCR on/off
+- Download converted files directly from your browser
+
+This is the easiest way to test the service without using the command line.
+
+#### Programmatic Usage
+
+Upload a document via `POST /convert` with a `multipart/form-data` request:
 
 ```bash
 # Convert PDF to PDF/A

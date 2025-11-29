@@ -23,15 +23,45 @@ This setup eliminates the need for expensive document management software while 
 
 ### Prerequisites
 
-- **Docker & Docker Compose** installed
+- **Docker** installed (version 20.10+)
+- **Docker Compose** installed (either standalone or Plugin version 2.0+)
 - **Network Access**: Device with scanning capability and network connectivity
 - **Storage**: USB drive, NAS, or local folder for document exchange
 
+### Docker Compose Installation
+
+Choose one of these methods:
+
+**Option 1: Docker Compose Plugin (Recommended)**
+```bash
+# Part of Docker Desktop or installed separately
+docker compose version  # Verify it's installed
+```
+
+**Option 2: Standalone Docker Compose**
+```bash
+# Older standalone version
+docker-compose version  # Verify it's installed
+```
+
+Both work identically; this guide uses `docker compose` (Plugin version).
+
 ### Basic Setup (x86_64 Linux / Windows with Docker Desktop)
 
-1. **Start the service**:
+1. **Clone the repository**:
 
 ```bash
+git clone https://github.com/kutsenko/pdfa-service.git
+cd pdfa-service
+```
+
+2. **Start the service**:
+
+```bash
+# Using Docker Compose Plugin (recommended)
+docker compose up -d
+
+# Or using standalone docker-compose
 docker-compose up -d
 ```
 
@@ -77,14 +107,18 @@ newgrp docker
 
 ```bash
 # Clone repository
-git clone https://github.com/anthropics/pdfa-service.git
+git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
 
-# Start with docker-compose
+# Start with Docker Compose Plugin (recommended)
+docker compose up -d
+
+# Or using standalone docker-compose
 docker-compose up -d
 
 # Check service status
-docker-compose logs -f
+docker compose logs -f
+# or: docker-compose logs -f
 ```
 
 Service available at: `http://localhost:8000`
@@ -160,9 +194,10 @@ services:
 6. **Start the service**:
 
 ```bash
-git clone https://github.com/anthropics/pdfa-service.git
+git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
-docker-compose up -d
+docker compose up -d
+# or: docker-compose up -d
 ```
 
 7. **Find Raspberry Pi IP address**:
@@ -219,8 +254,13 @@ sudo usermod -aG docker $USER
 4. **Clone and start service**:
 
 ```bash
-git clone https://github.com/anthropics/pdfa-service.git
+git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
+
+# Using Docker Compose Plugin (recommended)
+docker compose up -d
+
+# Or using standalone docker-compose
 docker-compose up -d
 ```
 
@@ -246,13 +286,17 @@ wsl hostname -I
 
 ```powershell
 # Using PowerShell or Git Bash
-git clone https://github.com/anthropics/pdfa-service.git
+git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
 ```
 
 3. **Start service**:
 
 ```powershell
+# Using Docker Compose Plugin (recommended)
+docker compose up -d
+
+# Or using standalone docker-compose
 docker-compose up -d
 ```
 
@@ -641,24 +685,28 @@ environment:
 ### Service Won't Start
 
 ```bash
-# Check logs
-docker-compose logs pdfa
+# Check logs (Docker Compose Plugin)
+docker compose logs pdfa
+# or: docker-compose logs pdfa
 
 # Common issue: Port already in use
 sudo lsof -i :8000  # Find process using port 8000
 
 # Kill process and restart
-docker-compose restart
+docker compose restart
+# or: docker-compose restart
 ```
 
 ### OCR Errors
 
 ```bash
 # Check if Tesseract is available
-docker-compose exec pdfa which tesseract
+docker compose exec pdfa which tesseract
+# or: docker-compose exec pdfa which tesseract
 
 # Install missing language pack (inside container)
-docker-compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
+docker compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
+# or: docker-compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
 ```
 
 ### Slow Processing
@@ -711,11 +759,13 @@ docker volume prune
 
 ```bash
 # Pull latest image
-docker-compose pull
+docker compose pull
+# or: docker-compose pull
 
 # Restart with new version
-docker-compose down
-docker-compose up -d
+docker compose down
+docker compose up -d
+# or: docker-compose down && docker-compose up -d
 ```
 
 ---

@@ -7,7 +7,7 @@ from tempfile import TemporaryDirectory
 from typing import Literal
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import Response
+from fastapi.responses import HTMLResponse, Response
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
 from pdfa.converter import convert_to_pdfa
@@ -24,6 +24,38 @@ app = FastAPI(
     description="Convert PDFs to PDF/A using OCRmyPDF.",
     version="0.1.0",
 )
+
+
+@app.get("/", response_class=HTMLResponse)
+async def web_ui() -> str:
+    """Serve the web-based conversion interface."""
+    ui_path = Path(__file__).parent / "web_ui.html"
+    try:
+        return ui_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        logger.warning("Web UI file not found at %s", ui_path)
+        return """
+        <html>
+        <head>
+            <title>PDF/A Converter</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+                .container { max-width: 600px; margin: 50px auto; background: white; padding: 30px; border-radius: 8px; }
+                h1 { color: #333; }
+                .error { color: #d32f2f; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>📄 PDF/A Converter API</h1>
+                <p>Web interface is not available. Use the API directly:</p>
+                <p><strong>Endpoint:</strong> <code>POST /convert</code></p>
+                <p><strong>API Documentation:</strong> <a href="/docs">/docs</a></p>
+                <p>For detailed usage instructions, see the <a href="https://github.com/kutsenko/pdfa-service">GitHub repository</a>.</p>
+            </div>
+        </body>
+        </html>
+        """
 
 
 @app.post(
