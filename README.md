@@ -2,7 +2,13 @@
 
 Command-line tool and REST API that converts PDF, Office, and OpenDocument files into PDF/A files using [OCRmyPDF](https://ocrmypdf.readthedocs.io/) with built-in OCR.
 
-**Documentation in other languages**: [Deutsch](README.de.md)
+## 📚 Documentation & Language
+
+| Link | Description |
+|------|-------------|
+| 🇩🇪 [Deutsch (German)](README.de.md) | Complete German documentation |
+| 🥧 [OCR-SCANNER Setup Guide](OCR-SCANNER.md) | **Raspberry Pi & Network Setup** - Deploy pdfa-service as a network-wide OCR scanner |
+| 🥧 [OCR-SCANNER (Deutsch)](OCR-SCANNER.de.md) | **Raspberry Pi & Netzwerk-Anleitung** - Einsatz als Dokumentenscanner im lokalen Netzwerk |
 
 ## Features
 
