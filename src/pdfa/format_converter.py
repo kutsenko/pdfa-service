@@ -46,7 +46,7 @@ def detect_format(filename: str) -> str:
 
 
 def is_office_document(filename: str) -> bool:
-    """Check if the file is an Office document (DOCX, PPTX, XLSX) or ODF document (ODT, ODS, ODP).
+    """Check if the file is an Office or ODF document.
 
     Args:
         filename: The filename to check.

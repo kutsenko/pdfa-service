@@ -165,7 +165,7 @@ class TestConvertOfficeToPdf:
     def test_convert_missing_output_pdf(
         self, mock_run: MagicMock, tmp_path: Path
     ) -> None:
-        """convert_office_to_pdf should raise error if LibreOffice doesn't produce output."""
+        """Raise error if LibreOffice doesn't produce output PDF."""
         input_file = tmp_path / "document.docx"
         input_file.write_text("dummy content")
 

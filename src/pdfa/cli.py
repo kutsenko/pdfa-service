@@ -29,7 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "input_file",
         type=Path,
-        help="Path to the input file (PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP) to convert.",
+        help=("Path to input file (PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP) to convert"),
     )
     parser.add_argument(
         "output_pdf",

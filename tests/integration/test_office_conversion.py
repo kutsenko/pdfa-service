@@ -27,21 +27,30 @@ def create_test_docx(path: Path) -> None:
         # Add [Content_Types].xml
         docx.writestr(
             "[Content_Types].xml",
-            '<?xml version="1.0"?>'
-            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-            '<Default Extension="xml" ContentType="application/xml"/>'
-            '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'
-            "</Types>",
+            (  # noqa: E501
+                '<?xml version="1.0"?>'
+                '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+                '<Default Extension="rels" '
+                'ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+                '<Default Extension="xml" ContentType="application/xml"/>'
+                '<Override PartName="/word/document.xml" '
+                'ContentType="application/vnd.openxmlformats-officedocument.'
+                'wordprocessingml.document.main+xml"/>'
+                "</Types>"
+            ),
         )
 
         # Add _rels/.rels
         docx.writestr(
             "_rels/.rels",
-            '<?xml version="1.0"?>'
-            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'
-            "</Relationships>",
+            (  # noqa: E501
+                '<?xml version="1.0"?>'
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                '<Relationship Id="rId1" '
+                'Type="http://schemas.openxmlformats.org/officeDocument/2006/'
+                'relationships/officeDocument" Target="word/document.xml"/>'
+                "</Relationships>"
+            ),
         )
 
         # Add word/document.xml
@@ -68,22 +77,33 @@ def create_test_pptx(path: Path) -> None:
         # Add [Content_Types].xml
         pptx.writestr(
             "[Content_Types].xml",
-            '<?xml version="1.0"?>'
-            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-            '<Default Extension="xml" ContentType="application/xml"/>'
-            '<Override PartName="/ppt/presentation.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.presentation.main+xml"/>'
-            '<Override PartName="/ppt/slides/slide1.xml" ContentType="application/vnd.openxmlformats-officedocument.presentationml.slide+xml"/>'
-            "</Types>",
+            (  # noqa: E501
+                '<?xml version="1.0"?>'
+                '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+                '<Default Extension="rels" '
+                'ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+                '<Default Extension="xml" ContentType="application/xml"/>'
+                '<Override PartName="/ppt/presentation.xml" '
+                'ContentType="application/vnd.openxmlformats-officedocument.'
+                'presentationml.presentation.main+xml"/>'
+                '<Override PartName="/ppt/slides/slide1.xml" '
+                'ContentType="application/vnd.openxmlformats-officedocument.'
+                'presentationml.slide+xml"/>'
+                "</Types>"
+            ),
         )
 
         # Add _rels/.rels
         pptx.writestr(
             "_rels/.rels",
-            '<?xml version="1.0"?>'
-            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="ppt/presentation.xml"/>'
-            "</Relationships>",
+            (  # noqa: E501
+                '<?xml version="1.0"?>'
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                '<Relationship Id="rId1" '
+                'Type="http://schemas.openxmlformats.org/officeDocument/2006/'
+                'relationships/officeDocument" Target="ppt/presentation.xml"/>'
+                "</Relationships>"
+            ),
         )
 
         # Add ppt/presentation.xml
@@ -117,10 +137,14 @@ def create_test_pptx(path: Path) -> None:
         # Add ppt/_rels/presentation.xml.rels
         pptx.writestr(
             "ppt/_rels/presentation.xml.rels",
-            '<?xml version="1.0"?>'
-            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/slide" Target="slides/slide1.xml"/>'
-            "</Relationships>",
+            (  # noqa: E501
+                '<?xml version="1.0"?>'
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                '<Relationship Id="rId1" '
+                'Type="http://schemas.openxmlformats.org/officeDocument/2006/'
+                'relationships/slide" Target="slides/slide1.xml"/>'
+                "</Relationships>"
+            ),
         )
 
 
@@ -132,22 +156,33 @@ def create_test_xlsx(path: Path) -> None:
         # Add [Content_Types].xml
         xlsx.writestr(
             "[Content_Types].xml",
-            '<?xml version="1.0"?>'
-            '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
-            '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
-            '<Default Extension="xml" ContentType="application/xml"/>'
-            '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'
-            '<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'
-            "</Types>",
+            (  # noqa: E501
+                '<?xml version="1.0"?>'
+                '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+                '<Default Extension="rels" '
+                'ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+                '<Default Extension="xml" ContentType="application/xml"/>'
+                '<Override PartName="/xl/workbook.xml" '
+                'ContentType="application/vnd.openxmlformats-officedocument.'
+                'spreadsheetml.sheet.main+xml"/>'
+                '<Override PartName="/xl/worksheets/sheet1.xml" '
+                'ContentType="application/vnd.openxmlformats-officedocument.'
+                'spreadsheetml.worksheet+xml"/>'
+                "</Types>"
+            ),
         )
 
         # Add _rels/.rels
         xlsx.writestr(
             "_rels/.rels",
-            '<?xml version="1.0"?>'
-            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>'
-            "</Relationships>",
+            (  # noqa: E501
+                '<?xml version="1.0"?>'
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                '<Relationship Id="rId1" '
+                'Type="http://schemas.openxmlformats.org/officeDocument/2006/'
+                'relationships/officeDocument" Target="xl/workbook.xml"/>'
+                "</Relationships>"
+            ),
         )
 
         # Add xl/workbook.xml
@@ -181,10 +216,14 @@ def create_test_xlsx(path: Path) -> None:
         # Add xl/_rels/workbook.xml.rels
         xlsx.writestr(
             "xl/_rels/workbook.xml.rels",
-            '<?xml version="1.0"?>'
-            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
-            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
-            "</Relationships>",
+            (  # noqa: E501
+                '<?xml version="1.0"?>'
+                '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+                '<Relationship Id="rId1" '
+                'Type="http://schemas.openxmlformats.org/officeDocument/2006/'
+                'relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+                "</Relationships>"
+            ),
         )
 
 
@@ -203,21 +242,30 @@ def create_test_odt(path: Path) -> None:
         # Add META-INF/manifest.xml
         odt.writestr(
             "META-INF/manifest.xml",
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'
-            '<manifest:file-entry manifest:media-type="application/vnd.oasis.opendocument.text" manifest:full-path="/"/>'
-            '<manifest:file-entry manifest:media-type="text/xml" manifest:full-path="content.xml"/>'
-            '</manifest:manifest>',
+            (
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'  # noqa: E501
+                "<manifest:file-entry "
+                'manifest:media-type="application/vnd.oasis.opendocument.text" '
+                'manifest:full-path="/"/>'
+                '<manifest:file-entry manifest:media-type="text/xml" '
+                'manifest:full-path="content.xml"/>'
+                "</manifest:manifest>"
+            ),
         )
 
         # Add content.xml
         odt.writestr(
             "content.xml",
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            '<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
-            'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
-            '<office:body><office:text><text:p>Test ODT Document</text:p></office:text></office:body>'
-            '</office:document>',
+            (  # noqa: E501
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                "<office:document "
+                'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+                'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
+                "<office:body><office:text><text:p>Test ODT Document</text:p>"
+                "</office:text></office:body>"
+                "</office:document>"
+            ),
         )
 
 
@@ -236,24 +284,33 @@ def create_test_ods(path: Path) -> None:
         # Add META-INF/manifest.xml
         ods.writestr(
             "META-INF/manifest.xml",
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'
-            '<manifest:file-entry manifest:media-type="application/vnd.oasis.opendocument.spreadsheet" manifest:full-path="/"/>'
-            '<manifest:file-entry manifest:media-type="text/xml" manifest:full-path="content.xml"/>'
-            '</manifest:manifest>',
+            (
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'  # noqa: E501
+                "<manifest:file-entry "
+                'manifest:media-type="application/vnd.oasis.opendocument.spreadsheet" '
+                'manifest:full-path="/"/>'
+                '<manifest:file-entry manifest:media-type="text/xml" '
+                'manifest:full-path="content.xml"/>'
+                "</manifest:manifest>"
+            ),
         )
 
         # Add content.xml
         ods.writestr(
             "content.xml",
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            '<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
-            'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" '
-            'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
-            '<office:body><office:spreadsheet><table:table table:name="Sheet1">'
-            '<table:table-row><table:table-cell><text:p>Test ODS Data</text:p></table:table-cell></table:table-row>'
-            '</table:table></office:spreadsheet></office:body>'
-            '</office:document>',
+            (  # noqa: E501
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                "<office:document "
+                'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+                'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" '
+                'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
+                '<office:body><office:spreadsheet><table:table table:name="Sheet1">'
+                "<table:table-row><table:table-cell><text:p>Test ODS Data"
+                "</text:p></table:table-cell></table:table-row>"
+                "</table:table></office:spreadsheet></office:body>"
+                "</office:document>"
+            ),
         )
 
 
@@ -272,24 +329,34 @@ def create_test_odp(path: Path) -> None:
         # Add META-INF/manifest.xml
         odp.writestr(
             "META-INF/manifest.xml",
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'
-            '<manifest:file-entry manifest:media-type="application/vnd.oasis.opendocument.presentation" manifest:full-path="/"/>'
-            '<manifest:file-entry manifest:media-type="text/xml" manifest:full-path="content.xml"/>'
-            '</manifest:manifest>',
+            (
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'  # noqa: E501
+                "<manifest:file-entry "
+                'manifest:media-type="application/vnd.oasis.opendocument.presentation" '
+                'manifest:full-path="/"/>'
+                '<manifest:file-entry manifest:media-type="text/xml" '
+                'manifest:full-path="content.xml"/>'
+                "</manifest:manifest>"
+            ),
         )
 
         # Add content.xml
         odp.writestr(
             "content.xml",
-            '<?xml version="1.0" encoding="UTF-8"?>'
-            '<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
-            'xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" '
-            'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
-            '<office:body><office:presentation><draw:page><draw:text-box>'
-            '<text:p>Test ODP Presentation</text:p>'
-            '</draw:text-box></draw:page></office:presentation></office:body>'
-            '</office:document>',
+            (  # noqa: E501
+                '<?xml version="1.0" encoding="UTF-8"?>'
+                "<office:document "
+                'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+                'xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" '
+                'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
+                "<office:body><office:presentation><draw:page>"
+                "<draw:text-box>"
+                "<text:p>Test ODP Presentation</text:p>"
+                "</draw:text-box></draw:page></office:presentation>"
+                "</office:body>"
+                "</office:document>"
+            ),
         )
 
 
