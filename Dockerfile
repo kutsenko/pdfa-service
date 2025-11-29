@@ -1,7 +1,9 @@
 FROM python:3.12-slim
 
-# Install system dependencies for OCRmyPDF
+# Install system dependencies for OCRmyPDF and LibreOffice
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    libreoffice-calc \
+    libreoffice-impress \
     tesseract-ocr \
     tesseract-ocr-eng \
     tesseract-ocr-deu \

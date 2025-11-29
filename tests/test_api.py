@@ -80,7 +80,7 @@ def test_convert_endpoint_rejects_non_pdf(client: TestClient) -> None:
     )
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Only PDF uploads are supported."
+    assert "Supported formats" in response.json()["detail"]
 
 
 def test_convert_endpoint_handles_conversion_failure(

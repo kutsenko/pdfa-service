@@ -1,4 +1,4 @@
-"""Command-line interface for converting PDFs to PDF/A using OCRmyPDF."""
+"""Command-line interface for converting PDFs and Office documents to PDF/A."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from pathlib import Path
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
 from pdfa.converter import convert_to_pdfa
+from pdfa.exceptions import OfficeConversionError, UnsupportedFormatError
+from pdfa.format_converter import convert_office_to_pdf, is_office_document
 from pdfa.logging_config import configure_logging, get_logger
 
 logger = get_logger(__name__)
@@ -20,12 +22,14 @@ def build_parser() -> argparse.ArgumentParser:
     """Create and configure the argument parser for the CLI."""
     parser = argparse.ArgumentParser(
         prog="pdfa-cli",
-        description="Convert PDF files to PDF/A-2 with OCR using OCRmyPDF.",
+        description=(
+            "Convert PDF and Office documents to PDF/A with OCR " "using OCRmyPDF."
+        ),
     )
     parser.add_argument(
-        "input_pdf",
+        "input_file",
         type=Path,
-        help="Path to the input PDF file to convert.",
+        help="Path to the input file (PDF, DOCX, PPTX, XLSX) to convert.",
     )
     parser.add_argument(
         "output_pdf",
@@ -76,24 +80,52 @@ def main(argv: Sequence[str] | None = None) -> int:
     log_level = logging.DEBUG if args.verbose else logging.INFO
     configure_logging(level=log_level, log_file=args.log_file)
 
-    logger.info("Starting PDF to PDF/A conversion")
+    logger.info("Starting file to PDF/A conversion")
     logger.debug(
-        f"Arguments: input={args.input_pdf}, output={args.output_pdf}, "
+        f"Arguments: input={args.input_file}, output={args.output_pdf}, "
         f"language={args.language}, pdfa_level={args.pdfa_level}, "
         f"ocr_enabled={not args.no_ocr}"
     )
 
     try:
-        convert_to_pdfa(
-            args.input_pdf,
-            args.output_pdf,
-            language=args.language,
-            pdfa_level=args.pdfa_level,
-            ocr_enabled=not args.no_ocr,
-        )
+        # Check if input file is Office document
+        is_office = is_office_document(args.input_file.name)
+
+        # Convert Office to PDF if needed
+        pdf_file = args.input_file
+        if is_office:
+            logger.info(
+                f"Office document detected, converting to PDF: {args.input_file.name}"
+            )
+            temp_pdf = args.input_file.parent / f"{args.input_file.stem}_temp.pdf"
+            convert_office_to_pdf(args.input_file, temp_pdf)
+            pdf_file = temp_pdf
+
+        try:
+            # Convert to PDF/A
+            convert_to_pdfa(
+                pdf_file,
+                args.output_pdf,
+                language=args.language,
+                pdfa_level=args.pdfa_level,
+                ocr_enabled=not args.no_ocr,
+            )
+        finally:
+            # Clean up temporary PDF if we created one
+            if is_office and temp_pdf.exists():
+                temp_pdf.unlink()
+
     except FileNotFoundError as error:
         logger.error(f"File not found: {error}")
         print(error, file=sys.stderr)
+        return 1
+    except UnsupportedFormatError as error:
+        logger.error(f"Unsupported file format: {error}")
+        print(error, file=sys.stderr)
+        return 1
+    except OfficeConversionError as error:
+        logger.error(f"Office conversion failed: {error}")
+        print(f"Office conversion failed: {error}", file=sys.stderr)
         return 1
     except ocrmypdf_exceptions.ExitCodeException as error:
         exit_code = getattr(error, "exit_code", 1)
