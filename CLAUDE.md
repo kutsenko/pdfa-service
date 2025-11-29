@@ -1,166 +1,169 @@
-# CLAUDE.md
+# CLAUDE.md - Quick Reference
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code and AI Agents working with the pdfa-service repository.
 
 **Documentation in other languages**: [Deutsch](CLAUDE.de.md)
 
-## Quick Start
+## ⚠️ Important
 
-### Environment Setup
+All development guidelines are consolidated in **[AGENTS.md](AGENTS.md)** - use that as your primary reference.
+
+This document is a quick reference. For complete details on:
+- Development standards and code quality
+- Project architecture and design patterns
+- Testing requirements and procedures
+- Security guidelines
+- Performance considerations
+
+See [AGENTS.md](AGENTS.md).
+
+---
+
+## Quick Setup
+
 ```bash
+# Environment setup (one-time)
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
+
+# Daily commands
+pytest                              # Run all tests (required before commit)
+black src tests                     # Format code
+ruff check src tests --fix          # Lint and auto-fix
+pdfa-cli --help                     # Test CLI
+uvicorn pdfa.api:app --port 8000   # Run API locally
 ```
 
-### Common Commands
-- **CLI Help**: `pdfa-cli --help`
-- **Run Tests**: `pytest`
-- **Run Single Test**: `pytest tests/test_cli.py::test_parse_args`
-- **Format Code**: `black src tests`
-- **Lint**: `ruff check src tests`
-- **Run API Locally**: `uvicorn pdfa.api:app --host 0.0.0.0 --port 8000`
+## Essential Before Commit
 
-### System Dependencies
+1. **Format**: `black src tests`
+2. **Lint**: `ruff check src tests --fix`
+3. **Test**: `pytest` (must pass)
+4. **Commit**: Use clear, imperative message
 
-Before running with real PDFs, install OCRmyPDF runtime dependencies. For detailed installation instructions for your distribution, see the **System Dependencies by Distribution** section in [README.md](README.md#system-dependencies-by-distribution).
-
-**Required packages** (vary by distribution):
-- **Tesseract OCR**: `tesseract-ocr` (apt), `tesseract` (dnf), `tesseract` (pacman)
-- **Language packs**: English and German by default; add others as needed
-- **Ghostscript**: `ghostscript` (all distributions)
-- **qpdf**: `qpdf` (all distributions)
-- **LibreOffice**: For Office document conversion (DOCX, PPTX, XLSX)
-
-Tests can run without these dependencies using mocked OCRmyPDF.
-
-## Project Architecture
-
-**pdfa-service** is a lightweight Python tool that converts regular PDFs into PDF/A-compliant documents with OCR using [OCRmyPDF](https://ocrmypdf.readthedocs.io/). It has two interfaces:
-
-### Dual Interface Design
-1. **CLI** (`src/pdfa/cli.py`): Command-line tool registered as `pdfa-cli` entry point
-2. **REST API** (`src/pdfa/api.py`): FastAPI endpoint (`POST /convert`) for file uploads
-
-### Shared Core Logic
-Both interfaces use a single `convert_to_pdfa()` function (`src/pdfa/converter.py`) to ensure feature parity and eliminate duplication. This is the key design principle: **single conversion implementation serving multiple entry points**.
-
-### Architecture Layers
-```
-Input (CLI args / HTTP request)
-    ↓
-Validation & Parsing (cli.py / api.py)
-    ↓
-Shared Conversion Logic (converter.py)
-    ↓
-OCRmyPDF Library
-    ↓
-Output (Exit code / HTTP response)
-```
-
-### Error Handling Pattern
-Both interfaces translate low-level errors consistently:
-- **File not found**: CLI returns exit code 1, API returns HTTP 400
-- **OCRmyPDF failures**: CLI propagates exit code, API returns HTTP 500
-- Shared logic in `converter.py` raises exceptions; interfaces handle translation
-
-## Testing Architecture
-
-### Test Pyramid
-1. **Unit Tests** (majority): Test CLI parsing, API validation, error handling with mocked OCRmyPDF
-2. **Integration Tests** (optional): End-to-end with real OCRmyPDF, skipped if system dependencies unavailable
-
-### Key Testing Details
-- `conftest.py` provides `ocrmypdf` module mocking so tests run without Tesseract/Ghostscript
-- Tests import from `src/` via `pythonpath` in `pyproject.toml`
-- Run `pytest` to execute all available tests; integration tests auto-skip gracefully
-- Marker: `@pytest.mark.skipif(not HAS_TESSERACT, ...)` for conditional tests
-
-### Test Files
-- `test_cli.py`: Argument parsing, error cases, success paths
-- `test_api.py`: Endpoint validation, file upload, response headers
-- `test_conversion.py`: Real OCRmyPDF integration (integration tests)
-
-## Code Quality Standards
-
-### Python & Style
-- **Python 3.11+** required
-- **Code formatting**: `black` with 88-character line length
-- **Linting**: `ruff` checks E (errors), F (pyflakes), W (warnings), I (imports), UP (upgrades), N (naming), D (docstrings)
-- Docstring required for all modules, functions, classes except specific cases (D100, D101, D102, D103, D104, D105 ignored)
-
-### Development Practices
-- Follow PEP 8 conventions
-- Organize modules by responsibility
-- Keep methods focused and concise
-- **Do not wrap imports in try/except** (per AGENTS.md)
-- Write all documentation and comments in English
-
-## Configuration
-
-### CLI Parameters
-- `input_pdf`: Path to input PDF (positional)
-- `output_pdf`: Path to output PDF/A file (positional)
-- `--language` / `-l`: Tesseract language codes, default "deu+eng"
-- `--pdfa-level`: PDF/A compliance level (1, 2, or 3), default "2"
-
-### API Parameters
-- `file`: PDF file upload (multipart/form-data)
-- `language`: Tesseract codes (default "deu+eng")
-- `pdfa_level`: PDF/A level as string (default "2")
-
-### Project Configuration
-- **Tool versions** in `pyproject.toml` specify minimum versions
-- **Entry point**: `pdfa-cli` → `pdfa.cli:main`
-- **API app**: `pdfa.api:app` for ASGI servers
-
-## Important Implementation Details
-
-### Type System
-- Uses Python 3.11+ type hints throughout
-- `Literal` types for configuration: `PdfaLevel = Literal["1", "2", "3"]`
-- `pathlib.Path` for file paths in core logic
-
-### Temporary File Handling (API)
-- REST endpoint uses `TemporaryDirectory()` context manager for uploaded files
-- Ensures cleanup even on errors; supports clean streaming semantics
-
-### Configuration Distribution
-- Configuration (language, PDF/A level) passed as **function arguments**, not environment variables
-- Enables per-request configuration in API, easier testing, no global state
-
-### Dependency Abstraction
-- OCRmyPDF imported at module level (mockable in tests)
-- Simple wrapper around `ocrmypdf.ocr()` for maintainability
-- API response includes proper headers: `Content-Type: application/pdf`, `Content-Disposition: attachment`
-
-## File Reference
+## Key Files
 
 | File | Purpose |
 |------|---------|
-| `src/pdfa/converter.py` | Core conversion logic; single source of truth for OCRmyPDF integration |
-| `src/pdfa/cli.py` | CLI with argparse; entry point is `main(argv)` |
-| `src/pdfa/api.py` | FastAPI app; endpoint is `POST /convert` |
-| `src/pdfa/__init__.py` | Package metadata (version) |
-| `tests/conftest.py` | Pytest fixtures, OCRmyPDF mocking |
-| `tests/test_cli.py` | CLI unit tests |
-| `tests/test_api.py` | API endpoint unit tests |
-| `tests/integration/test_conversion.py` | End-to-end integration tests |
-| `pyproject.toml` | Project metadata, dependencies, tool configs |
+| `AGENTS.md` | **Complete development guidelines** (single source of truth) |
+| `src/pdfa/converter.py` | Core conversion logic |
+| `src/pdfa/cli.py` | CLI entry point |
+| `src/pdfa/api.py` | REST API |
+| `tests/` | Test suite |
+| `README.md` | User documentation |
 
-## Development Workflow
+## Key Principles
 
-1. **Make changes** to `src/pdfa/` or `tests/`
-2. **Format code**: `black src tests`
-3. **Lint**: `ruff check src tests --fix` (auto-fix what possible)
-4. **Run tests**: `pytest` (mandatory before commit)
-5. **Update README.md** if behavior changes
-6. **Commit** with concise, imperative message
+1. **Single Conversion Function**: Both CLI and API must use `convert_to_pdfa()`
+2. **Configuration as Arguments**: Pass config as function parameters, not globals
+3. **Shared Error Handling**: Consistent error translation across interfaces
+4. **Tests First**: Write tests with mocked dependencies before implementing
+5. **Type Hints**: Use Python 3.11+ type hints throughout
 
-## Notes for Future Development
+## System Setup
 
-- **Single conversion function** is intentional: both CLI and API must call the same `convert_to_pdfa()` to stay in sync
-- **Mocked tests first**: Add unit tests with mocked OCRmyPDF before integration tests
-- **Error handling**: New OCRmyPDF exceptions should be caught and translated in both interfaces consistently
-- **Configuration**: New parameters should be function arguments, not globals or environment variables
-- **Type hints**: Maintain type coverage for IDE support and clarity
+Before running with real PDFs:
+```bash
+# Ubuntu/Debian
+sudo apt install tesseract-ocr ghostscript qpdf libreoffice
+
+# Fedora
+sudo dnf install tesseract ghostscript qpdf libreoffice
+
+# Arch
+sudo pacman -S tesseract ghostscript qpdf libreoffice-still
+```
+
+Tests run without these dependencies using mocked OCRmyPDF.
+
+## Project Structure
+
+```
+pdfa-service/
+├── AGENTS.md                 # Development guidelines (go here!)
+├── README.md                 # User documentation
+├── OCR-SCANNER.md            # Scanner setup guide
+├── src/pdfa/
+│   ├── converter.py          # Core logic (single source of truth)
+│   ├── cli.py                # CLI interface
+│   ├── api.py                # REST API interface
+│   ├── format_converter.py    # Office document conversion
+│   ├── exceptions.py          # Custom exceptions
+│   └── logging_config.py      # Logging setup
+└── tests/
+    ├── conftest.py           # Pytest config with OCRmyPDF mocking
+    ├── test_cli.py           # CLI tests
+    ├── test_api.py           # API tests
+    ├── test_format_converter.py
+    └── integration/          # Integration tests (with real OCRmyPDF)
+```
+
+## Common Tasks
+
+### Add a New Feature
+
+1. Write unit tests (with mocked OCRmyPDF) in `tests/`
+2. Implement in `converter.py` (shared core logic)
+3. Add CLI support in `cli.py`
+4. Add API support in `api.py`
+5. Update `README.md` with examples
+6. Run full test suite: `pytest`
+7. Commit with clear message
+
+### Run Specific Test
+
+```bash
+pytest tests/test_cli.py::test_main_success
+pytest -k "office"  # Run tests matching pattern
+```
+
+### Debug an Issue
+
+```bash
+# See full error output
+pytest -v tests/test_file.py
+
+# Run with print statements
+pytest -s tests/test_file.py
+
+# Run single test with debugging
+python -m pdb -c continue -m pytest tests/test_file.py::test_name
+```
+
+## Code Quality Checklist
+
+Before every commit:
+
+- [ ] All tests pass: `pytest`
+- [ ] Code formatted: `black src tests`
+- [ ] No linting issues: `ruff check src tests`
+- [ ] Smoke test passes: `pdfa-cli --help`
+- [ ] Commit message is clear and imperative
+- [ ] README.md updated if behavior changed
+
+## Architecture Reminder
+
+The key design principle ensures consistency:
+
+```
+                    Both interfaces use same function
+                            ↓
+                    convert_to_pdfa()
+                       ↙          ↖
+                     CLI          API
+                   (/bin)      (HTTP)
+```
+
+Never duplicate logic between CLI and API. Always put shared logic in `converter.py`.
+
+## Getting Help
+
+- **Development Guidelines**: Read [AGENTS.md](AGENTS.md)
+- **User Questions**: See [README.md](README.md)
+- **Setup Instructions**: See [OCR-SCANNER.md](OCR-SCANNER.md)
+- **Architecture Details**: Section "Project Architecture" in [AGENTS.md](AGENTS.md)
+
+---
+
+**Remember**: AGENTS.md is your single source of truth for development practices.

@@ -1,190 +1,169 @@
-# CLAUDE.md (Deutsch)
+# CLAUDE.de.md - Schnellreferenz
 
-Diese Datei bietet Anleitung für Claude Code (claude.ai/code) bei der Arbeit mit Code in diesem Repository.
+Anleitung für Claude Code und AI Agents bei der Arbeit mit dem pdfa-service Repository.
 
-**Englische Version**: [English](CLAUDE.md)
+**English Version**: [English](CLAUDE.md)
 
-## Schnelleinstieg
+## ⚠️ Wichtig
 
-### Umgebungseinrichtung
+Alle Entwicklungsrichtlinien sind in **[AGENTS.md](AGENTS.md)** konsolidiert - verwenden Sie diese als primäre Referenz.
+
+Dieses Dokument ist eine Schnellreferenz. Für vollständige Details zu:
+- Entwicklungsstandards und Code-Qualität
+- Projektarchitektur und Design-Patterns
+- Testanforderungen und -verfahren
+- Sicherheitsrichtlinien
+- Leistungsaspekte
+
+Siehe [AGENTS.md](AGENTS.md).
+
+---
+
+## Schnelle Einrichtung
+
 ```bash
+# Umgebungssetup (einmalig)
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
+
+# Tägliche Befehle
+pytest                              # Alle Tests ausführen (vor Commit erforderlich)
+black src tests                     # Code formatieren
+ruff check src tests --fix          # Linting und Auto-Fix
+pdfa-cli --help                     # CLI testen
+uvicorn pdfa.api:app --port 8000   # API lokal ausführen
 ```
 
-### Häufig verwendete Befehle
-- **CLI-Hilfe**: `pdfa-cli --help`
-- **Tests ausführen**: `pytest`
-- **Einen einzelnen Test ausführen**: `pytest tests/test_cli.py::test_parse_args`
-- **Code formatieren**: `black src tests`
-- **Linting**: `ruff check src tests`
-- **API lokal ausführen**: `uvicorn pdfa.api:app --host 0.0.0.0 --port 8000`
+## Wesentlich vor Commit
 
-### Systemabhängigkeiten
+1. **Formatieren**: `black src tests`
+2. **Linting**: `ruff check src tests --fix`
+3. **Testen**: `pytest` (muss bestehen)
+4. **Committen**: Klare, imperative Nachricht verwenden
 
-Bevor Sie mit echten PDFs arbeiten, installieren Sie die OCRmyPDF-Laufzeitabhängigkeiten. Detaillierte Installationsanweisungen für Ihre Distribution finden Sie im Abschnitt **Systemabhängigkeiten nach Distribution** in der [README.md](README.md#systemabhängigkeiten-nach-distribution).
-
-**Erforderliche Pakete** (unterscheiden sich je nach Distribution):
-- **Tesseract OCR**: `tesseract-ocr` (apt), `tesseract` (dnf), `tesseract` (pacman)
-- **Sprachpakete**: Englisch und Deutsch standardmäßig; bei Bedarf weitere hinzufügen
-- **Ghostscript**: `ghostscript` (alle Distributionen)
-- **qpdf**: `qpdf` (alle Distributionen)
-- **LibreOffice**: Für Office-Dokumentkonvertierung (DOCX, PPTX, XLSX)
-
-Tests können ohne diese Abhängigkeiten mit gemocktem OCRmyPDF ausgeführt werden.
-
-## Projektarchitektur
-
-**pdfa-service** ist ein leichtgewichtiges Python-Tool, das reguläre PDFs mit OCR unter Verwendung von [OCRmyPDF](https://ocrmypdf.readthedocs.io/) in PDF/A-konforme Dokumente konvertiert. Es hat zwei Schnittstellen:
-
-### Design mit dualer Schnittstelle
-1. **CLI** (`src/pdfa/cli.py`): Kommandozeilen-Tool registriert als `pdfa-cli` Entry Point
-2. **REST API** (`src/pdfa/api.py`): FastAPI-Endpunkt (`POST /convert`) für Datei-Uploads
-
-### Gemeinsame Kernlogik
-Beide Schnittstellen nutzen eine einzelne `convert_to_pdfa()`-Funktion (`src/pdfa/converter.py`), um Feature-Parität sicherzustellen und Duplikation zu vermeiden. Dies ist das Schlüsseldesign-Prinzip: **Eine einzelne Konvertierungsimplementierung für mehrere Einstiegspunkte**.
-
-### Architektur-Ebenen
-```
-Input (CLI-Argumente / HTTP-Request)
-    ↓
-Validierung & Parsing (cli.py / api.py)
-    ↓
-Gemeinsame Konvertierungslogik (converter.py)
-    ↓
-OCRmyPDF Bibliothek
-    ↓
-Output (Exit Code / HTTP Response)
-```
-
-### Fehlerbehandlungsmuster
-Beide Schnittstellen übersetzen Low-Level-Fehler konsistent:
-- **Datei nicht gefunden**: CLI gibt Exit Code 1 zurück, API gibt HTTP 400 zurück
-- **OCRmyPDF-Fehler**: CLI propagiert Exit Code, API gibt HTTP 500 zurück
-- Gemeinsame Logik in `converter.py` wirft Exceptions; Schnittstellen handhaben Übersetzung
-
-### Office-Dokumentkonvertierung
-- **format_converter.py**: LibreOffice-Integration für Office→PDF Konvertierung
-- **exceptions.py**: Benutzerdefinierte Exceptions für Fehlerbehandlung
-- Unterstützte Formate: DOCX, PPTX, XLSX, ODT, ODS, ODP
-
-## Test-Architektur
-
-### Test-Pyramide
-1. **Unit-Tests** (Mehrheit): Teste CLI-Parsing, API-Validierung, Fehlerbehandlung mit gemocktem OCRmyPDF
-2. **Integrations-Tests** (optional): End-to-End mit echtem OCRmyPDF, werden übersprungen wenn Systemabhängigkeiten nicht verfügbar sind
-
-### Wichtige Test-Details
-- `conftest.py` bietet `ocrmypdf` Modul Mocking, damit Tests ohne Tesseract/Ghostscript laufen
-- Tests importieren von `src/` über `pythonpath` in `pyproject.toml`
-- Führen Sie `pytest` aus, um alle verfügbaren Tests auszuführen; Integrations-Tests werden anmutig übersprungen
-- Markierung: `@pytest.mark.skipif(not HAS_TESSERACT, ...)` für bedingte Tests
-
-### Test-Dateien
-- `test_cli.py`: Argument Parsing, Fehlerfälle, Success Paths
-- `test_api.py`: Endpunkt-Validierung, Datei-Upload, Response Header
-- `test_cli_office.py`: Office-Dokumentbehandlung in CLI
-- `test_api_office.py`: Office-Dokumentbehandlung in API
-- `test_format_converter.py`: Format-Erkennung und Office-Konvertierung
-- `integration/test_office_conversion.py`: End-to-End Office→PDF/A Konvertierung
-
-## Code-Qualitätsstandards
-
-### Python & Stil
-- **Python 3.11+** erforderlich
-- **Code-Formatierung**: `black` mit 88-Zeichen-Zeilenlänge
-- **Linting**: `ruff` überprüft E (Fehler), F (pyflakes), W (Warnungen), I (Importe), UP (Upgrades), N (Naming), D (Docstrings)
-- Docstring erforderlich für alle Module, Funktionen, Klassen außer bestimmten Fällen (D100, D101, D102, D103, D104, D105 ignoriert)
-
-### Entwicklungspraktiken
-- Befolgen Sie PEP 8 Konventionen
-- Organisieren Sie Module nach Verantwortung
-- Halten Sie Methoden fokussiert und prägnant
-- **Wickeln Sie Importe nicht in try/except** (pro AGENTS.md)
-- Schreiben Sie alle Dokumentation und Kommentare auf Englisch
-
-## Konfiguration
-
-### CLI-Parameter
-- `input_file`: Pfad zur Eingabedatei (Positionsargument) - unterstützt PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP
-- `output_pdf`: Pfad zur PDF/A-Ausgabedatei (Positionsargument)
-- `--language` / `-l`: Tesseract-Sprachcodes, Standard "deu+eng"
-- `--pdfa-level`: PDF/A-Konformitätsstufe (1, 2 oder 3), Standard "2"
-- `--no-ocr`: OCR deaktivieren
-- `-v, --verbose`: Debug-Logging aktivieren
-- `--log-file`: Logs in eine Datei schreiben
-
-### API-Parameter
-- `file`: Datei-Upload (multipart/form-data)
-- `language`: Tesseract-Codes (Standard "deu+eng")
-- `pdfa_level`: PDF/A-Stufe als String (Standard "2")
-- `ocr_enabled`: Ob OCR durchgeführt werden soll (Standard true)
-
-### Projektkonfiguration
-- **Tool-Versionen** in `pyproject.toml` geben Mindestversionen an
-- **Entry Point**: `pdfa-cli` → `pdfa.cli:main`
-- **API-App**: `pdfa.api:app` für ASGI-Server
-
-## Wichtige Implementierungsdetails
-
-### Typsystem
-- Verwendet Python 3.11+ Type Hints überall
-- `Literal` Typen für Konfiguration: `PdfaLevel = Literal["1", "2", "3"]`
-- `pathlib.Path` für Dateipfade in Kernlogik
-
-### Temporäre Dateiverwaltung (API)
-- REST-Endpunkt nutzt `TemporaryDirectory()` Context Manager für hochgeladene Dateien
-- Gewährleistet Cleanup auch bei Fehlern; unterstützt saubere Streaming-Semantik
-
-### Konfigurationsverteilung
-- Konfiguration (Sprache, PDF/A-Stufe) wird als **Funktionsargumente** übergeben, nicht Umgebungsvariablen
-- Ermöglicht Per-Request-Konfiguration in API, einfacheres Testen, kein globaler Status
-
-### Abhängigkeits-Abstraktion
-- OCRmyPDF im Modul importiert (mockbar in Tests)
-- Einfacher Wrapper um `ocrmypdf.ocr()` für Wartbarkeit
-- API-Response umfasst korrekte Header: `Content-Type: application/pdf`, `Content-Disposition: attachment`
-
-### Office-Dokumentbehandlung
-- LibreOffice über subprocess aufgerufen für Office→PDF Konvertierung
-- Temporäre PDFs automatisch bereinigt
-- Unterstützt DOCX, PPTX, XLSX (MS Office) und ODT, ODS, ODP (OpenDocument)
-
-## Dateireferenz
+## Wichtigste Dateien
 
 | Datei | Zweck |
-|---|---|
-| `src/pdfa/converter.py` | Kernkonvertierungslogik; Single Source of Truth für OCRmyPDF-Integration |
-| `src/pdfa/cli.py` | CLI mit argparse; Entry Point ist `main(argv)` |
-| `src/pdfa/api.py` | FastAPI-App; Endpunkt ist `POST /convert` |
-| `src/pdfa/format_converter.py` | Office→PDF Konvertierung via LibreOffice |
-| `src/pdfa/exceptions.py` | Benutzerdefinierte Exceptions |
-| `src/pdfa/logging_config.py` | Logging-Konfiguration |
-| `src/pdfa/__init__.py` | Paket-Metadaten (Version) |
-| `tests/conftest.py` | Pytest Fixtures, OCRmyPDF Mocking |
-| `tests/test_cli.py` | CLI Unit-Tests |
-| `tests/test_api.py` | API Endpunkt Unit-Tests |
-| `tests/test_cli_office.py` | CLI Office-Handling Tests |
-| `tests/test_api_office.py` | API Office-Handling Tests |
-| `tests/test_format_converter.py` | Format-Erkennung und Office-Konvertierung Tests |
-| `tests/integration/test_office_conversion.py` | End-to-End Integration Tests |
-| `pyproject.toml` | Projekt-Metadaten, Abhängigkeiten, Tool-Konfigurationen |
+|-------|-------|
+| `AGENTS.md` | **Vollständige Entwicklungsrichtlinien** (Single Source of Truth) |
+| `src/pdfa/converter.py` | Kernkonvertierungslogik |
+| `src/pdfa/cli.py` | CLI Entry Point |
+| `src/pdfa/api.py` | REST API |
+| `tests/` | Testsuite |
+| `README.de.md` | Benutzerdokumentation (Deutsch) |
 
-## Entwicklungs-Workflow
+## Wichtigste Prinzipien
 
-1. **Änderungen vornehmen** in `src/pdfa/` oder `tests/`
-2. **Code formatieren**: `black src tests`
-3. **Linten**: `ruff check src tests --fix` (Auto-Fix wenn möglich)
-4. **Tests ausführen**: `pytest` (Pflicht vor Commit)
-5. **README.md aktualisieren** wenn sich Verhalten ändert
-6. **Committen** mit prägnanter, imperativer Nachricht
+1. **Einzelne Konvertierungsfunktion**: CLI und API müssen `convert_to_pdfa()` verwenden
+2. **Konfiguration als Argumente**: Konfiguration als Funktionsparameter übergeben, nicht als Globals
+3. **Gemeinsame Fehlerbehandlung**: Konsistente Fehlerübersetzung über Schnittstellen hinweg
+4. **Tests zuerst**: Zuerst Tests mit gemockten Abhängigkeiten schreiben, dann implementieren
+5. **Type Hints**: Python 3.11+ Type Hints überall verwenden
 
-## Hinweise für zukünftige Entwicklung
+## System-Setup
 
-- **Einzelne Konvertierungsfunktion** ist absichtlich: Sowohl CLI als auch API müssen die gleiche `convert_to_pdfa()` aufrufen, um synchron zu bleiben
-- **Gemockte Tests zuerst**: Fügen Sie Unit-Tests mit gemocktem OCRmyPDF vor Integrationstests hinzu
-- **Fehlerbehandlung**: Neue OCRmyPDF-Exceptions sollten in beiden Schnittstellen konsistent gefangen und übersetzt werden
-- **Konfiguration**: Neue Parameter sollten Funktionsargumente sein, nicht Globale oder Umgebungsvariablen
-- **Type Hints**: Erhalten Sie Type Coverage für IDE-Unterstützung und Klarheit
-- **Office-Dokumentunterstützung**: Erweiterungen sollten LibreOffice nutzen, nicht Python-Bibliotheken
+Vor dem Ausführen mit echten PDFs:
+```bash
+# Ubuntu/Debian
+sudo apt install tesseract-ocr ghostscript qpdf libreoffice
+
+# Fedora
+sudo dnf install tesseract ghostscript qpdf libreoffice
+
+# Arch
+sudo pacman -S tesseract ghostscript qpdf libreoffice-still
+```
+
+Tests laufen ohne diese Abhängigkeiten mit gemocktem OCRmyPDF.
+
+## Projektstruktur
+
+```
+pdfa-service/
+├── AGENTS.md                 # Entwicklungsrichtlinien (hier klicken!)
+├── README.de.md              # Benutzerdokumentation (Deutsch)
+├── OCR-SCANNER.de.md         # Scanner-Setup-Anleitung (Deutsch)
+├── src/pdfa/
+│   ├── converter.py          # Kernlogik (Single Source of Truth)
+│   ├── cli.py                # CLI-Schnittstelle
+│   ├── api.py                # REST API-Schnittstelle
+│   ├── format_converter.py    # Office-Dokumentkonvertierung
+│   ├── exceptions.py          # Benutzerdefinierte Exceptions
+│   └── logging_config.py      # Logging-Setup
+└── tests/
+    ├── conftest.py           # Pytest-Konfiguration mit OCRmyPDF Mocking
+    ├── test_cli.py           # CLI-Tests
+    ├── test_api.py           # API-Tests
+    ├── test_format_converter.py
+    └── integration/          # Integrationstests (mit echtem OCRmyPDF)
+```
+
+## Häufige Aufgaben
+
+### Eine neue Funktion hinzufügen
+
+1. Unit-Tests schreiben (mit gemocktem OCRmyPDF) in `tests/`
+2. In `converter.py` implementieren (gemeinsame Kernlogik)
+3. CLI-Unterstützung in `cli.py` hinzufügen
+4. API-Unterstützung in `api.py` hinzufügen
+5. `README.de.md` mit Beispielen aktualisieren
+6. Vollständige Testsuite ausführen: `pytest`
+7. Mit klarer Nachricht committen
+
+### Bestimmten Test ausführen
+
+```bash
+pytest tests/test_cli.py::test_main_success
+pytest -k "office"  # Tests mit Pattern ausführen
+```
+
+### Ein Problem debuggen
+
+```bash
+# Vollständige Fehlerausgabe sehen
+pytest -v tests/test_file.py
+
+# Mit Print-Anweisungen ausführen
+pytest -s tests/test_file.py
+
+# Einzelnen Test mit Debugging ausführen
+python -m pdb -c continue -m pytest tests/test_file.py::test_name
+```
+
+## Code-Qualitäts-Checkliste
+
+Vor jedem Commit:
+
+- [ ] Alle Tests bestehen: `pytest`
+- [ ] Code formatiert: `black src tests`
+- [ ] Keine Linting-Probleme: `ruff check src tests`
+- [ ] Smoke Test bestanden: `pdfa-cli --help`
+- [ ] Commit-Nachricht ist klar und imperativ
+- [ ] README.de.md aktualisiert, falls Verhalten sich geändert hat
+
+## Architektur-Erinnerung
+
+Das Schlüsseldesignprinzip gewährleistet Konsistenz:
+
+```
+                    Beide Schnittstellen verwenden dieselbe Funktion
+                            ↓
+                    convert_to_pdfa()
+                       ↙          ↖
+                     CLI          API
+                   (/bin)      (HTTP)
+```
+
+Niemals Logik zwischen CLI und API duplizieren. Gemeinsame Logik immer in `converter.py` platzieren.
+
+## Hilfe erhalten
+
+- **Entwicklungsrichtlinien**: Lesen Sie [AGENTS.md](AGENTS.md)
+- **Benutzerfragen**: Siehe [README.de.md](README.de.md)
+- **Setup-Anweisungen**: Siehe [OCR-SCANNER.de.md](OCR-SCANNER.de.md)
+- **Architektur-Details**: Abschnitt "Project Architecture" in [AGENTS.md](AGENTS.md)
+
+---
+
+**Denken Sie daran**: AGENTS.md ist Ihre Single Source of Truth für Entwicklungspraktiken.
