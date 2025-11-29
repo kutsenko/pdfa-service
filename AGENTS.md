@@ -42,7 +42,10 @@ See [`README.md`](README.md) for user-facing documentation and setup instruction
   - Use concise names in line with Clean Code principles
   - Methods should do one thing well
 - **Import Statements**: Do NOT wrap imports in `try`/`except` blocks
-- **Documentation**: Write all documentation, comments, and identifiers in English
+- **Primary Language**: **English is the default language for all code and development**
+  - All code identifiers, variables, functions, classes must be in English
+  - All comments, docstrings, and commit messages must be in English
+  - Documentation is maintained in both English and German (see Language Policy below)
 
 ### Type Hints
 
@@ -128,7 +131,24 @@ Both interfaces must translate low-level errors consistently:
 
 ---
 
-## Testing Architecture
+## Testing Architecture - Test-Driven Development (TDD) Required
+
+### TDD Principle
+
+**All development must follow Test-Driven Development (TDD):**
+
+1. **Write tests first** for the feature or fix you plan to implement
+2. **Write minimal production code** to make tests pass
+3. **Refactor code** while keeping tests green
+4. **Repeat** for each new feature or behavior
+
+This ensures:
+- Better code design (writing tests first forces you to think about interfaces)
+- Comprehensive test coverage (all functionality is tested)
+- Confidence in changes (tests prevent regressions)
+- Documentation through tests (tests show how code should be used)
+
+**Rule**: No production code changes are accepted without corresponding tests written first.
 
 ### Test Pyramid
 
@@ -136,19 +156,23 @@ Both interfaces must translate low-level errors consistently:
    - Run without system dependencies (Tesseract, Ghostscript)
    - Fast execution (< 10 seconds total)
    - Use `conftest.py` mocking for OCRmyPDF
+   - **Must be written first, before production code**
 
-2. **Integration Tests** (optional): End-to-end with real OCRmyPDF
+2. **Integration Tests** (recommended): End-to-end with real OCRmyPDF
    - Require system dependencies
    - Skipped automatically if dependencies unavailable
    - Use `@pytest.mark.skipif(not HAS_TESSERACT, ...)` for conditional execution
+   - **Can be written alongside or after unit tests**
 
 ### Testing Requirements
 
 - **Mandatory**: Execute full test suite with `pytest` before every commit
+- **Mandatory**: All new code must have passing tests before commit
+- **Mandatory**: Tests must be written before (or parallel to) production code
 - `conftest.py` provides `ocrmypdf` module mocking so tests run without Tesseract/Ghostscript
 - Tests import from `src/` via `pythonpath` in `pyproject.toml`
 - Run `pytest` to execute all available tests; integration tests auto-skip gracefully
-- When adding features, add unit tests with mocked OCRmyPDF first, then optional integration tests
+- **TDD Workflow**: Start with failing tests, write production code to make them pass, refactor
 
 ### Smoke Test
 
@@ -200,17 +224,64 @@ Before running with real PDFs, install OCRmyPDF runtime dependencies. See [READM
 
 Tests can run without these using mocked OCRmyPDF.
 
-### Required Steps Before Commit
+### TDD Development Workflow (Required)
 
-1. Make changes to `src/pdfa/` or `tests/`
-2. Format code: `black src tests`
-3. Lint: `ruff check src tests --fix`
-4. Run tests: `pytest` (must pass)
-5. Update `README.md` if behavior changes
-6. Commit with concise, imperative message:
+**Follow this workflow for every feature or fix:**
+
+1. **Write failing tests first** in `tests/`
+   ```bash
+   pytest tests/test_feature.py -v
+   # Tests should FAIL (red phase)
+   ```
+
+2. **Write minimal production code** in `src/pdfa/` to make tests pass
+   - Don't over-engineer; just make the failing tests pass
+   - This is the "green phase"
+
+3. **Run tests again** to verify they pass
+   ```bash
+   pytest tests/test_feature.py -v
+   # Tests should PASS (green phase)
+   ```
+
+4. **Refactor code** while keeping tests passing (optional but encouraged)
+   - Improve code structure, readability, efficiency
+   - Ensure tests still pass after each refactor
+
+5. **Run full test suite** before commit
+   ```bash
+   pytest
+   # All 46 tests must pass
+   ```
+
+6. **Format and lint code**
+   ```bash
+   black src tests
+   ruff check src tests --fix
+   ```
+
+7. **Update documentation** if behavior changes
+   - Update `README.md` (English) with examples
+   - Update `README.de.md` (German) with examples
+   - Update docstrings with new parameters or behavior
+
+8. **Commit with clear message**
    ```bash
    git commit -m "Add feature X to handle scenario Y"
    ```
+   - Use imperative mood ("Add" not "Added")
+   - Explain the "why", not just the "what"
+   - Reference issue numbers if applicable
+
+### Parallel Development Philosophy
+
+When implementing a feature:
+- **Tests and production code develop in parallel**
+- Write a test → write code to pass it → move to next test
+- Never write all tests upfront and then code
+- Never write all code and then test
+
+This keeps the development cycle short (minutes, not hours) and prevents regressions.
 
 ### Commit Message Guidelines
 
@@ -246,39 +317,88 @@ New configuration parameters must be:
 - Documented in docstrings and this AGENTS.md file
 - Tested with multiple values
 
-### New Features Checklist
+### New Features Checklist (TDD Required)
 
-When adding a new feature:
-- [ ] Write unit tests with mocked dependencies first
-- [ ] Implement feature in shared logic (converter.py)
-- [ ] Add CLI support (cli.py)
-- [ ] Add API support (api.py)
-- [ ] Ensure both interfaces use same core function
-- [ ] Update README.md with usage examples
+When adding a new feature, follow TDD strictly:
+
+**Phase 1: Red (Write Failing Tests)**
+- [ ] Create test file or add tests to existing test file
+- [ ] Write unit tests with mocked dependencies (should FAIL)
+- [ ] Run tests: `pytest tests/test_feature.py -v` (expect failures)
+
+**Phase 2: Green (Write Minimal Code)**
+- [ ] Implement feature in shared logic (converter.py) - minimal code to pass tests
+- [ ] Add CLI support (cli.py) - minimal code to pass tests
+- [ ] Add API support (api.py) - minimal code to pass tests
+- [ ] Run tests: `pytest tests/test_feature.py -v` (all should PASS)
+
+**Phase 3: Refactor (Improve Code While Tests Stay Green)**
+- [ ] Refactor code for clarity and efficiency
+- [ ] Run tests after each refactor: `pytest tests/test_feature.py -v`
 - [ ] Add integration tests (optional but recommended)
+
+**Phase 4: Documentation and Polish**
+- [ ] Update README.md (English) with usage examples
+- [ ] Update README.de.md (German) with translated examples
+- [ ] Update docstrings and code comments
 - [ ] Update this AGENTS.md if adding new patterns
-- [ ] Format with `black` and lint with `ruff`
-- [ ] All tests pass before committing
+- [ ] Ensure both CLI and API use same core function
+- [ ] Run full test suite: `pytest` (all 46+ tests must pass)
+
+**Phase 5: Final Quality Checks**
+- [ ] Format with `black src tests`
+- [ ] Lint with `ruff check src tests --fix`
+- [ ] Run smoke tests: `pdfa-cli --help`
+- [ ] All tests pass: `pytest`
+
+**Never skip Phase 1**: Tests must be written BEFORE production code. This is non-negotiable for this project.
 
 ---
 
-## Documentation and Language
+## Documentation and Language Policy
 
-### Documentation Standards
+### English as Default Language
 
-- All documentation must be in English
-- Comments should explain "why" not "what" (code explains "what")
+**English is the default language for this project:**
+
+- **Code**: All code identifiers, variables, functions, classes, and methods must be in English
+- **Comments**: All code comments must be in English
+- **Docstrings**: All Python docstrings must be in English
+- **Commit messages**: All git commit messages must be in English
+- **Issues and PRs**: Discussion in English unless in a language-specific context
+- **Development documentation**: All development guidelines (AGENTS.md) are in English
+
+### Documentation Standards (English - Primary)
+
+- Code comments should explain "why" not "what" (code explains "what")
 - Use clear examples in README and docstrings
-- Keep AGENTS.md as single source of truth
+- Keep AGENTS.md as single source of truth for development
+- Document all public APIs with docstrings
+- Example: `def convert_to_pdfa(...): """Convert PDF to PDF/A format."""`
 
-### Multilingual Documentation
+### Multilingual User Documentation
 
-Translations of user-facing documentation are maintained separately:
-- English: `README.md`, `CLAUDE.md`, `OCR-SCANNER.md`
-- German: `README.de.md`, `CLAUDE.de.md`, `OCR-SCANNER.de.md`
-- See `TRANSLATIONS.md` for framework and status
+User-facing documentation is maintained in **both English and German in parallel:**
 
-**Important**: Development documentation (this file) is English-only.
+**English documentation:**
+- `README.md` - Main user guide
+- `CLAUDE.md` - Quick reference for developers
+- `OCR-SCANNER.md` - Setup guide for OCR use case
+
+**German documentation (maintained in parallel):**
+- `README.de.md` - German translation of README.md
+- `CLAUDE.de.md` - German translation of CLAUDE.md
+- `OCR-SCANNER.de.md` - German translation of OCR-SCANNER.md
+
+**Rules for maintaining dual documentation:**
+1. When you update `README.md`, also update `README.de.md`
+2. When you update `CLAUDE.md`, also update `CLAUDE.de.md`
+3. When you update `OCR-SCANNER.md`, also update `OCR-SCANNER.de.md`
+4. Use `TRANSLATIONS.md` to track status of translations
+5. Keep translations accurate and up-to-date (not allowed to fall behind)
+6. Test both English and German documentation for accuracy
+
+**Note**: Development documentation (AGENTS.md, this file) is English-only. Only user-facing documentation has German translations.
 
 ---
 
@@ -384,11 +504,43 @@ Typical OCR processing times per page:
 
 This document is the **single source of truth** for all development practices in pdfa-service:
 
-- Follow the architecture principles to maintain code quality
-- Use the file reference to understand codebase structure
-- Execute the development workflow for all changes
-- Write tests first, implement second
-- Keep both CLI and API in sync by using shared functions
-- Commit early, commit often, with clear messages
+### Core Principles
 
-For user-facing questions, see `README.md`. For setup instructions, see `OCR-SCANNER.md`.
+1. **English is Default Language**
+   - All code, comments, docstrings, and commits in English
+   - User documentation maintained in both English and German
+
+2. **Test-Driven Development (TDD) is Required**
+   - Write tests first (RED phase)
+   - Write minimal code to pass tests (GREEN phase)
+   - Refactor while keeping tests passing (REFACTOR phase)
+   - No production code without tests
+   - Tests and code develop in parallel
+
+3. **Architecture and Code Quality**
+   - Follow the architecture principles to maintain code quality
+   - Use the file reference to understand codebase structure
+   - Keep both CLI and API in sync by using shared functions
+   - Maintain dual documentation (English + German)
+
+4. **Development Workflow**
+   - Execute TDD workflow for all changes
+   - Tests must be written before or parallel to production code
+   - Full test suite must pass before commit
+   - Code must be formatted with `black` and pass `ruff` checks
+
+### Documentation
+
+- **Code developers**: Reference [AGENTS.md](AGENTS.md) for complete development guidelines
+- **Users (English)**: See `README.md` for usage and `OCR-SCANNER.md` for setup
+- **Users (Deutsch)**: See `README.de.md` for usage and `OCR-SCANNER.de.md` for setup
+
+### Key Reminders
+
+- **TDD is non-negotiable**: No tests, no code acceptance
+- **English is default**: Every line of code and comment in English
+- **Dual documentation**: Every user-facing doc change requires English + German updates
+- **Test quality matters**: Mocked unit tests first, integration tests second
+- **Keep it simple**: Write minimal code to make tests pass
+
+**This is your checklist for every feature or fix: RED → GREEN → REFACTOR → TEST → FORMAT → DOCUMENT → COMMIT**
