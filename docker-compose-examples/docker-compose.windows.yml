@@ -1,0 +1,74 @@
+# Windows 10/11 docker-compose configuration
+# For: Windows with Docker Desktop or WSL2
+# Usage: docker-compose -f docker-compose.windows.yml up -d
+
+version: '3.8'
+
+services:
+  pdfa:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: pdfa-service-windows
+
+    ports:
+      # Standard local access
+      - "8000:8000"
+
+      # Optional: Expose on all interfaces (replace 127.0.0.1 to allow network access)
+      # - "127.0.0.1:8000:8000"    # Localhost only
+      # - "0.0.0.0:8000:8000"      # All interfaces
+
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+    # Mount volumes for easy document access from Windows
+    volumes:
+      # Windows paths (using .\folder notation)
+      # Files are accessible directly from Windows Explorer
+      - ./scans:/data/input        # Drop PDFs here to convert
+      - ./archive:/data/output     # Retrieved converted PDFs from here
+
+      # Alternative: C: drive paths
+      # - "C:\\Users\\YourName\\Documents\\scans:/data/input"
+      # - "C:\\Users\\YourName\\Documents\\archive:/data/output"
+
+      # Network share (UNC path with WSL2)
+      # - "//192.168.1.100/Documents/scans:/data/input"
+      # - "//192.168.1.100/Documents/archive:/data/output"
+
+    # Logging for Windows
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"
+
+    labels:
+      - "os=windows"
+      - "docker-platform=docker-desktop"
+
+# Override default network for Windows (optional)
+# This helps with WSL2 network access from Windows
+# networks:
+#   default:
+#     driver: bridge

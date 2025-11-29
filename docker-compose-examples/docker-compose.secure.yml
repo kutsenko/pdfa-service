@@ -1,0 +1,100 @@
+# Secure production configuration with nginx reverse proxy
+# For: Production use with authentication and network-wide access
+# Usage: docker-compose -f docker-compose.secure.yml up -d
+#
+# Prerequisites: Create .htpasswd file first
+#   docker run --rm httpd:2.4-alpine htpasswd -c .htpasswd admin
+
+version: '3.8'
+
+services:
+  pdfa:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: pdfa-backend
+
+    # Only expose on localhost - nginx will handle public access
+    ports:
+      - "127.0.0.1:8000:8000"
+
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+
+    restart: unless-stopped
+
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '1'
+          memory: 512M
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    volumes:
+      - ./scans:/data/input
+      - ./archive:/data/output
+
+    # Only accessible from nginx
+    networks:
+      - backend
+
+    labels:
+      - "role=backend"
+
+  nginx:
+    image: nginx:latest
+    container_name: pdfa-proxy
+
+    # Public facing port
+    ports:
+      - "80:80"
+      # Optional: HTTPS (requires SSL certificates)
+      # - "443:443"
+
+    restart: unless-stopped
+
+    depends_on:
+      - pdfa
+
+    # Mount configuration and auth file
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./.htpasswd:/etc/nginx/.htpasswd:ro
+
+      # Optional: SSL certificates
+      # - ./certs/cert.pem:/etc/nginx/certs/cert.pem:ro
+      # - ./certs/key.pem:/etc/nginx/certs/key.pem:ro
+
+    # Public network
+    networks:
+      - frontend
+      - backend
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+    labels:
+      - "role=reverse-proxy"
+      - "security=authentication"
+
+# Network configuration for security
+networks:
+  frontend:
+    driver: bridge
+    # Isolate frontend from backend
+  backend:
+    driver: bridge
+    internal: false
+    # Only pdfa and nginx can communicate here

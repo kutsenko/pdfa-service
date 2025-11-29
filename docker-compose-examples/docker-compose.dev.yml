@@ -1,0 +1,86 @@
+# Development configuration
+# For: Contributing to pdfa-service development
+# Usage: docker-compose -f docker-compose.dev.yml up -d
+
+version: '3.8'
+
+services:
+  pdfa:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: pdfa-dev
+
+    # Expose ports for debugging and access
+    ports:
+      - "8000:8000"      # Main API
+      - "5678:5678"      # Python debugger (pdb)
+
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG          # Full debug logging
+      - PYTHONJUSTIFY=true       # Better error messages
+      - PYTHONDONTWRITEBYTECODE=1  # Prevent .pyc files
+
+    restart: no          # Don't auto-restart during development
+
+    # Mount local source code for hot-reload
+    volumes:
+      # Mount source code
+      - ../src:/app/src:rw
+      - ../tests:/app/tests:rw
+
+      # Data volumes
+      - ./test_input:/data/input
+      - ./test_output:/data/output
+
+    # Enable stdin and tty for interactive debugging
+    stdin_open: true
+    tty: true
+
+    # Run with bash for interactive access
+    # Uncomment to override entrypoint for manual testing
+    # entrypoint: /bin/bash
+    # command: -c "cd /app && bash"
+
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 4G
+        reservations:
+          cpus: '2'
+          memory: 1G
+
+    # Extended health check for development
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+      start_period: 30s
+
+    # Verbose logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "200m"
+        max-file: "10"
+        labels: "dev=true"
+
+    labels:
+      - "environment=development"
+      - "purpose=local-development"
+
+  # Optional: Database for testing (if needed)
+  # db:
+  #   image: postgres:latest
+  #   environment:
+  #     POSTGRES_DB: pdfa_dev
+  #     POSTGRES_USER: developer
+  #     POSTGRES_PASSWORD: dev_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+
+# volumes:
+#   postgres_data:

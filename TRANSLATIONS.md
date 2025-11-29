@@ -5,12 +5,14 @@ Dieses Projekt bietet Dokumentation in mehreren Sprachen.
 ## Verfügbare Sprachen
 
 ### English (Englisch)
-- [README.md](README.md) - Hauptdokumentation
-- [CLAUDE.md](CLAUDE.md) - Entwickler-Anleitung für Claude Code
+- [README.md](README.md) - Main documentation
+- [CLAUDE.md](CLAUDE.md) - Developer guide for Claude Code
+- [OCR-SCANNER.md](OCR-SCANNER.md) - OCR document scanner setup guide
 
 ### Deutsch
 - [README.de.md](README.de.md) - Hauptdokumentation auf Deutsch
 - [CLAUDE.de.md](CLAUDE.de.md) - Entwickler-Anleitung für Claude Code auf Deutsch
+- [OCR-SCANNER.de.md](OCR-SCANNER.de.md) - OCR-Dokumentenscanner Anleitung
 
 ## Beitragen von Übersetzungen
 
@@ -54,10 +56,10 @@ Verwenden Sie ISO 639-1 Sprach-Codes:
 
 ## Aktuelle Status
 
-| Sprache | README | CLAUDE | Status |
-|---------|--------|--------|--------|
-| English | ✅ | ✅ | Aktuell |
-| Deutsch | ✅ | ✅ | Aktuell |
+| Sprache | README | CLAUDE | OCR-SCANNER | Status |
+|---------|--------|--------|-------------|--------|
+| English | ✅ | ✅ | ✅ | Aktuell |
+| Deutsch | ✅ | ✅ | ✅ | Aktuell |
 
 ---
 

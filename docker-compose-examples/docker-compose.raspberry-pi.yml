@@ -1,0 +1,73 @@
+# Raspberry Pi 4 optimized configuration
+# For: Raspberry Pi 4 with 4GB+ RAM, 64-bit OS
+# Usage: docker-compose -f docker-compose.raspberry-pi.yml up -d
+
+version: '3.8'
+
+services:
+  pdfa:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      # Use ARM64 base image (automatically selected for Pi OS 64-bit)
+    container_name: pdfa-service-pi
+
+    # Expose port - replace 192.168.1.50 with your Pi's IP
+    ports:
+      - "8000:8000"
+
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=INFO
+
+    restart: unless-stopped
+
+    # Resource limits optimized for Raspberry Pi 4
+    # Prevents system overload and crashes
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'        # Use 1.5 out of 4 cores
+          memory: 1500M      # Limit to 1.5GB RAM
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 60s         # Longer interval for slower hardware
+      timeout: 10s
+      retries: 2
+      start_period: 60s
+
+    # Mount external storage (USB drive or NAS)
+    volumes:
+      # USB drive example:
+      # - /media/pi/USB_DRIVE/scans:/data/input
+      # - /media/pi/USB_DRIVE/archive:/data/output
+
+      # NAS example (requires NFS mount):
+      # - /mnt/nas/scans:/data/input
+      # - /mnt/nas/archive:/data/output
+
+      # Local example:
+      - ~/Documents/scans:/data/input
+      - ~/Documents/archive:/data/output
+
+    # Logging configuration for Pi
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"     # Limit log file size
+        max-file: "3"       # Keep only 3 log files
+
+    labels:
+      - "hardware=raspberry-pi-4"
+      - "ocr-processor=tesseract"
+
+# Network configuration (optional)
+# Use host network for better performance on Pi
+# networks:
+#   default:
+#     driver: host
