@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import logging
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -10,6 +11,9 @@ from pathlib import Path
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
 from pdfa.converter import convert_to_pdfa
+from pdfa.logging_config import configure_logging, get_logger
+
+logger = get_logger(__name__)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -48,6 +52,18 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Disable OCR and convert PDF to PDF/A without text recognition.",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose (debug) logging output.",
+    )
+    parser.add_argument(
+        "--log-file",
+        type=Path,
+        default=None,
+        help="Write logs to a file in addition to stderr.",
+    )
     return parser
 
 
@@ -55,6 +71,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     """Entrypoint for the CLI."""
     parser = build_parser()
     args = parser.parse_args(None if argv is None else list(argv))
+
+    # Configure logging based on command-line arguments
+    log_level = logging.DEBUG if args.verbose else logging.INFO
+    configure_logging(level=log_level, log_file=args.log_file)
+
+    logger.info("Starting PDF to PDF/A conversion")
+    logger.debug(
+        f"Arguments: input={args.input_pdf}, output={args.output_pdf}, "
+        f"language={args.language}, pdfa_level={args.pdfa_level}, "
+        f"ocr_enabled={not args.no_ocr}"
+    )
+
     try:
         convert_to_pdfa(
             args.input_pdf,
@@ -64,13 +92,20 @@ def main(argv: Sequence[str] | None = None) -> int:
             ocr_enabled=not args.no_ocr,
         )
     except FileNotFoundError as error:
+        logger.error(f"File not found: {error}")
         print(error, file=sys.stderr)
         return 1
     except ocrmypdf_exceptions.ExitCodeException as error:
         exit_code = getattr(error, "exit_code", 1)
+        logger.error(f"OCRmyPDF failed with exit code {exit_code}: {error}")
         print(f"OCRmyPDF failed: {error}", file=sys.stderr)
         return exit_code
+    except Exception as error:
+        logger.exception(f"Unexpected error during conversion: {error}")
+        print(f"Error: {error}", file=sys.stderr)
+        return 1
 
+    logger.info(f"Successfully created PDF/A file at {args.output_pdf}")
     print(f"Successfully created PDF/A file at {args.output_pdf}")
     return 0
 

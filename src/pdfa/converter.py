@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import ocrmypdf
+
+logger = logging.getLogger(__name__)
 
 
 def convert_to_pdfa(
@@ -26,15 +29,26 @@ def convert_to_pdfa(
 
     """
     if not input_pdf.exists():
+        logger.error(f"Input file does not exist: {input_pdf}")
         raise FileNotFoundError(f"Input file does not exist: {input_pdf}")
+
+    logger.info(
+        f"Converting PDF to PDF/A-{pdfa_level}: {input_pdf} -> {output_pdf}",
+    )
+    logger.debug(f"OCR enabled: {ocr_enabled}, Languages: {language}")
 
     output_pdf.parent.mkdir(parents=True, exist_ok=True)
     output_type = f"pdfa-{pdfa_level}"
 
-    ocrmypdf.ocr(
-        str(input_pdf),
-        str(output_pdf),
-        language=language,
-        output_type=output_type,
-        force_ocr=ocr_enabled,
-    )
+    try:
+        ocrmypdf.ocr(
+            str(input_pdf),
+            str(output_pdf),
+            language=language,
+            output_type=output_type,
+            force_ocr=ocr_enabled,
+        )
+        logger.info(f"Successfully converted PDF/A file: {output_pdf}")
+    except Exception as e:
+        logger.error(f"OCRmyPDF conversion failed: {e}", exc_info=True)
+        raise

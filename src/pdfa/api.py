@@ -11,8 +11,11 @@ from fastapi.responses import Response
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
 from pdfa.converter import convert_to_pdfa
+from pdfa.logging_config import get_logger
 
 PdfaLevel = Literal["1", "2", "3"]
+
+logger = get_logger(__name__)
 
 app = FastAPI(
     title="PDF/A Conversion Service",
@@ -44,12 +47,26 @@ async def convert_endpoint(
         ocr_enabled: Whether to perform OCR (default: True).
 
     """
+    logger.info(
+        f"PDF conversion request received: filename={file.filename}, "
+        f"language={language}, pdfa_level={pdfa_level}, ocr_enabled={ocr_enabled}"
+    )
+
     if file.content_type not in {"application/pdf", "application/octet-stream"}:
-        raise HTTPException(status_code=400, detail="Only PDF uploads are supported.")
+        logger.warning(
+            f"Invalid file type rejected: {file.content_type} "
+            f"(filename: {file.filename})"
+        )
+        raise HTTPException(
+            status_code=400, detail="Only PDF uploads are supported."
+        )
 
     contents = await file.read()
     if not contents:
+        logger.warning(f"Empty file rejected: {file.filename}")
         raise HTTPException(status_code=400, detail="Uploaded file is empty.")
+
+    logger.debug(f"Processing file: {file.filename} (size: {len(contents)} bytes)")
 
     with TemporaryDirectory() as tmp_dir:
         input_path = Path(tmp_dir) / "input.pdf"
@@ -66,10 +83,17 @@ async def convert_endpoint(
                 ocr_enabled=ocr_enabled,
             )
         except FileNotFoundError as error:
+            logger.error(f"File not found during conversion: {error}")
             raise HTTPException(status_code=400, detail=str(error)) from error
         except ocrmypdf_exceptions.ExitCodeException as error:
+            logger.error(f"OCRmyPDF conversion failed: {error}", exc_info=True)
             raise HTTPException(
                 status_code=500, detail=f"OCRmyPDF failed: {error}"
+            ) from error
+        except Exception as error:
+            logger.exception(f"Unexpected error during conversion: {error}")
+            raise HTTPException(
+                status_code=500, detail=f"Conversion failed: {error}"
             ) from error
 
         output_bytes = output_path.read_bytes()
@@ -77,6 +101,11 @@ async def convert_endpoint(
     filename = file.filename or "converted.pdf"
     if not filename.endswith(".pdf"):
         filename = f"{Path(filename).stem}.pdf"
+
+    logger.info(
+        f"Conversion successful: {file.filename} -> {filename} "
+        f"(output size: {len(output_bytes)} bytes)"
+    )
 
     headers = {
         "Content-Type": "application/pdf",

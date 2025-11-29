@@ -49,9 +49,7 @@ def test_convert_endpoint_success(monkeypatch, client: TestClient) -> None:
     assert fake_convert.called_with["ocr_enabled"] is True  # type: ignore[attr-defined]
 
 
-def test_convert_endpoint_with_ocr_disabled(
-    monkeypatch, client: TestClient
-) -> None:
+def test_convert_endpoint_with_ocr_disabled(monkeypatch, client: TestClient) -> None:
     """The endpoint should pass ocr_enabled=False when requested."""
 
     def fake_convert(
