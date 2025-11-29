@@ -117,6 +117,112 @@ curl -X POST "http://localhost:8000/convert" \
   --output output.pdf
 ```
 
+## Advanced Usage
+
+### Batch Processing with curl
+
+Convert multiple files in a directory recursively:
+
+```bash
+# Convert all PDFs in directory and subdirectories, save with -pdfa.pdf suffix
+find /path/to/documents -name "*.pdf" -type f | while read file; do
+  output="${file%.*}-pdfa.pdf"
+  echo "Converting: $file -> $output"
+  curl -s -X POST "http://localhost:8000/convert" \
+    -F "file=@${file};type=application/pdf" \
+    -F "language=deu+eng" \
+    -F "pdfa_level=2" \
+    --output "$output"
+done
+```
+
+### Mixed Format Batch Processing
+
+Convert multiple file types (PDF, DOCX, PPTX, XLSX) in a single directory:
+
+```bash
+# Convert all supported formats
+for file in /path/to/documents/*.*; do
+  [ ! -f "$file" ] && continue
+
+  ext="${file##*.}"
+  output="${file%.*}-pdfa.pdf"
+
+  # Determine MIME type
+  case "$ext" in
+    pdf)
+      mime="application/pdf"
+      ;;
+    docx)
+      mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ;;
+    pptx)
+      mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      ;;
+    xlsx)
+      mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ;;
+    *)
+      echo "Skipping unsupported format: $file"
+      continue
+      ;;
+  esac
+
+  echo "Converting: $file -> $output"
+  curl -s -X POST "http://localhost:8000/convert" \
+    -F "file=@${file};type=${mime}" \
+    -F "language=deu+eng" \
+    -F "pdfa_level=2" \
+    --output "$output"
+done
+```
+
+### Parallel Processing
+
+For faster batch processing with multiple concurrent requests:
+
+```bash
+# Convert up to 4 files in parallel
+find /path/to/documents -type f \( -name "*.pdf" -o -name "*.docx" -o -name "*.pptx" -o -name "*.xlsx" \) | \
+  xargs -P 4 -I {} bash -c '
+    file="{}"
+    output="${file%.*}-pdfa.pdf"
+    mime="application/pdf"
+    [[ "$file" == *.docx ]] && mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    [[ "$file" == *.pptx ]] && mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    [[ "$file" == *.xlsx ]] && mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+
+    echo "Converting: $file"
+    curl -s -X POST "http://localhost:8000/convert" \
+      -F "file=@${file};type=${mime}" \
+      -F "language=deu+eng" \
+      --output "$output"
+  '
+```
+
+### Batch Script
+
+For a more robust solution with error handling, logging, and progress tracking, use the provided batch conversion script:
+
+```bash
+# Make the script executable
+chmod +x scripts/batch-convert.sh
+
+# Convert all documents in a directory (recursive)
+./scripts/batch-convert.sh /path/to/documents
+
+# With custom API endpoint and language
+./scripts/batch-convert.sh /path/to/documents \
+  --api-url "http://api-server:8000" \
+  --language "eng" \
+  --pdfa-level "3"
+
+# Dry-run mode (preview without actually converting)
+./scripts/batch-convert.sh /path/to/documents --dry-run
+```
+
+See [scripts/README.md](scripts/README.md) for detailed documentation on the batch conversion script.
+
 ## Testing
 
 ```bash
