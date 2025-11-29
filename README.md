@@ -1,11 +1,11 @@
 # pdfa service
 
-Command-line tool and REST API that converts PDF and Office documents into PDF/A files using [OCRmyPDF](https://ocrmypdf.readthedocs.io/) with built-in OCR.
+Command-line tool and REST API that converts PDF, Office, and OpenDocument files into PDF/A files using [OCRmyPDF](https://ocrmypdf.readthedocs.io/) with built-in OCR.
 
 ## Features
 
-- Converts **PDF, DOCX, PPTX, and XLSX** files to PDF/A-compliant documents
-- Office documents (DOCX, PPTX, XLSX) are automatically converted to PDF before PDF/A processing
+- Converts **PDF**, **MS Office** (DOCX, PPTX, XLSX), and **OpenDocument** (ODT, ODS, ODP) files to PDF/A-compliant documents
+- Office and OpenDocument files are automatically converted to PDF before PDF/A processing
 - Wraps OCRmyPDF to generate PDF/A-2 compliant files with configurable OCR
 - Configurable OCR language and PDF/A level (1, 2, or 3)
 - Offers a FastAPI REST endpoint for document conversions
@@ -115,16 +115,21 @@ pdfa-cli --help
 
 ### CLI: Converting Documents
 
-The CLI accepts PDF, DOCX, PPTX, and XLSX files:
+The CLI accepts PDF, MS Office (DOCX, PPTX, XLSX), and OpenDocument (ODT, ODS, ODP) files:
 
 ```bash
 # Convert PDF to PDF/A
 pdfa-cli input.pdf output.pdf --language deu+eng --pdfa-level 3
 
-# Convert Office document to PDF/A (automatic)
+# Convert Office documents to PDF/A (automatic)
 pdfa-cli document.docx output.pdf --language eng
 pdfa-cli presentation.pptx output.pdf
 pdfa-cli spreadsheet.xlsx output.pdf
+
+# Convert OpenDocument files to PDF/A (automatic)
+pdfa-cli document.odt output.pdf --language eng
+pdfa-cli presentation.odp output.pdf
+pdfa-cli spreadsheet.ods output.pdf
 ```
 
 **Options**:
@@ -152,7 +157,7 @@ curl -X POST "http://localhost:8000/convert" \
   -F "pdfa_level=2" \
   --output output.pdf
 
-# Convert Office document to PDF/A (automatic)
+# Convert MS Office documents to PDF/A (automatic)
 curl -X POST "http://localhost:8000/convert" \
   -F "file=@document.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document" \
   --output output.pdf
@@ -164,13 +169,26 @@ curl -X POST "http://localhost:8000/convert" \
 curl -X POST "http://localhost:8000/convert" \
   -F "file=@spreadsheet.xlsx;type=application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" \
   --output output.pdf
+
+# Convert OpenDocument files to PDF/A (automatic)
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@document.odt;type=application/vnd.oasis.opendocument.text" \
+  --output output.pdf
+
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@presentation.odp;type=application/vnd.oasis.opendocument.presentation" \
+  --output output.pdf
+
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@spreadsheet.ods;type=application/vnd.oasis.opendocument.spreadsheet" \
+  --output output.pdf
 ```
 
-The service validates the upload, converts Office documents to PDF (if needed), converts to PDF/A using OCRmyPDF, and returns the converted document as the HTTP response body.
+The service validates the upload, converts Office and OpenDocument files to PDF (if needed), converts to PDF/A using OCRmyPDF, and returns the converted document as the HTTP response body.
 
 #### Available Parameters
 
-- `file` (required): PDF or Office file to convert (DOCX, PPTX, XLSX, PDF)
+- `file` (required): PDF, MS Office (DOCX, PPTX, XLSX), or OpenDocument (ODT, ODS, ODP) file to convert
 - `language` (optional): Tesseract language codes for OCR (default: `deu+eng`)
 - `pdfa_level` (optional): PDF/A compliance level: `1`, `2`, or `3` (default: `2`)
 - `ocr_enabled` (optional): Whether to perform OCR (default: `true`). Set to `false` to skip OCR.
@@ -205,7 +223,7 @@ done
 
 ### Mixed Format Batch Processing
 
-Convert multiple file types (PDF, DOCX, PPTX, XLSX) in a single directory:
+Convert multiple file types (PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP) in a single directory:
 
 ```bash
 # Convert all supported formats
@@ -229,6 +247,15 @@ for file in /path/to/documents/*.*; do
     xlsx)
       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       ;;
+    odt)
+      mime="application/vnd.oasis.opendocument.text"
+      ;;
+    odp)
+      mime="application/vnd.oasis.opendocument.presentation"
+      ;;
+    ods)
+      mime="application/vnd.oasis.opendocument.spreadsheet"
+      ;;
     *)
       echo "Skipping unsupported format: $file"
       continue
@@ -249,8 +276,8 @@ done
 For faster batch processing with multiple concurrent requests:
 
 ```bash
-# Convert up to 4 files in parallel
-find /path/to/documents -type f \( -name "*.pdf" -o -name "*.docx" -o -name "*.pptx" -o -name "*.xlsx" \) | \
+# Convert up to 4 files in parallel (all supported formats)
+find /path/to/documents -type f \( -name "*.pdf" -o -name "*.docx" -o -name "*.pptx" -o -name "*.xlsx" -o -name "*.odt" -o -name "*.odp" -o -name "*.ods" \) | \
   xargs -P 4 -I {} bash -c '
     file="{}"
     output="${file%.*}-pdfa.pdf"
@@ -258,6 +285,9 @@ find /path/to/documents -type f \( -name "*.pdf" -o -name "*.docx" -o -name "*.p
     [[ "$file" == *.docx ]] && mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     [[ "$file" == *.pptx ]] && mime="application/vnd.openxmlformats-officedocument.presentationml.presentation"
     [[ "$file" == *.xlsx ]] && mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    [[ "$file" == *.odt ]] && mime="application/vnd.oasis.opendocument.text"
+    [[ "$file" == *.odp ]] && mime="application/vnd.oasis.opendocument.presentation"
+    [[ "$file" == *.ods ]] && mime="application/vnd.oasis.opendocument.spreadsheet"
 
     echo "Converting: $file"
     curl -s -X POST "http://localhost:8000/convert" \

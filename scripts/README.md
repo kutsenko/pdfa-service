@@ -14,10 +14,18 @@ The `batch-convert.sh` script provides a robust, production-ready solution for c
 
 ## Supported Formats
 
+### PDF
 - PDF (`.pdf`)
+
+### MS Office Formats
 - Word documents (`.docx`)
 - PowerPoint presentations (`.pptx`)
 - Excel spreadsheets (`.xlsx`)
+
+### OpenDocument Formats (ODF)
+- OpenDocument Text (`.odt`)
+- OpenDocument Presentation (`.odp`)
+- OpenDocument Spreadsheet (`.ods`)
 
 ## Requirements
 
@@ -217,17 +225,22 @@ Convert 500+ documents in a corporate archive with OCR:
   --log-file "/var/log/archive-conversion.log"
 ```
 
-### Scenario 2: Convert Office Documents to PDF/A
+### Scenario 2: Convert Office and OpenDocument Documents
 
-Convert all Word, Excel, and PowerPoint files to PDF/A with English OCR:
+Convert all MS Office and OpenDocument files to PDF/A with English OCR:
 
 ```bash
-./scripts/batch-convert.sh /home/user/Office \
+./scripts/batch-convert.sh /home/user/Documents \
   --language "eng" \
   --pdfa-level "2"
 ```
 
-Only PDF, DOCX, PPTX, and XLSX files will be processed. Other file types are skipped.
+Supported formats include:
+- MS Office: DOCX, PPTX, XLSX
+- OpenDocument: ODT, ODS, ODP
+- PDF files
+
+Other file types are skipped.
 
 ### Scenario 3: Process Multiple Directories
 

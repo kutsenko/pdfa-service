@@ -1,0 +1,52 @@
+[2025-11-29 16:01:50] [INFO] === PDF/A Batch Conversion Started ===
+[2025-11-29 16:01:50] [INFO] Input directory: /home/dalv/Dokumente
+[2025-11-29 16:01:50] [INFO] API endpoint: http://localhost:8000
+[2025-11-29 16:01:50] [INFO] Language: eng+deu
+[2025-11-29 16:01:50] [INFO] PDF/A level: 2
+[2025-11-29 16:01:50] [INFO] Parallel workers: 4
+[2025-11-29 16:01:50] [INFO] Validating API connection to http://localhost:8000...
+[2025-11-29 16:01:50] [SUCCESS] API connection OK
+[2025-11-29 16:01:50] [INFO] Scanning directory for supported formats...
+[2025-11-29 16:01:50] [SUCCESS] Found 5 file(s) to process
+[2025-11-29 16:01:50] [INFO] Processing with 4 parallel workers...
+[2025-11-29 16:01:50] [INFO] Converting [1/5]: Diplom Übersetzt.pdf -> Diplom Übersetzt-pdfa.pdf
+[2025-11-29 16:01:50] [INFO] Converting [1/5]: Tanliste 5-9.pdf -> Tanliste 5-9-pdfa.pdf
+[2025-11-29 16:01:50] [INFO] Converting [1/5]: Vertrag Stadtwerke 2024-03 Seite1.pdf -> Vertrag Stadtwerke 2024-03 Seite1-pdfa.pdf
+[2025-11-29 16:01:50] [INFO] Converting [1/5]: Vertrag Stadtwerke 2024-03.pdf -> Vertrag Stadtwerke 2024-03-pdfa.pdf
+[2025-11-29 16:01:53] [SUCCESS] Converted: Vertrag Stadtwerke 2024-03 Seite1.pdf (size: 1,1MiB)
+[2025-11-29 16:01:53] [INFO] Converting [1/5]: Befund Endoskopie 2020-11-11 (2).pdf -> Befund Endoskopie 2020-11-11 (2)-pdfa.pdf
+[2025-11-29 16:01:56] [SUCCESS] Converted: Diplom Übersetzt.pdf (size: 643KiB)
+[2025-11-29 16:02:01] [SUCCESS] Converted: Tanliste 5-9.pdf (size: 1,3MiB)
+[2025-11-29 16:02:13] [SUCCESS] Converted: Befund Endoskopie 2020-11-11 (2).pdf (size: 2,6MiB)
+[2025-11-29 16:02:44] [SUCCESS] Converted: Vertrag Stadtwerke 2024-03.pdf (size: 51MiB)
+[2025-11-29 16:08:44] [INFO] === PDF/A Batch Conversion Started ===
+[2025-11-29 16:08:44] [INFO] Input directory: /home/dalv/mnt/googledrive/docs/private/Behördlich/KVJS 2025
+[2025-11-29 16:08:44] [INFO] API endpoint: http://localhost:8000
+[2025-11-29 16:08:44] [INFO] Language: eng+deu
+[2025-11-29 16:08:44] [INFO] PDF/A level: 2
+[2025-11-29 16:08:44] [INFO] Parallel workers: 4
+[2025-11-29 16:08:44] [INFO] Validating API connection to http://localhost:8000...
+[2025-11-29 16:08:44] [SUCCESS] API connection OK
+[2025-11-29 16:08:44] [INFO] Scanning directory for supported formats...
+[2025-11-29 16:08:44] [SUCCESS] Found 10 file(s) to process
+[2025-11-29 16:08:44] [INFO] Processing with 4 parallel workers...
+[2025-11-29 16:08:44] [INFO] Converting [1/10]: 2025-06_KVJS_Seminar2025.pdf -> 2025-06_KVJS_Seminar2025-pdfa.pdf
+[2025-11-29 16:08:44] [INFO] Converting [1/10]: 20254002851_vom_2025-07-09.pdf -> 20254002851_vom_2025-07-09-pdfa.pdf
+[2025-11-29 16:08:44] [INFO] Converting [1/10]: Antrag Arbeitsplatzassistenz 2025.pdf -> Antrag Arbeitsplatzassistenz 2025-pdfa.pdf
+[2025-11-29 16:08:44] [INFO] Converting [1/10]: ALU Lieferschein Braillezeilen 2025-03-11.pdf -> ALU Lieferschein Braillezeilen 2025-03-11-pdfa.pdf
+[2025-11-29 16:08:47] [SUCCESS] Converted: Antrag Arbeitsplatzassistenz 2025.pdf (size: 168KiB)
+[2025-11-29 16:08:47] [INFO] Converting [1/10]: Ausschreibung_Biotheater_2025.docx -> Ausschreibung_Biotheater_2025-pdfa.pdf
+[2025-11-29 16:09:00] [SUCCESS] Converted: 20254002851_vom_2025-07-09.pdf (size: 554KiB)
+[2025-11-29 16:09:00] [SUCCESS] Converted: ALU Lieferschein Braillezeilen 2025-03-11.pdf (size: 785KiB)
+[2025-11-29 16:09:00] [SUCCESS] Converted: 2025-06_KVJS_Seminar2025.pdf (size: 1,7MiB)
+[2025-11-29 16:09:00] [INFO] Converting [1/10]: Erinnerung Beförderungsdienst 2025-05.pdf -> Erinnerung Beförderungsdienst 2025-05-pdfa.pdf
+[2025-11-29 16:09:00] [INFO] Converting [1/10]: Fragebogen 2025-10-28.pdf -> Fragebogen 2025-10-28-pdfa.pdf
+[2025-11-29 16:09:00] [INFO] Converting [1/10]: Lieferschein Brailliant BI80 2025-03.pdf -> Lieferschein Brailliant BI80 2025-03-pdfa.pdf
+[2025-11-29 16:09:01] [ERROR] Conversion failed for Ausschreibung_Biotheater_2025.docx (HTTP 500): {"detail":"Conversion failed: LibreOffice did not produce output PDF: /tmp/tmp4pgq2mhl/Ausschreibung_Biotheater_2025.pdf"}
+[2025-11-29 16:09:01] [INFO] Converting [1/10]: Scan12112025.pdf -> Scan12112025-pdfa.pdf
+[2025-11-29 16:09:02] [SUCCESS] Converted: Scan12112025.pdf (size: 252KiB)
+[2025-11-29 16:09:02] [INFO] Converting [1/10]: TN-Zertifikat_BioTheater_2025_Kutsenko.pdf -> TN-Zertifikat_BioTheater_2025_Kutsenko-pdfa.pdf
+[2025-11-29 16:09:08] [SUCCESS] Converted: Fragebogen 2025-10-28.pdf (size: 92KiB)
+[2025-11-29 16:09:11] [SUCCESS] Converted: Erinnerung Beförderungsdienst 2025-05.pdf (size: 298KiB)
+[2025-11-29 16:09:11] [SUCCESS] Converted: Lieferschein Brailliant BI80 2025-03.pdf (size: 939KiB)
+[2025-11-29 16:09:13] [SUCCESS] Converted: TN-Zertifikat_BioTheater_2025_Kutsenko.pdf (size: 490KiB)

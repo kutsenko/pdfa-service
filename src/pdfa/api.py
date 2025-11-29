@@ -40,13 +40,14 @@ async def convert_endpoint(
     pdfa_level: PdfaLevel = Form("2"),
     ocr_enabled: bool = Form(True),
 ) -> Response:
-    """Convert the uploaded PDF or Office document into PDF/A.
+    """Convert the uploaded PDF, Office, or ODF document into PDF/A.
 
-    Supports PDF, DOCX, PPTX, and XLSX files. Office documents are
-    automatically converted to PDF before PDF/A conversion.
+    Supports PDF, DOCX, PPTX, XLSX (MS Office), and ODT, ODS, ODP (OpenDocument)
+    files. Office and ODF documents are automatically converted to PDF before
+    PDF/A conversion.
 
     Args:
-        file: PDF or Office file to convert.
+        file: PDF, Office, or ODF file to convert.
         language: Tesseract language codes for OCR (default: 'deu+eng').
         pdfa_level: PDF/A compliance level (default: '2').
         ocr_enabled: Whether to perform OCR (default: True).
@@ -61,7 +62,7 @@ async def convert_endpoint(
     supported_types = {
         "application/pdf",
         "application/octet-stream",
-        # Office document MIME types
+        # Office document MIME types (MS Office)
         (
             "application/vnd.openxmlformats-officedocument." "wordprocessingml.document"
         ),  # docx
@@ -72,6 +73,10 @@ async def convert_endpoint(
         (
             "application/vnd.openxmlformats-officedocument." "spreadsheetml.sheet"
         ),  # xlsx
+        # Open Document Format (ODF) MIME types
+        "application/vnd.oasis.opendocument.text",  # odt
+        "application/vnd.oasis.opendocument.spreadsheet",  # ods
+        "application/vnd.oasis.opendocument.presentation",  # odp
     }
 
     if file.content_type not in supported_types:
@@ -81,7 +86,7 @@ async def convert_endpoint(
         )
         raise HTTPException(
             status_code=400,
-            detail="Supported formats: PDF, DOCX, PPTX, XLSX",
+            detail="Supported formats: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP",
         )
 
     contents = await file.read()

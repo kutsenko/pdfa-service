@@ -39,12 +39,24 @@ done
 
 ## MIME-Typen nach Dateityp
 
+### PDF
 | Format | MIME-Type |
 |--------|-----------|
 | PDF | `application/pdf` |
+
+### MS Office Formate
+| Format | MIME-Type |
+|--------|-----------|
 | Word (.docx) | `application/vnd.openxmlformats-officedocument.wordprocessingml.document` |
 | PowerPoint (.pptx) | `application/vnd.openxmlformats-officedocument.presentationml.presentation` |
 | Excel (.xlsx) | `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` |
+
+### OpenDocument Formate (ODF)
+| Format | MIME-Type |
+|--------|-----------|
+| Text (.odt) | `application/vnd.oasis.opendocument.text` |
+| Spreadsheet (.ods) | `application/vnd.oasis.opendocument.spreadsheet` |
+| Presentation (.odp) | `application/vnd.oasis.opendocument.presentation` |
 
 ---
 
@@ -128,6 +140,28 @@ curl -X POST "http://localhost:8000/convert" \
   --output spreadsheet-pdfa.pdf
 ```
 
+### OpenDocument Text konvertieren
+```bash
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@document.odt;type=application/vnd.oasis.opendocument.text" \
+  -F "language=deu+eng" \
+  --output document-pdfa.pdf
+```
+
+### OpenDocument Spreadsheet konvertieren
+```bash
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@spreadsheet.ods;type=application/vnd.oasis.opendocument.spreadsheet" \
+  --output spreadsheet-pdfa.pdf
+```
+
+### OpenDocument Presentation konvertieren
+```bash
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@presentation.odp;type=application/vnd.oasis.opendocument.presentation" \
+  --output presentation-pdfa.pdf
+```
+
 ---
 
 ## Batch-Verarbeitung
@@ -143,9 +177,9 @@ for file in *.pdf; do
 done
 ```
 
-### Gemischte Formate (PDF, DOCX, PPTX, XLSX)
+### Gemischte Formate (alle unterstützten Dateitypen)
 ```bash
-for file in *.{pdf,docx,pptx,xlsx}; do
+for file in *.{pdf,docx,pptx,xlsx,odt,ods,odp}; do
   [ ! -f "$file" ] && continue
 
   ext="${file##*.}"
@@ -164,6 +198,15 @@ for file in *.{pdf,docx,pptx,xlsx}; do
       ;;
     xlsx)
       mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ;;
+    odt)
+      mime="application/vnd.oasis.opendocument.text"
+      ;;
+    ods)
+      mime="application/vnd.oasis.opendocument.spreadsheet"
+      ;;
+    odp)
+      mime="application/vnd.oasis.opendocument.presentation"
       ;;
   esac
 

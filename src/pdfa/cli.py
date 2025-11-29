@@ -1,4 +1,4 @@
-"""Command-line interface for converting PDFs and Office documents to PDF/A."""
+"""Command-line interface for converting PDFs, Office, and ODF documents to PDF/A."""
 
 from __future__ import annotations
 
@@ -23,13 +23,13 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pdfa-cli",
         description=(
-            "Convert PDF and Office documents to PDF/A with OCR " "using OCRmyPDF."
+            "Convert PDF, Office, and ODF documents to PDF/A with OCR using OCRmyPDF."
         ),
     )
     parser.add_argument(
         "input_file",
         type=Path,
-        help="Path to the input file (PDF, DOCX, PPTX, XLSX) to convert.",
+        help="Path to the input file (PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP) to convert.",
     )
     parser.add_argument(
         "output_pdf",

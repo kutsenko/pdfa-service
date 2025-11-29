@@ -1,4 +1,4 @@
-"""Integration tests for Office document to PDF/A conversion.
+"""Integration tests for Office and ODF document to PDF/A conversion.
 
 These tests require LibreOffice, Tesseract, and Ghostscript to be installed.
 They are skipped gracefully if dependencies are unavailable.
@@ -188,6 +188,111 @@ def create_test_xlsx(path: Path) -> None:
         )
 
 
+def create_test_odt(path: Path) -> None:
+    """Create a minimal valid ODT (OpenDocument Text) file."""
+    import zipfile
+
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as odt:
+        # Add mimetype (must be first and uncompressed for valid ODF)
+        odt.writestr(
+            "mimetype",
+            "application/vnd.oasis.opendocument.text",
+            compress_type=zipfile.ZIP_STORED,
+        )
+
+        # Add META-INF/manifest.xml
+        odt.writestr(
+            "META-INF/manifest.xml",
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'
+            '<manifest:file-entry manifest:media-type="application/vnd.oasis.opendocument.text" manifest:full-path="/"/>'
+            '<manifest:file-entry manifest:media-type="text/xml" manifest:full-path="content.xml"/>'
+            '</manifest:manifest>',
+        )
+
+        # Add content.xml
+        odt.writestr(
+            "content.xml",
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+            'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
+            '<office:body><office:text><text:p>Test ODT Document</text:p></office:text></office:body>'
+            '</office:document>',
+        )
+
+
+def create_test_ods(path: Path) -> None:
+    """Create a minimal valid ODS (OpenDocument Spreadsheet) file."""
+    import zipfile
+
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as ods:
+        # Add mimetype
+        ods.writestr(
+            "mimetype",
+            "application/vnd.oasis.opendocument.spreadsheet",
+            compress_type=zipfile.ZIP_STORED,
+        )
+
+        # Add META-INF/manifest.xml
+        ods.writestr(
+            "META-INF/manifest.xml",
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'
+            '<manifest:file-entry manifest:media-type="application/vnd.oasis.opendocument.spreadsheet" manifest:full-path="/"/>'
+            '<manifest:file-entry manifest:media-type="text/xml" manifest:full-path="content.xml"/>'
+            '</manifest:manifest>',
+        )
+
+        # Add content.xml
+        ods.writestr(
+            "content.xml",
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+            'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" '
+            'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
+            '<office:body><office:spreadsheet><table:table table:name="Sheet1">'
+            '<table:table-row><table:table-cell><text:p>Test ODS Data</text:p></table:table-cell></table:table-row>'
+            '</table:table></office:spreadsheet></office:body>'
+            '</office:document>',
+        )
+
+
+def create_test_odp(path: Path) -> None:
+    """Create a minimal valid ODP (OpenDocument Presentation) file."""
+    import zipfile
+
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as odp:
+        # Add mimetype
+        odp.writestr(
+            "mimetype",
+            "application/vnd.oasis.opendocument.presentation",
+            compress_type=zipfile.ZIP_STORED,
+        )
+
+        # Add META-INF/manifest.xml
+        odp.writestr(
+            "META-INF/manifest.xml",
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0">'
+            '<manifest:file-entry manifest:media-type="application/vnd.oasis.opendocument.presentation" manifest:full-path="/"/>'
+            '<manifest:file-entry manifest:media-type="text/xml" manifest:full-path="content.xml"/>'
+            '</manifest:manifest>',
+        )
+
+        # Add content.xml
+        odp.writestr(
+            "content.xml",
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            '<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" '
+            'xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" '
+            'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0">'
+            '<office:body><office:presentation><draw:page><draw:text-box>'
+            '<text:p>Test ODP Presentation</text:p>'
+            '</draw:text-box></draw:page></office:presentation></office:body>'
+            '</office:document>',
+        )
+
+
 @pytest.mark.skipif(
     not HAS_LIBREOFFICE,
     reason="LibreOffice not installed",
@@ -197,7 +302,7 @@ class TestOfficeConversion:
 
     @pytest.fixture()
     def test_files(self, tmp_path: Path) -> dict[str, Path]:
-        """Create test files in all supported Office formats."""
+        """Create test files in all supported Office and ODF formats."""
         files = {}
 
         # Create test DOCX
@@ -215,6 +320,21 @@ class TestOfficeConversion:
         create_test_xlsx(xlsx_file)
         files["xlsx"] = xlsx_file
 
+        # Create test ODT
+        odt_file = tmp_path / "test_document.odt"
+        create_test_odt(odt_file)
+        files["odt"] = odt_file
+
+        # Create test ODS
+        ods_file = tmp_path / "test_spreadsheet.ods"
+        create_test_ods(ods_file)
+        files["ods"] = ods_file
+
+        # Create test ODP
+        odp_file = tmp_path / "test_presentation.odp"
+        create_test_odp(odp_file)
+        files["odp"] = odp_file
+
         return files
 
     def test_convert_docx_to_pdfa(
@@ -225,6 +345,48 @@ class TestOfficeConversion:
 
         output_pdf = tmp_path / "output.pdf"
         convert_office_to_pdf(test_files["docx"], output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        # Verify it's a PDF
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_convert_odt_to_pdfa(
+        self, test_files: dict[str, Path], tmp_path: Path
+    ) -> None:
+        """ODT files should be converted to PDF/A."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(test_files["odt"], output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        # Verify it's a PDF
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_convert_ods_to_pdfa(
+        self, test_files: dict[str, Path], tmp_path: Path
+    ) -> None:
+        """ODS files should be converted to PDF/A."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(test_files["ods"], output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        # Verify it's a PDF
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_convert_odp_to_pdfa(
+        self, test_files: dict[str, Path], tmp_path: Path
+    ) -> None:
+        """ODP files should be converted to PDF/A."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(test_files["odp"], output_pdf)
 
         assert output_pdf.exists()
         assert output_pdf.stat().st_size > 0

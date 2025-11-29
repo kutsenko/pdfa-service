@@ -12,7 +12,15 @@ logger = logging.getLogger(__name__)
 
 # Supported Office formats
 OFFICE_EXTENSIONS = {".docx", ".pptx", ".xlsx"}
-SUPPORTED_EXTENSIONS = {".pdf"} | OFFICE_EXTENSIONS
+
+# Supported Open Document Format (ODF)
+ODF_EXTENSIONS = {".odt", ".ods", ".odp"}
+
+# All document formats that require conversion to PDF
+DOCUMENT_EXTENSIONS = OFFICE_EXTENSIONS | ODF_EXTENSIONS
+
+# All supported formats
+SUPPORTED_EXTENSIONS = {".pdf"} | DOCUMENT_EXTENSIONS
 
 
 def detect_format(filename: str) -> str:
@@ -38,27 +46,27 @@ def detect_format(filename: str) -> str:
 
 
 def is_office_document(filename: str) -> bool:
-    """Check if the file is an Office document.
+    """Check if the file is an Office document (DOCX, PPTX, XLSX) or ODF document (ODT, ODS, ODP).
 
     Args:
         filename: The filename to check.
 
     Returns:
-        True if the file is an Office document, False otherwise.
+        True if the file is an Office or ODF document, False otherwise.
 
     """
     try:
         ext = detect_format(filename)
-        return ext in OFFICE_EXTENSIONS
+        return ext in DOCUMENT_EXTENSIONS
     except UnsupportedFormatError:
         return False
 
 
 def convert_office_to_pdf(input_file: Path, output_file: Path) -> None:
-    """Convert Office document to PDF using LibreOffice.
+    """Convert Office or ODF document to PDF using LibreOffice.
 
     Args:
-        input_file: Path to the Office document (.docx, .pptx, .xlsx).
+        input_file: Path to the document file (.docx, .pptx, .xlsx, .odt, .ods, .odp).
         output_file: Path where the PDF should be written.
 
     Raises:
