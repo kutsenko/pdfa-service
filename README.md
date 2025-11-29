@@ -2,6 +2,8 @@
 
 Command-line tool and REST API that converts PDF, Office, and OpenDocument files into PDF/A files using [OCRmyPDF](https://ocrmypdf.readthedocs.io/) with built-in OCR.
 
+**Documentation in other languages**: [Deutsch](README.de.md)
+
 ## Features
 
 - Converts **PDF**, **MS Office** (DOCX, PPTX, XLSX), and **OpenDocument** (ODT, ODS, ODP) files to PDF/A-compliant documents

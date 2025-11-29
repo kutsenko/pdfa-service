@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**Documentation in other languages**: [Deutsch](CLAUDE.de.md)
+
 ## Quick Start
 
 ### Environment Setup
