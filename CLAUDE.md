@@ -20,11 +20,15 @@ pip install -e ".[dev]"
 - **Run API Locally**: `uvicorn pdfa.api:app --host 0.0.0.0 --port 8000`
 
 ### System Dependencies
-Before running with real PDFs, install OCRmyPDF runtime dependencies:
-```bash
-# Ubuntu 24.04
-sudo apt install tesseract-ocr tesseract-ocr-eng tesseract-ocr-deu ghostscript qpdf
-```
+
+Before running with real PDFs, install OCRmyPDF runtime dependencies. For detailed installation instructions for your distribution, see the **System Dependencies by Distribution** section in [README.md](README.md#system-dependencies-by-distribution).
+
+**Required packages** (vary by distribution):
+- **Tesseract OCR**: `tesseract-ocr` (apt), `tesseract` (dnf), `tesseract` (pacman)
+- **Language packs**: English and German by default; add others as needed
+- **Ghostscript**: `ghostscript` (all distributions)
+- **qpdf**: `qpdf` (all distributions)
+- **LibreOffice**: For Office document conversion (DOCX, PPTX, XLSX)
 
 Tests can run without these dependencies using mocked OCRmyPDF.
 
