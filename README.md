@@ -9,6 +9,8 @@ Command-line tool and REST API that converts PDF, Office, and OpenDocument files
 | 🇩🇪 [Deutsch (German)](README.de.md) | Complete German documentation |
 | 🥧 [OCR-SCANNER Setup Guide](OCR-SCANNER.md) | **Raspberry Pi & Network Setup** - Deploy pdfa-service as a network-wide OCR scanner |
 | 🥧 [OCR-SCANNER (Deutsch)](OCR-SCANNER.de.md) | **Raspberry Pi & Netzwerk-Anleitung** - Einsatz als Dokumentenscanner im lokalen Netzwerk |
+| 📋 [OCR-SCANNER Practical Guide](OCR-SCANNER-GUIDE.md) | **Real-world scenarios with Docker Compose** - Home office, law firms, medical practices |
+| 📋 [OCR-SCANNER Praktische Anleitung](OCR-SCANNER-GUIDE.de.md) | **Praktische Szenarien mit Docker Compose** - Heimatelier, Kanzlei, Arztpraxis |
 
 ## Features
 
