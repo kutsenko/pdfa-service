@@ -356,6 +356,8 @@
         const convertBtn = document.getElementById('convertBtn');
         const ocrCheckbox = document.getElementById('ocr_enabled');
 
+        const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+
         // File upload area click
         uploadArea.addEventListener('click', () => fileInput.click());
 
@@ -384,10 +386,28 @@
 
         function updateFileName() {
             if (fileInput.files.length > 0) {
-                fileName.textContent = '✓ ' + fileInput.files[0].name;
+                const file = fileInput.files[0];
+
+                // Validate file size
+                if (file.size > MAX_FILE_SIZE) {
+                    showStatus(`✗ File too large: ${formatFileSize(file.size)}. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}.`, 'error');
+                    fileInput.value = '';
+                    fileName.textContent = '';
+                    return;
+                }
+
+                fileName.textContent = '✓ ' + file.name + ' (' + formatFileSize(file.size) + ')';
             } else {
                 fileName.textContent = '';
             }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
         }
 
         // Form submission
@@ -399,8 +419,16 @@
                 return;
             }
 
+            const file = fileInput.files[0];
+
+            // Validate file size
+            if (file.size > MAX_FILE_SIZE) {
+                showStatus(`File too large: ${formatFileSize(file.size)}. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}.`, 'error');
+                return;
+            }
+
             const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+            formData.append('file', file);
             formData.append('language', document.getElementById('language').value);
             formData.append('pdfa_level', document.getElementById('pdfa_level').value);
             formData.append('ocr_enabled', ocrCheckbox.checked);
@@ -421,9 +449,9 @@
                     link.href = url;
 
                     // Generate output filename
-                    const originalName = fileInput.files[0].name;
-                    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-                    link.download = nameWithoutExt + '_converted.pdf';
+                    const originalName = file.name;
+                    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+                    link.download = nameWithoutExt + '_pdfa.pdf';
 
                     document.body.appendChild(link);
                     link.click();
@@ -434,8 +462,26 @@
                     form.reset();
                     fileName.textContent = '';
                 } else {
-                    const errorText = await response.text();
-                    const errorMsg = errorText || 'Conversion failed. Please check the file and try again.';
+                    let errorMsg = 'Conversion failed. Please check the file and try again.';
+
+                    // Try to parse JSON error response
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.detail) {
+                            errorMsg = errorData.detail;
+                        }
+                    } catch (e) {
+                        // If not JSON, try to get text
+                        try {
+                            const errorText = await response.text();
+                            if (errorText) {
+                                errorMsg = errorText;
+                            }
+                        } catch (e2) {
+                            errorMsg = `HTTP Error: ${response.status}`;
+                        }
+                    }
+
                     showStatus('✗ Error: ' + errorMsg, 'error');
                 }
             } catch (error) {
