@@ -333,7 +333,7 @@ docker run --rm -v $(pwd):/data pdfa-service:latest \
 Der einfachste Weg, den Service lokal auszuführen:
 
 ```bash
-docker-compose up
+docker compose up
 ```
 
 Dies startet die REST-API auf `http://localhost:8000`. PDFs hochladen über:

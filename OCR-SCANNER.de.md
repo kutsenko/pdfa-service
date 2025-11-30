@@ -41,7 +41,7 @@ docker compose version  # Überprüfen Sie die Installation
 **Option 2: Standalone Docker Compose**
 ```bash
 # Ältere Standalone-Version
-docker-compose version  # Überprüfen Sie die Installation
+docker compose version  # Überprüfen Sie die Installation
 ```
 
 Beide funktionieren identisch; diese Anleitung verwendet `docker compose` (Plugin-Version).
@@ -61,8 +61,8 @@ cd pdfa-service
 # Docker Compose Plugin (empfohlen)
 docker compose up -d
 
-# Oder Standalone docker-compose
-docker-compose up -d
+# Oder Standalone docker compose
+docker compose up -d
 ```
 
 Die API ist verfügbar unter `http://localhost:8000`
@@ -113,12 +113,12 @@ cd pdfa-service
 # Mit Docker Compose Plugin starten (empfohlen)
 docker compose up -d
 
-# Oder mit Standalone docker-compose
-docker-compose up -d
+# Oder mit Standalone docker compose
+docker compose up -d
 
 # Service-Status überprüfen
 docker compose logs -f
-# oder: docker-compose logs -f
+# oder: docker compose logs -f
 ```
 
 Service verfügbar unter: `http://localhost:8000`
@@ -197,7 +197,7 @@ services:
 git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
 docker compose up -d
-# oder: docker-compose up -d
+# oder: docker compose up -d
 ```
 
 7. **Raspberry Pi IP-Adresse finden**:
@@ -245,7 +245,7 @@ wsl --install -d Ubuntu-22.04
 sudo apt update
 
 # Docker und Docker Compose installieren
-sudo apt install -y docker.io docker-compose
+sudo apt install -y docker.io docker compose
 
 # Docker-Socket-Berechtigungen konfigurieren
 sudo usermod -aG docker $USER
@@ -260,8 +260,8 @@ cd pdfa-service
 # Docker Compose Plugin (empfohlen)
 docker compose up -d
 
-# Oder Standalone docker-compose
-docker-compose up -d
+# Oder Standalone docker compose
+docker compose up -d
 ```
 
 5. **Zugriff von Windows**:
@@ -296,8 +296,8 @@ cd pdfa-service
 # Docker Compose Plugin (empfohlen)
 docker compose up -d
 
-# Oder Standalone docker-compose
-docker-compose up -d
+# Oder Standalone docker compose
+docker compose up -d
 ```
 
 4. **Service zugreifen**:
@@ -312,7 +312,7 @@ Start-Process "http://localhost:8000"
 Einen freigegebenen Ordner für Dateiaustausch einbinden:
 
 ```yaml
-# In docker-compose.yml
+# In docker compose.yml
 services:
   pdfa:
     # ... vorhandene Konfiguration ...
@@ -528,7 +528,7 @@ wsl hostname -I
 Anderen Port verwenden, wenn 8000 belegt ist:
 
 ```yaml
-# docker-compose.yml
+# docker compose.yml
 services:
   pdfa:
     ports:
@@ -587,7 +587,7 @@ Typische OCR-Verarbeitungszeiten pro Seite:
    done
    ```
 
-4. **Weisen Sie ausreichend Ressourcen in docker-compose.yml zu**:
+4. **Weisen Sie ausreichend Ressourcen in docker compose.yml zu**:
    ```yaml
    deploy:
      resources:
@@ -611,7 +611,7 @@ Typische OCR-Verarbeitungszeiten pro Seite:
 Das Standard-Setup ist für die **Verwendung nur im lokalen Netzwerk** geeignet:
 
 ```yaml
-# docker-compose.yml
+# docker compose.yml
 services:
   pdfa:
     ports:
@@ -630,7 +630,7 @@ ports:
 Für netzwerkweiten Zugriff verwenden Sie einen Reverse Proxy:
 
 ```yaml
-# docker-compose.yml mit nginx
+# docker compose.yml mit nginx
 version: '3.8'
 services:
   pdfa:
@@ -671,7 +671,7 @@ http {
 
 ### Dateigröße-Limits
 
-Maximale Upload-Größe in docker-compose festlegen:
+Maximale Upload-Größe in docker compose festlegen:
 
 ```yaml
 environment:
@@ -687,14 +687,14 @@ environment:
 ```bash
 # Protokolle überprüfen
 docker compose logs pdfa
-# oder: docker-compose logs pdfa
+# oder: docker compose logs pdfa
 
 # Häufiges Problem: Port bereits in Verwendung
 sudo lsof -i :8000  # Prozess finden, der Port 8000 verwendet
 
 # Prozess beenden und neu starten
 docker compose restart
-# oder: docker-compose restart
+# oder: docker compose restart
 ```
 
 ### OCR-Fehler
@@ -702,11 +702,11 @@ docker compose restart
 ```bash
 # Überprüfen, ob Tesseract verfügbar ist
 docker compose exec pdfa which tesseract
-# oder: docker-compose exec pdfa which tesseract
+# oder: docker compose exec pdfa which tesseract
 
 # Fehlendes Sprachpaket installieren (im Container)
 docker compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
-# oder: docker-compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
+# oder: docker compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
 ```
 
 ### Langsame Verarbeitung
@@ -725,9 +725,9 @@ curl http://192.168.1.50:8000/docs  # API testen
 
 # Von Pi aus, Service-Status überprüfen
 docker compose ps
-# oder: docker-compose ps
+# oder: docker compose ps
 docker compose logs pdfa
-# oder: docker-compose logs pdfa
+# oder: docker compose logs pdfa
 ```
 
 ---
@@ -762,12 +762,12 @@ docker volume prune
 ```bash
 # Neuestes Image abrufen
 docker compose pull
-# oder: docker-compose pull
+# oder: docker compose pull
 
 # Mit neuer Version neu starten
 docker compose down
 docker compose up -d
-# oder: docker-compose down && docker-compose up -d
+# oder: docker compose down && docker compose up -d
 ```
 
 ---

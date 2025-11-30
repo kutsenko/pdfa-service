@@ -41,7 +41,7 @@ docker compose version  # Verify it's installed
 **Option 2: Standalone Docker Compose**
 ```bash
 # Older standalone version
-docker-compose version  # Verify it's installed
+docker compose version  # Verify it's installed
 ```
 
 Both work identically; this guide uses `docker compose` (Plugin version).
@@ -61,8 +61,8 @@ cd pdfa-service
 # Using Docker Compose Plugin (recommended)
 docker compose up -d
 
-# Or using standalone docker-compose
-docker-compose up -d
+# Or using standalone docker compose
+docker compose up -d
 ```
 
 The API will be available at `http://localhost:8000`
@@ -113,12 +113,12 @@ cd pdfa-service
 # Start with Docker Compose Plugin (recommended)
 docker compose up -d
 
-# Or using standalone docker-compose
-docker-compose up -d
+# Or using standalone docker compose
+docker compose up -d
 
 # Check service status
 docker compose logs -f
-# or: docker-compose logs -f
+# or: docker compose logs -f
 ```
 
 Service available at: `http://localhost:8000`
@@ -197,7 +197,7 @@ services:
 git clone https://github.com/kutsenko/pdfa-service.git
 cd pdfa-service
 docker compose up -d
-# or: docker-compose up -d
+# or: docker compose up -d
 ```
 
 7. **Find Raspberry Pi IP address**:
@@ -260,8 +260,8 @@ cd pdfa-service
 # Using Docker Compose Plugin (recommended)
 docker compose up -d
 
-# Or using standalone docker-compose
-docker-compose up -d
+# Or using standalone docker compose
+docker compose up -d
 ```
 
 5. **Access from Windows**:
@@ -296,8 +296,8 @@ cd pdfa-service
 # Using Docker Compose Plugin (recommended)
 docker compose up -d
 
-# Or using standalone docker-compose
-docker-compose up -d
+# Or using standalone docker compose
+docker compose up -d
 ```
 
 4. **Access service**:
@@ -312,7 +312,7 @@ Start-Process "http://localhost:8000"
 Mount a shared folder for document exchange:
 
 ```yaml
-# In docker-compose.yml
+# In docker compose.yml
 services:
   pdfa:
     # ... existing config ...
@@ -528,7 +528,7 @@ wsl hostname -I
 Expose different port if 8000 is in use:
 
 ```yaml
-# docker-compose.yml
+# docker compose.yml
 services:
   pdfa:
     ports:
@@ -587,7 +587,7 @@ Typical OCR processing times per page:
    done
    ```
 
-4. **Allocate sufficient resources in docker-compose.yml**:
+4. **Allocate sufficient resources in docker compose.yml**:
    ```yaml
    deploy:
      resources:
@@ -611,7 +611,7 @@ Typical OCR processing times per page:
 The default setup is suitable for **local network use only**:
 
 ```yaml
-# docker-compose.yml
+# docker compose.yml
 services:
   pdfa:
     ports:
@@ -630,7 +630,7 @@ ports:
 For network-wide access, use a reverse proxy:
 
 ```yaml
-# docker-compose.yml with nginx
+# docker compose.yml with nginx
 version: '3.8'
 services:
   pdfa:
@@ -671,7 +671,7 @@ http {
 
 ### File Upload Limits
 
-Set maximum upload size in docker-compose:
+Set maximum upload size in docker compose:
 
 ```yaml
 environment:
@@ -687,14 +687,14 @@ environment:
 ```bash
 # Check logs (Docker Compose Plugin)
 docker compose logs pdfa
-# or: docker-compose logs pdfa
+# or: docker compose logs pdfa
 
 # Common issue: Port already in use
 sudo lsof -i :8000  # Find process using port 8000
 
 # Kill process and restart
 docker compose restart
-# or: docker-compose restart
+# or: docker compose restart
 ```
 
 ### OCR Errors
@@ -702,11 +702,11 @@ docker compose restart
 ```bash
 # Check if Tesseract is available
 docker compose exec pdfa which tesseract
-# or: docker-compose exec pdfa which tesseract
+# or: docker compose exec pdfa which tesseract
 
 # Install missing language pack (inside container)
 docker compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
-# or: docker-compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
+# or: docker compose exec pdfa apt-get update && apt-get install -y tesseract-ocr-fra
 ```
 
 ### Slow Processing
@@ -724,8 +724,8 @@ ping 192.168.1.50  # Ping Raspberry Pi
 curl http://192.168.1.50:8000/docs  # Test API
 
 # From Pi, check service is running
-docker-compose ps
-docker-compose logs pdfa
+docker compose ps
+docker compose logs pdfa
 ```
 
 ---
@@ -760,12 +760,12 @@ docker volume prune
 ```bash
 # Pull latest image
 docker compose pull
-# or: docker-compose pull
+# or: docker compose pull
 
 # Restart with new version
 docker compose down
 docker compose up -d
-# or: docker-compose down && docker-compose up -d
+# or: docker compose down && docker compose up -d
 ```
 
 ---
