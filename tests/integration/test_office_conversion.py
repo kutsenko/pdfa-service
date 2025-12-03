@@ -536,3 +536,190 @@ class TestOfficeConversion:
         assert output_pdf.exists()
         assert output_pdf.stat().st_size > 0
         assert output_pdf.read_bytes().startswith(b"%PDF")
+
+
+@pytest.mark.skipif(
+    not HAS_LIBREOFFICE,
+    reason="LibreOffice not installed",
+)
+class TestSpecialFilenames:
+    """Integration tests for Office document conversion with special filenames."""
+
+    def test_docx_with_spaces_in_filename(self, tmp_path: Path) -> None:
+        """DOCX files with spaces in filename should convert successfully."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        # Create DOCX with spaces in name
+        docx_file = tmp_path / "My Test Document.docx"
+        create_test_docx(docx_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(docx_file, output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_docx_with_multiple_spaces(self, tmp_path: Path) -> None:
+        """DOCX files with multiple spaces should convert successfully."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        # Create DOCX with multiple spaces
+        docx_file = tmp_path / "Document   With   Multiple   Spaces.docx"
+        create_test_docx(docx_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(docx_file, output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_docx_with_special_characters(self, tmp_path: Path) -> None:
+        """DOCX files with special characters should convert successfully."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        # Create DOCX with special characters
+        docx_file = tmp_path / "Document (1) - Final [v2].docx"
+        create_test_docx(docx_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(docx_file, output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_docx_with_underscores(self, tmp_path: Path) -> None:
+        """DOCX files with underscores should convert successfully."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        # Create DOCX with underscores
+        docx_file = tmp_path / "Document_with_underscores_v1.docx"
+        create_test_docx(docx_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(docx_file, output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_docx_with_long_filename(self, tmp_path: Path) -> None:
+        """DOCX files with long names should convert successfully."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        # Create DOCX with long name (100+ characters)
+        long_name = (
+            "This is a very long document name with multiple words and spaces "
+            "to test handling of lengthy filenames in conversion process.docx"
+        )
+        docx_file = tmp_path / long_name
+        create_test_docx(docx_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(docx_file, output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_docx_with_german_umlauts(self, tmp_path: Path) -> None:
+        """DOCX files with German umlauts should convert successfully."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        # Create DOCX with German umlauts
+        docx_file = tmp_path / "Dokumentation Übersicht äöü.docx"
+        create_test_docx(docx_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(docx_file, output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_docx_with_dashes_and_dots(self, tmp_path: Path) -> None:
+        """DOCX files with dashes and dots should convert successfully."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        # Create DOCX with dashes and dots
+        docx_file = tmp_path / "Document-2024.12.03-Final.docx"
+        create_test_docx(docx_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(docx_file, output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_odt_with_spaces_in_filename(self, tmp_path: Path) -> None:
+        """ODT files with spaces in filename should convert successfully."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        # Create ODT with spaces in name
+        odt_file = tmp_path / "My OpenDocument File.odt"
+        create_test_odt(odt_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(odt_file, output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    def test_odt_with_special_characters(self, tmp_path: Path) -> None:
+        """ODT files with special characters should convert successfully."""
+        from pdfa.format_converter import convert_office_to_pdf
+
+        # Create ODT with special characters
+        odt_file = tmp_path / "Document [Draft] (Review).odt"
+        create_test_odt(odt_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        convert_office_to_pdf(odt_file, output_pdf)
+
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    @pytest.mark.skipif(
+        not (HAS_TESSERACT and HAS_GHOSTSCRIPT),
+        reason="Tesseract or Ghostscript not installed",
+    )
+    def test_docx_with_spaces_end_to_end(self, tmp_path: Path) -> None:
+        """DOCX with spaces should convert end-to-end to PDF/A."""
+        from pdfa.cli import main
+
+        # Create DOCX with spaces
+        docx_file = tmp_path / "Document With Spaces.docx"
+        create_test_docx(docx_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        exit_code = main([str(docx_file), str(output_pdf)])
+
+        assert exit_code == 0
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
+
+    @pytest.mark.skipif(
+        not (HAS_TESSERACT and HAS_GHOSTSCRIPT),
+        reason="Tesseract or Ghostscript not installed",
+    )
+    def test_docx_with_special_chars_end_to_end(self, tmp_path: Path) -> None:
+        """DOCX with special characters should convert end-to-end to PDF/A."""
+        from pdfa.cli import main
+
+        # Create DOCX with special chars
+        docx_file = tmp_path / "Document (1) - Final [v2].docx"
+        create_test_docx(docx_file)
+
+        output_pdf = tmp_path / "output.pdf"
+        exit_code = main([str(docx_file), str(output_pdf)])
+
+        assert exit_code == 0
+        assert output_pdf.exists()
+        assert output_pdf.stat().st_size > 0
+        assert output_pdf.read_bytes().startswith(b"%PDF")
