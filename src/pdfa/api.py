@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import uuid
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Literal
@@ -134,13 +135,17 @@ async def convert_endpoint(
         # Determine if file is Office document
         is_office = is_office_document(file.filename or "")
 
-        # Write uploaded file to temporary location
-        if is_office:
-            # Keep original filename for office documents (LibreOffice needs it)
-            input_path = tmp_path / (file.filename or "document.docx")
-        else:
-            input_path = tmp_path / "input.pdf"
+        # Use random filename for security (don't expose user filenames in temp storage)
+        # Extract original file extension
+        original_ext = Path(file.filename or "").suffix.lower() if file.filename else ""
+        if not original_ext:
+            original_ext = ".docx" if is_office else ".pdf"
 
+        # Generate random temporary filename while preserving extension
+        random_filename = f"{uuid.uuid4().hex}{original_ext}"
+        input_path = tmp_path / random_filename
+
+        logger.debug(f"Storing uploaded file with random name: {random_filename}")
         input_path.write_bytes(contents)
 
         try:

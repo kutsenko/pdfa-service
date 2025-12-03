@@ -5,8 +5,10 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+import uuid
 from collections.abc import Sequence
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
@@ -93,13 +95,30 @@ def main(argv: Sequence[str] | None = None) -> int:
 
         # Convert Office to PDF if needed
         pdf_file = args.input_file
+        temp_dir = None
+        temp_input_file = None
+
         if is_office:
             logger.info(
                 f"Office document detected, converting to PDF: {args.input_file.name}"
             )
-            temp_pdf = args.input_file.parent / f"{args.input_file.stem}_temp.pdf"
-            convert_office_to_pdf(args.input_file, temp_pdf)
-            pdf_file = temp_pdf
+            # Use temporary directory with random filenames for security
+            temp_dir = TemporaryDirectory()
+            temp_dir_path = Path(temp_dir.name)
+
+            # Copy input file to temp dir with random name
+            original_ext = args.input_file.suffix.lower()
+            random_input_name = f"{uuid.uuid4().hex}{original_ext}"
+            temp_input_file = temp_dir_path / random_input_name
+
+            logger.debug(f"Using random temporary input filename: {random_input_name}")
+            temp_input_file.write_bytes(args.input_file.read_bytes())
+
+            # Convert to PDF with random name
+            random_pdf_name = f"{uuid.uuid4().hex}.pdf"
+            pdf_file = temp_dir_path / random_pdf_name
+            logger.debug(f"Using random temporary PDF filename: {random_pdf_name}")
+            convert_office_to_pdf(temp_input_file, pdf_file)
 
         try:
             # Convert to PDF/A
@@ -111,9 +130,9 @@ def main(argv: Sequence[str] | None = None) -> int:
                 ocr_enabled=not args.no_ocr,
             )
         finally:
-            # Clean up temporary PDF if we created one
-            if is_office and temp_pdf.exists():
-                temp_pdf.unlink()
+            # Clean up temporary directory if we created one
+            if temp_dir is not None:
+                temp_dir.cleanup()
 
     except FileNotFoundError as error:
         logger.error(f"File not found: {error}")
