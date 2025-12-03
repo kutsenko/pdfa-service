@@ -47,6 +47,17 @@ def convert_to_pdfa(
             language=language,
             output_type=output_type,
             force_ocr=ocr_enabled,
+            # Compression settings for smaller file sizes
+            image_dpi=150,  # Reduce image resolution to 150 DPI (good for documents)
+            remove_vectors=True,  # Remove vector graphics where possible
+            # Note: remove_background=True is not implemented in ocrmypdf 16.12.0
+            optimize=1,  # Optimization level (0=none, 1=low, 2=medium requires pngquant, 3=high)
+            jpg_quality=85,  # JPEG quality for images (1-100)
+            # Note: png_quality=85 requires pngquant (installed in Docker only)
+            # Use JBIG2 compression for black & white images (lossless + efficient)
+            jbig2_lossy=False,  # Use lossless JBIG2 compression
+            jbig2_page_group_size=10,  # Group pages for better compression
+            # Note: clean=True requires unpaper (installed in Docker only)
         )
         logger.info(f"Successfully converted PDF/A file: {output_pdf}")
     except Exception as e:

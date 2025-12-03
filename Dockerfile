@@ -14,6 +14,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tesseract-ocr-deu \
     ghostscript \
     qpdf \
+    pngquant \
+    unpaper \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
