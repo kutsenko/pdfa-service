@@ -1,5 +1,8 @@
 FROM python:3.12-slim
 
+# Upgrade pip, setuptools and wheel
+RUN pip install --upgrade pip setuptools wheel
+
 # Install system dependencies for OCRmyPDF and LibreOffice
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libreoffice-calc \
