@@ -78,6 +78,7 @@ def convert_office_to_pdf(input_file: Path, output_file: Path) -> None:
         raise FileNotFoundError(f"Input file does not exist: {input_file}")
 
     logger.info(f"Converting Office document to PDF: {input_file}")
+    logger.debug(f"Output directory: {output_file.parent}")
 
     try:
         # LibreOffice --convert-to outputs to the input file's parent directory
@@ -96,6 +97,12 @@ def convert_office_to_pdf(input_file: Path, output_file: Path) -> None:
             timeout=300,  # 5 minutes timeout
             check=False,
         )
+
+        logger.debug(f"LibreOffice exit code: {result.returncode}")
+        if result.stdout:
+            logger.debug(f"LibreOffice stdout: {result.stdout}")
+        if result.stderr:
+            logger.debug(f"LibreOffice stderr: {result.stderr}")
 
         if result.returncode != 0:
             logger.error(
