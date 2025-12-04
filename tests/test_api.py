@@ -21,7 +21,13 @@ def test_convert_endpoint_success(monkeypatch, client: TestClient) -> None:
     """The endpoint should convert files and return a PDF response."""
 
     def fake_convert(
-        input_pdf, output_pdf, *, language, pdfa_level, ocr_enabled
+        input_pdf,
+        output_pdf,
+        *,
+        language,
+        pdfa_level,
+        ocr_enabled,
+        compression_config=None,
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         fake_convert.called_with = {  # type: ignore[attr-defined]
@@ -53,7 +59,13 @@ def test_convert_endpoint_with_ocr_disabled(monkeypatch, client: TestClient) -> 
     """The endpoint should pass ocr_enabled=False when requested."""
 
     def fake_convert(
-        input_pdf, output_pdf, *, language, pdfa_level, ocr_enabled
+        input_pdf,
+        output_pdf,
+        *,
+        language,
+        pdfa_level,
+        ocr_enabled,
+        compression_config=None,
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         fake_convert.called_with = {  # type: ignore[attr-defined]

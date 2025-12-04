@@ -12,6 +12,7 @@ from tempfile import TemporaryDirectory
 
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
+from pdfa.compression_config import CompressionConfig
 from pdfa.converter import convert_to_pdfa
 from pdfa.exceptions import OfficeConversionError, UnsupportedFormatError
 from pdfa.format_converter import convert_office_to_pdf, is_office_document
@@ -82,11 +83,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     log_level = logging.DEBUG if args.verbose else logging.INFO
     configure_logging(level=log_level, log_file=args.log_file)
 
+    # Load compression configuration from environment variables
+    compression_config = CompressionConfig.from_env()
+
     logger.info("Starting file to PDF/A conversion")
     logger.debug(
         f"Arguments: input={args.input_file}, output={args.output_pdf}, "
         f"language={args.language}, pdfa_level={args.pdfa_level}, "
         f"ocr_enabled={not args.no_ocr}"
+    )
+    logger.debug(
+        f"Compression: DPI={compression_config.image_dpi}, "
+        f"JPG quality={compression_config.jpg_quality}, "
+        f"Optimize={compression_config.optimize}"
     )
 
     try:
@@ -128,6 +137,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 language=args.language,
                 pdfa_level=args.pdfa_level,
                 ocr_enabled=not args.no_ocr,
+                compression_config=compression_config,
             )
         finally:
             # Clean up temporary directory if we created one

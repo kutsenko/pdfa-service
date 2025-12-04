@@ -11,6 +11,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, Response
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
+from pdfa.compression_config import CompressionConfig
 from pdfa.converter import convert_to_pdfa
 from pdfa.exceptions import OfficeConversionError, UnsupportedFormatError
 from pdfa.format_converter import convert_office_to_pdf, is_office_document
@@ -19,6 +20,14 @@ from pdfa.logging_config import get_logger
 PdfaLevel = Literal["1", "2", "3"]
 
 logger = get_logger(__name__)
+
+# Load compression configuration from environment variables at startup
+compression_config = CompressionConfig.from_env()
+logger.info(
+    f"Loaded compression config: DPI={compression_config.image_dpi}, "
+    f"JPG quality={compression_config.jpg_quality}, "
+    f"Optimize={compression_config.optimize}"
+)
 
 app = FastAPI(
     title="PDF/A Conversion Service",
@@ -166,6 +175,7 @@ async def convert_endpoint(
                 language=language,
                 pdfa_level=pdfa_level,
                 ocr_enabled=ocr_enabled,
+                compression_config=compression_config,
             )
 
         except FileNotFoundError as error:

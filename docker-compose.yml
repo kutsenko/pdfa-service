@@ -5,4 +5,11 @@ services:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
+      # PDF Compression Settings (balanced defaults for quality and file size)
+      - PDFA_IMAGE_DPI=150          # Image resolution in DPI (72-600, default: 150)
+      - PDFA_JPG_QUALITY=85         # JPEG compression quality (1-100, default: 85)
+      - PDFA_OPTIMIZE=1             # Optimization level (0-3, default: 1)
+      - PDFA_REMOVE_VECTORS=true    # Remove vector graphics (true/false, default: true)
+      - PDFA_JBIG2_LOSSY=false      # Use lossy JBIG2 compression (true/false, default: false)
+      - PDFA_JBIG2_PAGE_GROUP_SIZE=10  # JBIG2 page grouping (0-100+, default: 10)
     restart: unless-stopped

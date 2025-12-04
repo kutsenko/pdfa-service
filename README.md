@@ -7,6 +7,8 @@ Command-line tool and REST API that converts PDF, Office, and OpenDocument files
 | Link | Description |
 |------|-------------|
 | 🇩🇪 [Deutsch (German)](README.de.md) | Complete German documentation |
+| ⚙️ [Compression Configuration](COMPRESSION.md) | **PDF compression settings** - Configure quality vs file size trade-offs |
+| ⚙️ [Komprimierungs-Konfiguration (Deutsch)](COMPRESSION.de.md) | **PDF-Komprimierungseinstellungen** - Qualität vs. Dateigröße konfigurieren |
 | 🥧 [OCR-SCANNER Setup Guide](OCR-SCANNER.md) | **Raspberry Pi & Network Setup** - Deploy pdfa-service as a network-wide OCR scanner |
 | 🥧 [OCR-SCANNER (Deutsch)](OCR-SCANNER.de.md) | **Raspberry Pi & Netzwerk-Anleitung** - Einsatz als Dokumentenscanner im lokalen Netzwerk |
 | 📋 [OCR-SCANNER Practical Guide](OCR-SCANNER-GUIDE.md) | **Real-world scenarios with Docker Compose** - Home office, law firms, medical practices |

@@ -384,19 +384,23 @@ User-facing documentation is maintained in **both English and German in parallel
 - `README.md` - Main user guide
 - `CLAUDE.md` - Quick reference for developers
 - `OCR-SCANNER.md` - Setup guide for OCR use case
+- `COMPRESSION.md` - PDF compression configuration guide
 
 **German documentation (maintained in parallel):**
 - `README.de.md` - German translation of README.md
 - `CLAUDE.de.md` - German translation of CLAUDE.md
 - `OCR-SCANNER.de.md` - German translation of OCR-SCANNER.md
+- `COMPRESSION.de.md` - German translation of COMPRESSION.md
 
 **Rules for maintaining dual documentation:**
 1. When you update `README.md`, also update `README.de.md`
 2. When you update `CLAUDE.md`, also update `CLAUDE.de.md`
 3. When you update `OCR-SCANNER.md`, also update `OCR-SCANNER.de.md`
-4. Use `TRANSLATIONS.md` to track status of translations
-5. Keep translations accurate and up-to-date (not allowed to fall behind)
-6. Test both English and German documentation for accuracy
+4. When you update `COMPRESSION.md`, also update `COMPRESSION.de.md`
+5. **English is the source language** - always write documentation in English first, then translate to German
+6. Use `TRANSLATIONS.md` to track status of translations
+7. Keep translations accurate and up-to-date (not allowed to fall behind)
+8. Test both English and German documentation for accuracy
 
 **Note**: Development documentation (AGENTS.md, this file) is English-only. Only user-facing documentation has German translations.
 

@@ -27,7 +27,13 @@ class TestConvertOfficeDocuments:
             output_file.write_bytes(b"%PDF-1.4 converted")
 
         def fake_convert(
-            input_pdf, output_pdf, *, language, pdfa_level, ocr_enabled
+            input_pdf,
+            output_pdf,
+            *,
+            language,
+            pdfa_level,
+            ocr_enabled,
+            compression_config=None,
         ) -> None:
             output_pdf.write_bytes(b"%PDF-1.4 pdfa")
 
@@ -59,7 +65,13 @@ class TestConvertOfficeDocuments:
             output_file.write_bytes(b"%PDF-1.4 converted")
 
         def fake_convert(
-            input_pdf, output_pdf, *, language, pdfa_level, ocr_enabled
+            input_pdf,
+            output_pdf,
+            *,
+            language,
+            pdfa_level,
+            ocr_enabled,
+            compression_config=None,
         ) -> None:
             output_pdf.write_bytes(b"%PDF-1.4 pdfa")
 
@@ -89,7 +101,13 @@ class TestConvertOfficeDocuments:
             output_file.write_bytes(b"%PDF-1.4 converted")
 
         def fake_convert(
-            input_pdf, output_pdf, *, language, pdfa_level, ocr_enabled
+            input_pdf,
+            output_pdf,
+            *,
+            language,
+            pdfa_level,
+            ocr_enabled,
+            compression_config=None,
         ) -> None:
             output_pdf.write_bytes(b"%PDF-1.4 pdfa")
 

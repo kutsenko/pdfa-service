@@ -2,7 +2,17 @@
 
 Kommandozeilen-Tool und REST-API zur Konvertierung von PDF-, Office- und OpenDocument-Dateien in PDF/A-Dateien unter Verwendung von [OCRmyPDF](https://ocrmypdf.readthedocs.io/) mit integrierter OCR.
 
-**Dokumentation in anderen Sprachen**: [English](README.md)
+## 📚 Dokumentation & Sprache
+
+| Link | Beschreibung |
+|------|--------------|
+| 🇬🇧 [English](README.md) | Vollständige englische Dokumentation |
+| ⚙️ [Komprimierungs-Konfiguration](COMPRESSION.de.md) | **PDF-Komprimierungseinstellungen** - Qualität vs. Dateigröße konfigurieren |
+| ⚙️ [Compression Configuration (English)](COMPRESSION.md) | **PDF compression settings** - Configure quality vs file size trade-offs |
+| 🥧 [OCR-SCANNER Anleitung](OCR-SCANNER.de.md) | **Raspberry Pi & Netzwerk-Setup** - Einsatz als Dokumentenscanner im lokalen Netzwerk |
+| 🥧 [OCR-SCANNER Setup Guide (English)](OCR-SCANNER.md) | **Raspberry Pi & Network Setup** - Deploy pdfa-service as a network-wide OCR scanner |
+| 📋 [OCR-SCANNER Praktische Anleitung](OCR-SCANNER-GUIDE.de.md) | **Praktische Szenarien mit Docker Compose** - Heimatelier, Kanzlei, Arztpraxis |
+| 📋 [OCR-SCANNER Practical Guide (English)](OCR-SCANNER-GUIDE.md) | **Real-world scenarios with Docker Compose** - Home office, law firms, medical practices |
 
 ## Features
 
