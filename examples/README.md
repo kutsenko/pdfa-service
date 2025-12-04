@@ -35,6 +35,41 @@ Deploy pdfa-service behind an Nginx reverse proxy with HTTP Basic Authentication
 
 ---
 
+### 🔐 [Nginx Reverse Proxy with Let's Encrypt SSL/TLS](nginx-letsencrypt/)
+
+Deploy pdfa-service with automatic SSL/TLS certificates from Let's Encrypt using Certbot for production-ready HTTPS.
+
+**Features:**
+- Automatic SSL/TLS certificates from Let's Encrypt
+- Automatic certificate renewal every 12 hours
+- HTTPS enforcement (HTTP to HTTPS redirect)
+- Modern TLS 1.2/1.3 with strong ciphers
+- Security headers (HSTS, CSP, X-Frame-Options, etc.)
+- Large file upload support (configurable up to 500MB+)
+- Extended timeouts for long OCR operations
+- Production-ready public-facing deployment
+
+**Use Cases:**
+- Public-facing PDF conversion service
+- Production deployment with valid SSL certificates
+- Professional document processing service
+- Internet-accessible service with encryption
+
+**Files:**
+- `nginx.conf` - Nginx configuration with SSL/TLS
+- `docker-compose.yml` - Multi-container setup (nginx, pdfa, certbot)
+- `init-letsencrypt.sh` - Certificate initialization script
+- `README.md` / `README.de.md` - Detailed setup guide
+
+**Requirements:**
+- Domain name (e.g., doc.example.com)
+- Public server with ports 80 and 443 accessible
+- DNS A record pointing to your server
+
+[→ Go to Let's Encrypt SSL/TLS example](nginx-letsencrypt/)
+
+---
+
 ## Contributing Examples
 
 Have a useful deployment scenario or configuration? We welcome contributions!
