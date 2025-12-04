@@ -54,6 +54,88 @@ See [`README.md`](README.md) for user-facing documentation and setup instruction
 - Use `pathlib.Path` for file path handling
 - Maintain type coverage for IDE support and code clarity
 
+### Code Quality & Linting Requirements
+
+**All code must be linted before committing.** This is a mandatory step in the development workflow.
+
+#### Formatting with Black
+
+```bash
+# Format all code
+black src tests
+
+# Check formatting without changes
+black --check src tests
+```
+
+- **Line length**: 88 characters (Black default)
+- **Target Python version**: 3.11+
+- Black formatting is **non-negotiable** - all code must pass Black formatting
+
+#### Linting with Ruff
+
+```bash
+# Lint and auto-fix issues
+ruff check src tests --fix
+
+# Lint without auto-fix (CI mode)
+ruff check src tests
+```
+
+**Ruff checks enabled:**
+- **E** (pycodestyle errors) - PEP 8 style violations
+- **F** (Pyflakes) - Logical errors, unused imports
+- **W** (pycodestyle warnings) - Code style issues
+- **I** (isort) - Import sorting and organization
+- **UP** (pyupgrade) - Upgrade syntax to newer Python versions
+- **N** (pep8-naming) - Naming conventions (PEP 8)
+- **D** (pydocstyle) - Docstring conventions (with exceptions)
+
+**Docstring exceptions** (D100-D105): Module, class, and method docstrings are encouraged but not required for simple, self-explanatory code.
+
+#### Pre-Commit Checklist
+
+Before every commit, run these commands in sequence:
+
+```bash
+# 1. Run full test suite
+pytest
+
+# 2. Format code
+black src tests
+
+# 3. Lint and fix issues
+ruff check src tests --fix
+
+# 4. Verify no linting errors remain
+ruff check src tests
+
+# 5. Check that tests still pass
+pytest
+```
+
+**All steps must pass before committing.** If linting reveals issues:
+1. Fix issues automatically with `--fix` flag
+2. Review changes to ensure they're correct
+3. Manually fix issues that can't be auto-fixed
+4. Re-run tests to ensure fixes didn't break functionality
+
+#### Handling Linting Errors
+
+**Critical errors (must fix):**
+- E (syntax errors, undefined names)
+- F (unused imports, undefined variables)
+- Import sorting issues
+
+**Warning-level issues (should fix):**
+- Line length violations (split long lines)
+- Naming convention violations
+- Missing type hints
+
+**Acceptable exceptions:**
+- Long lines in HTML strings or URLs (use `# noqa: E501` sparingly)
+- Complex regex patterns that exceed line length
+
 ---
 
 ## Project Architecture

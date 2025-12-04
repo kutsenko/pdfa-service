@@ -49,6 +49,7 @@ async def web_ui() -> str:
         return ui_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         logger.warning("Web UI file not found at %s", ui_path)
+        # Fallback HTML UI (line length exceptions acceptable for HTML/CSS)
         return """
         <html>
         <head>
