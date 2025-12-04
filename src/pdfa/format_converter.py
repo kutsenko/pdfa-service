@@ -1,4 +1,4 @@
-"""Convert Office documents to PDF using LibreOffice."""
+"""Convert Office documents and images to PDF."""
 
 from __future__ import annotations
 
@@ -16,11 +16,17 @@ OFFICE_EXTENSIONS = {".docx", ".pptx", ".xlsx"}
 # Supported Open Document Format (ODF)
 ODF_EXTENSIONS = {".odt", ".ods", ".odp"}
 
+# Supported image formats
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".tiff", ".tif", ".bmp", ".gif"}
+
 # All document formats that require conversion to PDF
 DOCUMENT_EXTENSIONS = OFFICE_EXTENSIONS | ODF_EXTENSIONS
 
+# All formats that require conversion to PDF before PDF/A
+CONVERTIBLE_EXTENSIONS = DOCUMENT_EXTENSIONS | IMAGE_EXTENSIONS
+
 # All supported formats
-SUPPORTED_EXTENSIONS = {".pdf"} | DOCUMENT_EXTENSIONS
+SUPPORTED_EXTENSIONS = {".pdf"} | CONVERTIBLE_EXTENSIONS
 
 
 def detect_format(filename: str) -> str:
@@ -58,6 +64,23 @@ def is_office_document(filename: str) -> bool:
     try:
         ext = detect_format(filename)
         return ext in DOCUMENT_EXTENSIONS
+    except UnsupportedFormatError:
+        return False
+
+
+def is_image_file(filename: str) -> bool:
+    """Check if the file is a supported image format.
+
+    Args:
+        filename: The filename to check.
+
+    Returns:
+        True if the file is a supported image format, False otherwise.
+
+    """
+    try:
+        ext = detect_format(filename)
+        return ext in IMAGE_EXTENSIONS
     except UnsupportedFormatError:
         return False
 

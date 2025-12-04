@@ -11,6 +11,7 @@ from pdfa.exceptions import OfficeConversionError, UnsupportedFormatError
 from pdfa.format_converter import (
     convert_office_to_pdf,
     detect_format,
+    is_image_file,
     is_office_document,
 )
 
@@ -37,6 +38,34 @@ class TestDetectFormat:
         """detect_format should recognize XLSX files."""
         assert detect_format("spreadsheet.xlsx") == ".xlsx"
         assert detect_format("data.XLSX") == ".xlsx"
+
+    def test_detect_jpg_format(self) -> None:
+        """detect_format should recognize JPG/JPEG files."""
+        assert detect_format("photo.jpg") == ".jpg"
+        assert detect_format("photo.JPG") == ".jpg"
+        assert detect_format("photo.jpeg") == ".jpeg"
+        assert detect_format("photo.JPEG") == ".jpeg"
+
+    def test_detect_png_format(self) -> None:
+        """detect_format should recognize PNG files."""
+        assert detect_format("image.png") == ".png"
+        assert detect_format("image.PNG") == ".png"
+
+    def test_detect_tiff_format(self) -> None:
+        """detect_format should recognize TIFF files."""
+        assert detect_format("scan.tiff") == ".tiff"
+        assert detect_format("scan.TIFF") == ".tiff"
+        assert detect_format("scan.tif") == ".tif"
+
+    def test_detect_bmp_format(self) -> None:
+        """detect_format should recognize BMP files."""
+        assert detect_format("bitmap.bmp") == ".bmp"
+        assert detect_format("bitmap.BMP") == ".bmp"
+
+    def test_detect_gif_format(self) -> None:
+        """detect_format should recognize GIF files."""
+        assert detect_format("animation.gif") == ".gif"
+        assert detect_format("animation.GIF") == ".gif"
 
     def test_detect_unsupported_format(self) -> None:
         """detect_format should raise error for unsupported formats."""
@@ -76,6 +105,11 @@ class TestIsOfficeDocument:
         """is_office_document should return False for PDF files."""
         assert is_office_document("document.pdf") is False
 
+    def test_is_office_image(self) -> None:
+        """is_office_document should return False for image files."""
+        assert is_office_document("photo.jpg") is False
+        assert is_office_document("image.png") is False
+
     def test_is_office_invalid_format(self) -> None:
         """is_office_document should return False for unsupported formats."""
         assert is_office_document("document.txt") is False
@@ -83,6 +117,52 @@ class TestIsOfficeDocument:
     def test_is_office_no_extension(self) -> None:
         """is_office_document should return False for files without extension."""
         assert is_office_document("document") is False
+
+
+class TestIsImageFile:
+    """Tests for image file detection."""
+
+    def test_is_image_jpg(self) -> None:
+        """is_image_file should return True for JPG/JPEG files."""
+        assert is_image_file("photo.jpg") is True
+        assert is_image_file("photo.JPG") is True
+        assert is_image_file("photo.jpeg") is True
+        assert is_image_file("photo.JPEG") is True
+
+    def test_is_image_png(self) -> None:
+        """is_image_file should return True for PNG files."""
+        assert is_image_file("image.png") is True
+        assert is_image_file("image.PNG") is True
+
+    def test_is_image_tiff(self) -> None:
+        """is_image_file should return True for TIFF files."""
+        assert is_image_file("scan.tiff") is True
+        assert is_image_file("scan.tif") is True
+
+    def test_is_image_bmp(self) -> None:
+        """is_image_file should return True for BMP files."""
+        assert is_image_file("bitmap.bmp") is True
+
+    def test_is_image_gif(self) -> None:
+        """is_image_file should return True for GIF files."""
+        assert is_image_file("animation.gif") is True
+
+    def test_is_image_pdf(self) -> None:
+        """is_image_file should return False for PDF files."""
+        assert is_image_file("document.pdf") is False
+
+    def test_is_image_office(self) -> None:
+        """is_image_file should return False for Office files."""
+        assert is_image_file("document.docx") is False
+        assert is_image_file("presentation.pptx") is False
+
+    def test_is_image_invalid_format(self) -> None:
+        """is_image_file should return False for unsupported formats."""
+        assert is_image_file("document.txt") is False
+
+    def test_is_image_no_extension(self) -> None:
+        """is_image_file should return False for files without extension."""
+        assert is_image_file("document") is False
 
 
 class TestConvertOfficeToPdf:

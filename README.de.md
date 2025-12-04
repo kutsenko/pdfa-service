@@ -1,6 +1,6 @@
 # pdfa service
 
-Kommandozeilen-Tool und REST-API zur Konvertierung von PDF-, Office- und OpenDocument-Dateien in PDF/A-Dateien unter Verwendung von [OCRmyPDF](https://ocrmypdf.readthedocs.io/) mit integrierter OCR.
+Kommandozeilen-Tool und REST-API zur Konvertierung von PDF-, Office-, OpenDocument- und Bilddateien in PDF/A-Dateien unter Verwendung von [OCRmyPDF](https://ocrmypdf.readthedocs.io/) mit integrierter OCR.
 
 ## 📚 Dokumentation & Sprache
 
@@ -16,8 +16,8 @@ Kommandozeilen-Tool und REST-API zur Konvertierung von PDF-, Office- und OpenDoc
 
 ## Features
 
-- Konvertiert **PDF**, **MS Office** (DOCX, PPTX, XLSX) und **OpenDocument** (ODT, ODS, ODP) Dateien in PDF/A-konforme Dokumente
-- Office- und OpenDocument-Dateien werden automatisch in PDF konvertiert, bevor die PDF/A-Verarbeitung stattfindet
+- Konvertiert **PDF**, **MS Office** (DOCX, PPTX, XLSX), **OpenDocument** (ODT, ODS, ODP) und **Bilddateien** (JPG, PNG, TIFF, BMP, GIF) in PDF/A-konforme Dokumente
+- Office-, OpenDocument- und Bilddateien werden automatisch in PDF konvertiert, bevor die PDF/A-Verarbeitung stattfindet
 - Nutzt OCRmyPDF zur Erstellung von PDF/A-2-kompatiblen Dateien mit konfigurierbarer OCR
 - Konfigurierbare OCR-Sprache und PDF/A-Stufe (1, 2 oder 3)
 - Bietet einen FastAPI-REST-Endpunkt für Dokumentkonvertierungen
@@ -127,7 +127,7 @@ pdfa-cli --help
 
 ### CLI: Dokumente konvertieren
 
-Die CLI akzeptiert PDF-, MS Office (DOCX, PPTX, XLSX) und OpenDocument (ODT, ODS, ODP) Dateien:
+Die CLI akzeptiert PDF-, MS Office (DOCX, PPTX, XLSX), OpenDocument (ODT, ODS, ODP) und Bilddateien (JPG, PNG, TIFF, BMP, GIF):
 
 ```bash
 # PDF in PDF/A konvertieren
@@ -142,6 +142,11 @@ pdfa-cli spreadsheet.xlsx output.pdf
 pdfa-cli document.odt output.pdf --language eng
 pdfa-cli presentation.odp output.pdf
 pdfa-cli spreadsheet.ods output.pdf
+
+# Bilder in PDF/A konvertieren (automatisch)
+pdfa-cli photo.jpg output.pdf --language eng
+pdfa-cli scan.png output.pdf
+pdfa-cli document.tiff output.pdf
 ```
 
 **Optionen**:
@@ -194,13 +199,26 @@ curl -X POST "http://localhost:8000/convert" \
 curl -X POST "http://localhost:8000/convert" \
   -F "file=@spreadsheet.ods;type=application/vnd.oasis.opendocument.spreadsheet" \
   --output output.pdf
+
+# Bilddateien in PDF/A konvertieren (automatisch)
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@photo.jpg;type=image/jpeg" \
+  --output output.pdf
+
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@scan.png;type=image/png" \
+  --output output.pdf
+
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@document.tiff;type=image/tiff" \
+  --output output.pdf
 ```
 
-Der Service validiert den Upload, konvertiert Office- und OpenDocument-Dateien in PDF (falls erforderlich), konvertiert in PDF/A mit OCRmyPDF und gibt das konvertierte Dokument als HTTP-Response-Body zurück.
+Der Service validiert den Upload, konvertiert Office-, OpenDocument- und Bilddateien in PDF (falls erforderlich), konvertiert in PDF/A mit OCRmyPDF und gibt das konvertierte Dokument als HTTP-Response-Body zurück.
 
 #### Verfügbare Parameter
 
-- `file` (erforderlich): PDF-, MS Office (DOCX, PPTX, XLSX) oder OpenDocument (ODT, ODS, ODP) Datei zum Konvertieren
+- `file` (erforderlich): PDF-, MS Office (DOCX, PPTX, XLSX), OpenDocument (ODT, ODS, ODP) oder Bilddatei (JPG, PNG, TIFF, BMP, GIF) zum Konvertieren
 - `language` (optional): Tesseract-Sprachcodes für OCR (Standard: `deu+eng`)
 - `pdfa_level` (optional): PDF/A-Konformitätsstufe: `1`, `2` oder `3` (Standard: `2`)
 - `ocr_enabled` (optional): Ob OCR durchgeführt werden soll (Standard: `true`). Auf `false` setzen, um OCR zu überspringen.
@@ -235,7 +253,7 @@ done
 
 ### Batch-Verarbeitung mit gemischten Formaten
 
-Mehrere Dateitypen (PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP) in einem einzigen Verzeichnis konvertieren:
+Mehrere Dateitypen (PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP, JPG, PNG, TIFF, BMP, GIF) in einem einzigen Verzeichnis konvertieren:
 
 ```bash
 # Alle unterstützten Formate konvertieren
@@ -268,6 +286,21 @@ for file in /path/to/documents/*.*; do
     ods)
       mime="application/vnd.oasis.opendocument.spreadsheet"
       ;;
+    jpg|jpeg)
+      mime="image/jpeg"
+      ;;
+    png)
+      mime="image/png"
+      ;;
+    tiff|tif)
+      mime="image/tiff"
+      ;;
+    bmp)
+      mime="image/bmp"
+      ;;
+    gif)
+      mime="image/gif"
+      ;;
     *)
       echo "Nicht unterstütztes Format übersprungen: $file"
       continue
@@ -289,7 +322,7 @@ Für schnellere Batch-Verarbeitung mit mehreren gleichzeitigen Anfragen:
 
 ```bash
 # Bis zu 4 Dateien gleichzeitig konvertieren (alle unterstützten Formate)
-find /path/to/documents -type f \( -name "*.pdf" -o -name "*.docx" -o -name "*.pptx" -o -name "*.xlsx" -o -name "*.odt" -o -name "*.odp" -o -name "*.ods" \) | \
+find /path/to/documents -type f \( -name "*.pdf" -o -name "*.docx" -o -name "*.pptx" -o -name "*.xlsx" -o -name "*.odt" -o -name "*.odp" -o -name "*.ods" -o -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.tiff" -o -name "*.tif" -o -name "*.bmp" -o -name "*.gif" \) | \
   xargs -P 4 -I {} bash -c '
     file="{}"
     output="${file%.*}-pdfa.pdf"
@@ -300,6 +333,11 @@ find /path/to/documents -type f \( -name "*.pdf" -o -name "*.docx" -o -name "*.p
     [[ "$file" == *.odt ]] && mime="application/vnd.oasis.opendocument.text"
     [[ "$file" == *.odp ]] && mime="application/vnd.oasis.opendocument.presentation"
     [[ "$file" == *.ods ]] && mime="application/vnd.oasis.opendocument.spreadsheet"
+    [[ "$file" == *.jpg || "$file" == *.jpeg ]] && mime="image/jpeg"
+    [[ "$file" == *.png ]] && mime="image/png"
+    [[ "$file" == *.tiff || "$file" == *.tif ]] && mime="image/tiff"
+    [[ "$file" == *.bmp ]] && mime="image/bmp"
+    [[ "$file" == *.gif ]] && mime="image/gif"
 
     echo "Konvertierung: $file"
     curl -s -X POST "http://localhost:8000/convert" \

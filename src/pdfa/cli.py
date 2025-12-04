@@ -15,7 +15,12 @@ from ocrmypdf import exceptions as ocrmypdf_exceptions
 from pdfa.compression_config import CompressionConfig
 from pdfa.converter import convert_to_pdfa
 from pdfa.exceptions import OfficeConversionError, UnsupportedFormatError
-from pdfa.format_converter import convert_office_to_pdf, is_office_document
+from pdfa.format_converter import (
+    convert_office_to_pdf,
+    is_image_file,
+    is_office_document,
+)
+from pdfa.image_converter import convert_image_to_pdf
 from pdfa.logging_config import configure_logging, get_logger
 
 logger = get_logger(__name__)
@@ -26,13 +31,17 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="pdfa-cli",
         description=(
-            "Convert PDF, Office, and ODF documents to PDF/A with OCR using OCRmyPDF."
+            "Convert PDF, Office, ODF documents, and images to PDF/A "
+            "with OCR using OCRmyPDF."
         ),
     )
     parser.add_argument(
         "input_file",
         type=Path,
-        help=("Path to input file (PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP) to convert"),
+        help=(
+            "Path to input file (PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP, "
+            "JPG, PNG, TIFF, BMP, GIF) to convert"
+        ),
     )
     parser.add_argument(
         "output_pdf",
@@ -99,17 +108,19 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
 
     try:
-        # Check if input file is Office document
+        # Check if input file needs conversion
         is_office = is_office_document(args.input_file.name)
+        is_image = is_image_file(args.input_file.name)
 
-        # Convert Office to PDF if needed
+        # Convert Office documents or images to PDF if needed
         pdf_file = args.input_file
         temp_dir = None
         temp_input_file = None
 
-        if is_office:
+        if is_office or is_image:
+            file_type = "Office document" if is_office else "Image file"
             logger.info(
-                f"Office document detected, converting to PDF: {args.input_file.name}"
+                f"{file_type} detected, converting to PDF: {args.input_file.name}"
             )
             # Use temporary directory with random filenames for security
             temp_dir = TemporaryDirectory()
@@ -127,7 +138,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             random_pdf_name = f"{uuid.uuid4().hex}.pdf"
             pdf_file = temp_dir_path / random_pdf_name
             logger.debug(f"Using random temporary PDF filename: {random_pdf_name}")
-            convert_office_to_pdf(temp_input_file, pdf_file)
+
+            if is_office:
+                convert_office_to_pdf(temp_input_file, pdf_file)
+            else:  # is_image
+                convert_image_to_pdf(temp_input_file, pdf_file)
 
         try:
             # Convert to PDF/A

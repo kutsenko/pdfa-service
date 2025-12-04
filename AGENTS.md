@@ -8,7 +8,7 @@ This document contains all guidelines for working with the pdfa-service reposito
 
 ## Project Overview
 
-**pdfa-service** is a lightweight Python tool that converts regular PDFs and Office documents into PDF/A-compliant, searchable documents with OCR using [OCRmyPDF](https://ocrmypdf.readthedocs.io/).
+**pdfa-service** is a lightweight Python tool that converts regular PDFs, Office documents, and images into PDF/A-compliant, searchable documents with OCR using [OCRmyPDF](https://ocrmypdf.readthedocs.io/).
 
 The service provides two interfaces:
 1. **CLI** (`src/pdfa/cli.py`): Command-line tool registered as `pdfa-cli` entry point
@@ -99,11 +99,13 @@ Both interfaces must translate low-level errors consistently:
 - Ensures cleanup even on errors
 - Supports clean streaming semantics
 
-### Office Document Support
+### Office Document and Image Support
 
 - Office/OpenDocument files (DOCX, PPTX, XLSX, ODT, ODS, ODP) are automatically detected
-- Conversion to PDF happens via LibreOffice (CLI subprocess, no Python fallbacks)
-- Format detection uses file extension in `format_converter.py`
+- Image files (JPG, PNG, TIFF, BMP, GIF) are automatically detected
+- Office/ODF conversion to PDF happens via LibreOffice (CLI subprocess, no Python fallbacks)
+- Image conversion to PDF happens via img2pdf library
+- Format detection uses file extension in `format_converter.py` and `image_converter.py`
 - Custom exceptions: `OfficeConversionError`, `UnsupportedFormatError`
 
 ---
@@ -116,6 +118,7 @@ Both interfaces must translate low-level errors consistently:
 | `src/pdfa/cli.py` | CLI with argparse; entry point is `main(argv)` |
 | `src/pdfa/api.py` | FastAPI app; endpoint is `POST /convert` |
 | `src/pdfa/format_converter.py` | Office/ODF document format detection and LibreOffice conversion |
+| `src/pdfa/image_converter.py` | Image format detection and img2pdf conversion |
 | `src/pdfa/exceptions.py` | Custom exception definitions |
 | `src/pdfa/logging_config.py` | Logging configuration and setup |
 | `src/pdfa/__init__.py` | Package metadata (version) |
@@ -123,6 +126,7 @@ Both interfaces must translate low-level errors consistently:
 | `tests/test_cli.py` | CLI unit tests |
 | `tests/test_api.py` | API endpoint unit tests |
 | `tests/test_format_converter.py` | Format detection and Office conversion tests |
+| `tests/test_image_converter.py` | Image format detection and conversion tests |
 | `tests/test_cli_office.py` | CLI Office document handling tests |
 | `tests/test_api_office.py` | API Office document handling tests |
 | `tests/integration/test_conversion.py` | End-to-end PDF conversion integration tests |
@@ -186,6 +190,7 @@ pdfa-cli --help
 - `test_cli.py`: Argument parsing, error cases, success paths
 - `test_api.py`: Endpoint validation, file upload, response headers
 - `test_format_converter.py`: Format detection, Office/ODF conversion
+- `test_image_converter.py`: Image format detection and conversion
 - `test_cli_office.py`: CLI Office document handling
 - `test_api_office.py`: API Office document handling
 - `integration/test_conversion.py`: Real OCRmyPDF PDF conversion

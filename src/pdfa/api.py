@@ -14,7 +14,12 @@ from ocrmypdf import exceptions as ocrmypdf_exceptions
 from pdfa.compression_config import CompressionConfig
 from pdfa.converter import convert_to_pdfa
 from pdfa.exceptions import OfficeConversionError, UnsupportedFormatError
-from pdfa.format_converter import convert_office_to_pdf, is_office_document
+from pdfa.format_converter import (
+    convert_office_to_pdf,
+    is_image_file,
+    is_office_document,
+)
+from pdfa.image_converter import convert_image_to_pdf
 from pdfa.logging_config import get_logger
 
 PdfaLevel = Literal["1", "2", "3"]
@@ -82,14 +87,14 @@ async def convert_endpoint(
     pdfa_level: PdfaLevel = Form("2"),
     ocr_enabled: bool = Form(True),
 ) -> Response:
-    """Convert the uploaded PDF, Office, or ODF document into PDF/A.
+    """Convert the uploaded PDF, Office, ODF, or image file into PDF/A.
 
-    Supports PDF, DOCX, PPTX, XLSX (MS Office), and ODT, ODS, ODP (OpenDocument)
-    files. Office and ODF documents are automatically converted to PDF before
-    PDF/A conversion.
+    Supports PDF, DOCX, PPTX, XLSX (MS Office), ODT, ODS, ODP (OpenDocument),
+    and image files (JPG, PNG, TIFF, BMP, GIF). Office, ODF, and image files
+    are automatically converted to PDF before PDF/A conversion.
 
     Args:
-        file: PDF, Office, or ODF file to convert.
+        file: PDF, Office, ODF, or image file to convert.
         language: Tesseract language codes for OCR (default: 'deu+eng').
         pdfa_level: PDF/A compliance level (default: '2').
         ocr_enabled: Whether to perform OCR (default: True).
@@ -119,6 +124,12 @@ async def convert_endpoint(
         "application/vnd.oasis.opendocument.text",  # odt
         "application/vnd.oasis.opendocument.spreadsheet",  # ods
         "application/vnd.oasis.opendocument.presentation",  # odp
+        # Image MIME types
+        "image/jpeg",  # jpg, jpeg
+        "image/png",  # png
+        "image/tiff",  # tiff, tif
+        "image/bmp",  # bmp
+        "image/gif",  # gif
     }
 
     if file.content_type not in supported_types:
@@ -128,7 +139,10 @@ async def convert_endpoint(
         )
         raise HTTPException(
             status_code=400,
-            detail="Supported formats: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP",
+            detail=(
+                "Supported formats: PDF, DOCX, PPTX, XLSX, "
+                "ODT, ODS, ODP, JPG, PNG, TIFF, BMP, GIF"
+            ),
         )
 
     contents = await file.read()
@@ -141,14 +155,20 @@ async def convert_endpoint(
     with TemporaryDirectory() as tmp_dir:
         tmp_path = Path(tmp_dir)
 
-        # Determine if file is Office document
+        # Determine file type
         is_office = is_office_document(file.filename or "")
+        is_image = is_image_file(file.filename or "")
 
         # Use random filename for security (don't expose user filenames in temp storage)
         # Extract original file extension
         original_ext = Path(file.filename or "").suffix.lower() if file.filename else ""
         if not original_ext:
-            original_ext = ".docx" if is_office else ".pdf"
+            if is_office:
+                original_ext = ".docx"
+            elif is_image:
+                original_ext = ".jpg"
+            else:
+                original_ext = ".pdf"
 
         # Generate random temporary filename while preserving extension
         random_filename = f"{uuid.uuid4().hex}{original_ext}"
@@ -166,6 +186,10 @@ async def convert_endpoint(
                 )
                 pdf_path = tmp_path / "converted.pdf"
                 convert_office_to_pdf(input_path, pdf_path)
+            elif is_image:
+                logger.info(f"Image file detected, converting to PDF: {file.filename}")
+                pdf_path = tmp_path / "converted.pdf"
+                convert_image_to_pdf(input_path, pdf_path)
 
             # Convert to PDF/A
             output_path = tmp_path / "output.pdf"
