@@ -1,0 +1,35 @@
+services:
+  # PDF/A Conversion Service
+  pdfa:
+    build: ../../
+    # No ports exposed - only accessible via nginx reverse proxy
+    environment:
+      - PYTHONUNBUFFERED=1
+      # PDF Compression Settings (balanced defaults)
+      - PDFA_IMAGE_DPI=150
+      - PDFA_JPG_QUALITY=85
+      - PDFA_OPTIMIZE=1
+      - PDFA_REMOVE_VECTORS=true
+      - PDFA_JBIG2_LOSSY=false
+      - PDFA_JBIG2_PAGE_GROUP_SIZE=10
+    restart: unless-stopped
+    networks:
+      - pdfa-network
+
+  # Nginx Reverse Proxy with Basic Auth
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"  # Expose nginx on port 8080
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./htpasswd/.htpasswd:/etc/nginx/.htpasswd:ro
+    depends_on:
+      - pdfa
+    restart: unless-stopped
+    networks:
+      - pdfa-network
+
+networks:
+  pdfa-network:
+    driver: bridge

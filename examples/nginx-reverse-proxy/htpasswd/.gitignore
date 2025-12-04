@@ -1,0 +1,6 @@
+# Ignore real .htpasswd file (contains sensitive credentials)
+.htpasswd
+
+# Keep only the example file
+!.htpasswd.example
+!.gitignore
