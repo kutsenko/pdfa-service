@@ -129,7 +129,7 @@ jobs:
             type=sha,prefix=sha-,suffix=-minimal
 
       - name: Build full image for scanning
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           target: full
@@ -156,7 +156,7 @@ jobs:
 
       - name: Build and push full image
         if: success()
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           target: full
@@ -168,7 +168,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
 
       - name: Build minimal image for scanning
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           target: minimal
@@ -195,7 +195,7 @@ jobs:
 
       - name: Build and push minimal image
         if: success()
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           target: minimal
