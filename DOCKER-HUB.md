@@ -172,6 +172,8 @@ docker pull <username>/pdfa-service:latest
 ## Workflow Features
 
 - **Dual Image Variants**: Automatically builds both full and minimal images in parallel
+- **Security Scanning**: Uses Trivy to scan Docker images for vulnerabilities
+- **Python Vulnerability Scanning**: Uses pip-audit to check Python dependencies
 - **Build Cache**: Uses GitHub Actions cache for faster builds
 - **Multi-platform**: Builds for amd64 and arm64 architectures
 - **Auto-tagging**: Intelligent tagging based on git refs with `-minimal` suffix for minimal images
