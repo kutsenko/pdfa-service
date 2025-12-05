@@ -41,8 +41,32 @@ jobs:
       - name: Run pytest
         run: pytest -v
 
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -e .
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit for Python dependency vulnerabilities
+        run: pip-audit --desc on
+
   build-and-push:
-    needs: test
+    needs: [test, security]
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -100,7 +124,34 @@ jobs:
             # Tag with commit SHA
             type=sha,prefix=sha-,suffix=-minimal
 
+      - name: Build full image for scanning
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: full
+          load: true
+          tags: pdfa-service:full-scan
+          cache-from: type=gha
+          platforms: linux/amd64
+
+      - name: Run Trivy scan on full image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: pdfa-service:full-scan
+          format: 'sarif'
+          output: 'trivy-full-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+
+      - name: Upload Trivy scan results for full image
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-full-results.sarif'
+          category: 'trivy-full-image'
+
       - name: Build and push full image
+        if: success()
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -112,7 +163,34 @@ jobs:
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
 
+      - name: Build minimal image for scanning
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: minimal
+          load: true
+          tags: pdfa-service:minimal-scan
+          cache-from: type=gha
+          platforms: linux/amd64
+
+      - name: Run Trivy scan on minimal image
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: pdfa-service:minimal-scan
+          format: 'sarif'
+          output: 'trivy-minimal-results.sarif'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '1'
+
+      - name: Upload Trivy scan results for minimal image
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-minimal-results.sarif'
+          category: 'trivy-minimal-image'
+
       - name: Build and push minimal image
+        if: success()
         uses: docker/build-push-action@v5
         with:
           context: .

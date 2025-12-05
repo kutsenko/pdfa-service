@@ -23,6 +23,7 @@ dev = [
     "black>=25.1",
     "ruff>=0.9",
     "httpx>=0.28",
+    "pip-audit>=2.7",
 ]
 
 [project.scripts]

@@ -489,3 +489,51 @@ curl -X POST "http://localhost:8000/convert" \
     ├── test_api.py
     └── test_cli.py
 ```
+
+## Security
+
+This project uses automated vulnerability scanning to ensure dependency security:
+
+- **pip-audit**: Scans Python dependencies for known CVEs using the PyPI Advisory Database
+- **Trivy**: Scans Docker images for vulnerabilities in OS packages and Python dependencies
+- **Dependabot**: Automatically creates pull requests for dependency updates and security patches
+
+### CI/CD Security Pipeline
+
+Security scans run on every push and pull request:
+
+1. **Python Dependency Scan**: Runs in parallel with tests using pip-audit
+2. **Docker Image Scan**: Scans both full and minimal image variants with Trivy before pushing
+3. **Build Failure**: CI pipeline fails if HIGH or CRITICAL vulnerabilities are detected
+
+Vulnerability reports are automatically uploaded to the GitHub Security tab for review.
+
+### Running Security Scans Locally
+
+Scan Python dependencies for vulnerabilities:
+
+```bash
+pip install pip-audit
+pip-audit
+```
+
+Scan Docker images:
+
+```bash
+# Install Trivy
+# See: https://aquasecurity.github.io/trivy/latest/getting-started/installation/
+
+# Build and scan the image
+docker build -t pdfa-service .
+trivy image --severity HIGH,CRITICAL pdfa-service
+```
+
+### Automated Dependency Updates
+
+Dependabot is configured to:
+- Check for dependency updates weekly (Mondays at 06:00 UTC)
+- Create pull requests for Python dependencies and GitHub Actions
+- Automatically label security-related updates
+- Limit open PRs to prevent overwhelming the repository
+
+All Dependabot PRs trigger the full test suite and security scans before merge.
