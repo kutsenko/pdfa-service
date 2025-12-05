@@ -384,9 +384,42 @@ See [scripts/README.md](scripts/README.md) for detailed documentation on the bat
 
 ## Testing
 
+### Unit and Integration Tests
+
+Run the test suite:
+
 ```bash
 pytest
 ```
+
+Run with verbose output:
+
+```bash
+pytest -v
+```
+
+### Testing GitHub Actions Locally
+
+The project uses [act](https://github.com/nektos/act) to run GitHub Actions workflows locally before pushing to GitHub.
+
+**Prerequisites**: Install act following the [installation guide](https://github.com/nektos/act#installation)
+
+**Run specific jobs**:
+
+```bash
+# Run tests
+act -j test
+
+# Run security scan
+act -j security
+
+# Run both (all stage 0 jobs)
+act
+```
+
+**Configuration**: The `.actrc` file configures act to use the correct Docker image for local testing.
+
+**Note**: The `build-and-push` job requires Docker Hub credentials and is typically not run locally.
 
 ## Deployment
 

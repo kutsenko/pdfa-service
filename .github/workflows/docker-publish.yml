@@ -63,7 +63,11 @@ jobs:
         run: pip install pip-audit
 
       - name: Run pip-audit for Python dependency vulnerabilities
-        run: pip-audit --desc on
+        run: |
+          # Ignore GHSA-f83h-ghpp-7wcc: pdfminer.six pickle deserialization
+          # Reason: Transitive dependency from ocrmypdf, not exploitable in our use case
+          # We don't use CMap functionality and CMAP_PATH is not user-controllable
+          pip-audit --desc on --ignore-vuln GHSA-f83h-ghpp-7wcc
 
   build-and-push:
     needs: [test, security]
