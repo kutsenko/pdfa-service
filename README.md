@@ -392,17 +392,59 @@ pytest
 
 ### Docker
 
-Build the Docker image:
+#### Docker Image Variants
+
+Two Docker image variants are available:
+
+| Variant | Tags | Features | Size | Use Case |
+|---------|------|----------|------|----------|
+| **Full** | `:latest`, `:1.2.3` | PDF, Office docs (.docx, .xlsx, .pptx), Images (.jpg, .png) | ~1.2 GB | Complete functionality with LibreOffice support |
+| **Minimal** | `:latest-minimal`, `:1.2.3-minimal` | PDF to PDF/A only | ~400-500 MB | Smaller footprint, PDF/A conversion only |
+
+**Choosing an Image:**
+
+- Use the **full image** (`:latest`) if you need to convert Office documents or images
+- Use the **minimal image** (`:latest-minimal`) if you only convert PDFs to PDF/A and want a smaller image
+
+#### Building Locally
+
+Build the full image (default):
 
 ```bash
 docker build -t pdfa-service:latest .
 ```
+
+Build the minimal image:
+
+```bash
+docker build --target minimal -t pdfa-service:minimal .
+```
+
+#### Using Pre-built Images from Docker Hub
+
+Pull and run the full image:
+
+```bash
+docker pull <username>/pdfa-service:latest
+docker run -p 8000:8000 <username>/pdfa-service:latest
+```
+
+Pull and run the minimal image:
+
+```bash
+docker pull <username>/pdfa-service:latest-minimal
+docker run -p 8000:8000 <username>/pdfa-service:latest-minimal
+```
+
+#### Running the API Service
 
 Run the API service in a container:
 
 ```bash
 docker run -p 8000:8000 pdfa-service:latest
 ```
+
+#### Using the CLI
 
 Convert a PDF using the containerized CLI:
 

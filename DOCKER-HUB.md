@@ -4,9 +4,16 @@ This document describes the automated Docker image build and publishing pipeline
 
 ## Overview
 
-GitHub Actions automatically builds and publishes Docker images to Docker Hub on:
-- **Push to main branch** → tagged as `latest`
-- **Version tags** (e.g., `v1.2.3`) → tagged with version numbers
+GitHub Actions automatically builds and publishes **two Docker image variants** to Docker Hub:
+
+| Variant | Tags | Features | Size |
+|---------|------|----------|------|
+| **Full** | `:latest`, `:1.2.3` | PDF, Office docs, Images | ~1.2 GB |
+| **Minimal** | `:latest-minimal`, `:1.2.3-minimal` | PDF to PDF/A only | ~400-500 MB |
+
+Build triggers:
+- **Push to main branch** → tagged as `latest` and `latest-minimal`
+- **Version tags** (e.g., `v1.2.3`) → tagged with version numbers and `-minimal` variants
 - **Pull requests** → builds only (no push)
 
 ## Initial Setup
@@ -38,40 +45,101 @@ Add the following secrets to your GitHub repository:
 4. Visibility: **Public** or **Private** (your choice)
 5. Click **Create**
 
+## Image Variants
+
+### Full Image (Default)
+
+- **Tags**: `:latest`, `:1.2.3`, `:1.2`, `:1`
+- **Features**: Complete functionality
+  - PDF to PDF/A conversion
+  - Office document conversion (.docx, .xlsx, .pptx)
+  - OpenDocument conversion (.odt, .ods, .odp)
+  - Image conversion (.jpg, .png, .tiff, .bmp, .gif)
+- **Dependencies**: Includes LibreOffice for Office document support
+- **Size**: ~1.2 GB
+- **Use Case**: Full-featured document processing
+
+### Minimal Image
+
+- **Tags**: `:latest-minimal`, `:1.2.3-minimal`, `:1.2-minimal`, `:1-minimal`
+- **Features**: PDF to PDF/A conversion only
+  - No Office document support
+  - No image conversion support
+- **Dependencies**: OCRmyPDF, Tesseract, Ghostscript, qpdf (no LibreOffice)
+- **Size**: ~400-500 MB (60% smaller than full image)
+- **Use Case**: When you only need PDF/A conversion and want minimal footprint
+
+**Important**: Attempting to convert Office documents or images with the minimal image will result in an error.
+
 ## Image Tags
 
-The workflow automatically creates the following tags:
+The workflow automatically creates the following tags for **both variants**:
 
-| Trigger | Tags Created | Example |
-|---------|--------------|---------|
-| Push to main | `latest`, `main-<sha>` | `latest`, `main-a1b2c3d` |
-| Version tag | `<version>`, `<major>.<minor>`, `<major>` | `1.2.3`, `1.2`, `1` |
-| Branch push | `<branch>-<sha>` | `feature-xyz-a1b2c3d` |
-| Pull request | `pr-<number>` | `pr-42` (build only, not pushed) |
+| Trigger | Full Image Tags | Minimal Image Tags | Example |
+|---------|----------------|-------------------|---------|
+| Push to main | `latest`, `sha-<hash>` | `latest-minimal`, `sha-<hash>-minimal` | `latest`, `latest-minimal` |
+| Version tag | `<version>`, `<major>.<minor>`, `<major>` | `<version>-minimal`, `<major>.<minor>-minimal`, `<major>-minimal` | `1.2.3`, `1.2.3-minimal` |
+| Branch push | `<branch>`, `sha-<hash>` | `<branch>-minimal`, `sha-<hash>-minimal` | `feature-xyz`, `feature-xyz-minimal` |
+| Pull request | `pr-<number>` | `pr-<number>-minimal` | `pr-42`, `pr-42-minimal` (build only, not pushed) |
 
 ## Usage
 
-### Pull Latest Image
+### Full Image
+
+Pull the latest full image:
 
 ```bash
 docker pull <username>/pdfa-service:latest
 ```
 
-### Pull Specific Version
+Pull a specific version:
 
 ```bash
 docker pull <username>/pdfa-service:1.2.3
 ```
 
-### Run Container
+Run the full image:
 
 ```bash
 docker run -p 8000:8000 <username>/pdfa-service:latest
 ```
 
+### Minimal Image
+
+Pull the latest minimal image:
+
+```bash
+docker pull <username>/pdfa-service:latest-minimal
+```
+
+Pull a specific version:
+
+```bash
+docker pull <username>/pdfa-service:1.2.3-minimal
+```
+
+Run the minimal image:
+
+```bash
+docker run -p 8000:8000 <username>/pdfa-service:latest-minimal
+```
+
+### Choosing Between Variants
+
+**Use the full image** when:
+- You need to convert Office documents (.docx, .xlsx, .pptx)
+- You need to convert images (.jpg, .png, .tiff)
+- You want complete functionality
+
+**Use the minimal image** when:
+- You only convert PDF files to PDF/A
+- You want a smaller Docker image
+- You want faster image pull times
+- You have storage or bandwidth constraints
+
 ## Release Process
 
-To create a new release with automatic Docker image:
+To create a new release with automatic Docker images:
 
 1. Update version in `pyproject.toml`
 2. Commit changes
@@ -83,8 +151,9 @@ git push origin v1.2.3
 ```
 
 GitHub Actions will automatically:
-- Build the Docker image for both `linux/amd64` and `linux/arm64`
-- Push with tags: `1.2.3`, `1.2`, `1`, and `latest`
+- Build **both full and minimal images** for `linux/amd64` and `linux/arm64`
+- Push full image with tags: `1.2.3`, `1.2`, `1`, and `latest`
+- Push minimal image with tags: `1.2.3-minimal`, `1.2-minimal`, `1-minimal`, and `latest-minimal`
 - Update the Docker Hub description with README.md content
 
 ## Multi-Platform Support
@@ -102,11 +171,13 @@ docker pull <username>/pdfa-service:latest
 
 ## Workflow Features
 
+- **Dual Image Variants**: Automatically builds both full and minimal images in parallel
 - **Build Cache**: Uses GitHub Actions cache for faster builds
 - **Multi-platform**: Builds for amd64 and arm64 architectures
-- **Auto-tagging**: Intelligent tagging based on git refs
+- **Auto-tagging**: Intelligent tagging based on git refs with `-minimal` suffix for minimal images
 - **README Sync**: Automatically updates Docker Hub description from README.md
 - **PR Validation**: Builds (but doesn't push) on pull requests
+- **Test-First**: All tests must pass before building images
 
 ## Troubleshooting
 

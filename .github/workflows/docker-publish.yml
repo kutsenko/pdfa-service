@@ -62,8 +62,8 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels)
-        id: meta
+      - name: Extract metadata for full image
+        id: meta-full
         uses: docker/metadata-action@v5
         with:
           images: ${{ env.DOCKER_IMAGE }}
@@ -81,13 +81,45 @@ jobs:
             # Tag with commit SHA
             type=sha,prefix=sha-
 
-      - name: Build and push Docker image
+      - name: Extract metadata for minimal image
+        id: meta-minimal
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKER_IMAGE }}
+          tags: |
+            # Tag with 'latest-minimal' on main branch
+            type=raw,value=latest-minimal,enable={{is_default_branch}}
+            # Tag with version number on version tags
+            type=semver,pattern={{version}}-minimal
+            type=semver,pattern={{major}}.{{minor}}-minimal
+            type=semver,pattern={{major}}-minimal
+            # Tag with branch name
+            type=ref,event=branch,suffix=-minimal
+            # Tag with PR number
+            type=ref,event=pr,suffix=-minimal
+            # Tag with commit SHA
+            type=sha,prefix=sha-,suffix=-minimal
+
+      - name: Build and push full image
         uses: docker/build-push-action@v5
         with:
           context: .
+          target: full
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: ${{ steps.meta-full.outputs.tags }}
+          labels: ${{ steps.meta-full.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+      - name: Build and push minimal image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          target: minimal
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta-minimal.outputs.tags }}
+          labels: ${{ steps.meta-minimal.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64,linux/arm64
