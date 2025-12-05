@@ -253,12 +253,58 @@ This ensures:
 ### Testing Requirements
 
 - **Mandatory**: Execute full test suite with `pytest` before every commit
+- **Mandatory**: Run security scans before every PR (see Security Testing below)
 - **Mandatory**: All new code must have passing tests before commit
 - **Mandatory**: Tests must be written before (or parallel to) production code
 - `conftest.py` provides `ocrmypdf` module mocking so tests run without Tesseract/Ghostscript
 - Tests import from `src/` via `pythonpath` in `pyproject.toml`
 - Run `pytest` to execute all available tests; integration tests auto-skip gracefully
 - **TDD Workflow**: Start with failing tests, write production code to make them pass, refactor
+
+### Security Testing
+
+Before creating a pull request, **mandatory security scans must pass**:
+
+#### Local Security Testing
+
+Run locally before pushing:
+
+```bash
+# Test GitHub Actions locally with act
+act -j security
+
+# Or run pip-audit directly
+pip install pip-audit
+pip-audit --desc on --ignore-vuln GHSA-f83h-ghpp-7wcc
+```
+
+#### CI/CD Security Pipeline
+
+The GitHub Actions workflow automatically runs:
+
+1. **Python Dependency Scan** (`pip-audit`):
+   - Scans all Python dependencies for known CVEs
+   - Fails on HIGH or CRITICAL vulnerabilities
+   - Runs parallel to unit tests for speed
+
+2. **Docker Image Scan** (`trivy`):
+   - Scans both full and minimal Docker images
+   - Checks OS packages and Python dependencies
+   - Fails on HIGH or CRITICAL vulnerabilities
+   - Results uploaded to GitHub Security tab
+
+#### Known Exceptions
+
+- **GHSA-f83h-ghpp-7wcc** (pdfminer.six pickle deserialization):
+  - Transitive dependency from ocrmypdf
+  - Not exploitable in our use case (no CMap usage, CMAP_PATH not user-controllable)
+  - Ignored pending upstream fix
+
+#### Testing Infrastructure
+
+- **act**: Run GitHub Actions workflows locally before pushing
+- **Configuration**: `.actrc` configures Docker images for local testing
+- **Documentation**: See "Testing GitHub Actions Locally" in README.md
 
 ### Smoke Test
 
@@ -556,6 +602,17 @@ Typical OCR processing times per page:
 ---
 
 ## Security Considerations
+
+### Automated Vulnerability Scanning
+
+The project uses automated security scanning in the CI/CD pipeline:
+
+- **pip-audit**: Scans Python dependencies for CVEs from PyPI Advisory Database
+- **Trivy**: Scans Docker images for vulnerabilities in OS packages and dependencies
+- **Dependabot**: Automatically creates PRs for dependency updates and security patches
+- **GitHub Security Tab**: Aggregates vulnerability reports for review
+
+CI pipeline **fails** if HIGH or CRITICAL vulnerabilities are detected. See "Security Testing" section for details.
 
 ### Input Validation
 
