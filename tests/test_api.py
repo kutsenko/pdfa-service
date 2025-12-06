@@ -118,3 +118,72 @@ def test_convert_endpoint_handles_conversion_failure(
 
     assert response.status_code == 500
     assert response.json()["detail"] == "OCRmyPDF failed: ocr failure"
+
+
+def test_web_ui_root_path(client: TestClient) -> None:
+    """Root path should serve the web UI with auto language detection."""
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/html; charset=utf-8"
+    # Should have auto language detection enabled
+    assert 'data-lang="auto"' in response.text
+
+
+def test_web_ui_english(client: TestClient) -> None:
+    """English web UI should have correct language attribute."""
+    response = client.get("/en")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/html; charset=utf-8"
+    # Should have English language set
+    assert 'lang="en"' in response.text
+    assert 'data-lang="en"' in response.text
+    # Should NOT have auto detection
+    assert 'data-lang="auto"' not in response.text
+
+
+def test_web_ui_german(client: TestClient) -> None:
+    """German web UI should have correct language attribute."""
+    response = client.get("/de")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/html; charset=utf-8"
+    # Should have German language set
+    assert 'lang="de"' in response.text
+    assert 'data-lang="de"' in response.text
+
+
+def test_web_ui_spanish(client: TestClient) -> None:
+    """Spanish web UI should have correct language attribute."""
+    response = client.get("/es")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/html; charset=utf-8"
+    # Should have Spanish language set
+    assert 'lang="es"' in response.text
+    assert 'data-lang="es"' in response.text
+
+
+def test_web_ui_french(client: TestClient) -> None:
+    """French web UI should have correct language attribute."""
+    response = client.get("/fr")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/html; charset=utf-8"
+    # Should have French language set
+    assert 'lang="fr"' in response.text
+    assert 'data-lang="fr"' in response.text
+
+
+def test_web_ui_unsupported_language(client: TestClient) -> None:
+    """Unsupported language should return 404."""
+    response = client.get("/xx")
+    assert response.status_code == 404
+    assert "not supported" in response.json()["detail"]
+
+
+def test_web_ui_language_switcher_links(client: TestClient) -> None:
+    """Web UI should contain language switcher links."""
+    response = client.get("/en")
+    assert response.status_code == 200
+    # Check for language switcher links
+    assert 'href="/en"' in response.text
+    assert 'href="/de"' in response.text
+    assert 'href="/es"' in response.text
+    assert 'href="/fr"' in response.text

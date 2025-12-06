@@ -76,7 +76,8 @@ async def web_ui_lang(lang: str) -> str:
         html_content = ui_path.read_text(encoding="utf-8")
         # Inject the language code into the HTML
         html_content = html_content.replace(
-            '<html lang="en">', f'<html lang="{lang}" data-lang="{lang}">'
+            '<html lang="en" data-lang="en">',
+            f'<html lang="{lang}" data-lang="{lang}">',
         )
         return html_content
     except FileNotFoundError:
