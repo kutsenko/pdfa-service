@@ -454,7 +454,16 @@
                 'status.fileTooLarge': 'File too large: {size}. Maximum size is {max}.',
                 'status.converting': 'Converting... This may take a moment',
                 'status.success': '✓ Conversion successful! Your file has been downloaded.',
-                'status.error': '✗ Error: {message}'
+                'status.error': '✗ Error: {message}',
+                'error.badRequest': 'Invalid file or parameters. Please check your file and try again.',
+                'error.payloadTooLarge': 'File size exceeds server limit. Please use a smaller file.',
+                'error.requestTimeout': 'Request timed out. The server took too long to respond.',
+                'error.internalServer': 'Server error occurred. Please try again later.',
+                'error.gatewayTimeout': 'Gateway timeout. The conversion is taking longer than expected.',
+                'error.networkError': 'Network error. Please check your internet connection.',
+                'error.connectionRefused': 'Cannot connect to server. Please try again later.',
+                'error.timeout': 'Request timeout. Please try again with a smaller file or later.',
+                'error.unknown': 'An unknown error occurred: {message}'
             },
             de: {
                 'page.title': 'PDF/A Konverter - Testoberfläche',
@@ -490,7 +499,16 @@
                 'status.fileTooLarge': 'Datei zu groß: {size}. Maximale Größe ist {max}.',
                 'status.converting': 'Konvertierung läuft... Dies kann einen Moment dauern',
                 'status.success': '✓ Konvertierung erfolgreich! Ihre Datei wurde heruntergeladen.',
-                'status.error': '✗ Fehler: {message}'
+                'status.error': '✗ Fehler: {message}',
+                'error.badRequest': 'Ungültige Datei oder Parameter. Bitte überprüfen Sie Ihre Datei und versuchen Sie es erneut.',
+                'error.payloadTooLarge': 'Dateigröße überschreitet Serverlimit. Bitte verwenden Sie eine kleinere Datei.',
+                'error.requestTimeout': 'Zeitüberschreitung der Anfrage. Der Server hat zu lange gebraucht.',
+                'error.internalServer': 'Serverfehler aufgetreten. Bitte versuchen Sie es später erneut.',
+                'error.gatewayTimeout': 'Gateway-Zeitüberschreitung. Die Konvertierung dauert länger als erwartet.',
+                'error.networkError': 'Netzwerkfehler. Bitte überprüfen Sie Ihre Internetverbindung.',
+                'error.connectionRefused': 'Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie es später erneut.',
+                'error.timeout': 'Zeitüberschreitung. Bitte versuchen Sie es mit einer kleineren Datei oder später erneut.',
+                'error.unknown': 'Ein unbekannter Fehler ist aufgetreten: {message}'
             },
             es: {
                 'page.title': 'Convertidor PDF/A - Interfaz de Prueba',
@@ -526,7 +544,16 @@
                 'status.fileTooLarge': 'Archivo demasiado grande: {size}. El tamaño máximo es {max}.',
                 'status.converting': 'Convirtiendo... Esto puede tardar un momento',
                 'status.success': '✓ ¡Conversión exitosa! Su archivo ha sido descargado.',
-                'status.error': '✗ Error: {message}'
+                'status.error': '✗ Error: {message}',
+                'error.badRequest': 'Archivo o parámetros inválidos. Por favor, verifique su archivo e inténtelo de nuevo.',
+                'error.payloadTooLarge': 'El tamaño del archivo excede el límite del servidor. Por favor, use un archivo más pequeño.',
+                'error.requestTimeout': 'Se agotó el tiempo de espera de la solicitud. El servidor tardó demasiado en responder.',
+                'error.internalServer': 'Ocurrió un error en el servidor. Por favor, inténtelo de nuevo más tarde.',
+                'error.gatewayTimeout': 'Tiempo de espera agotado. La conversión está tardando más de lo esperado.',
+                'error.networkError': 'Error de red. Por favor, verifique su conexión a internet.',
+                'error.connectionRefused': 'No se puede conectar al servidor. Por favor, inténtelo de nuevo más tarde.',
+                'error.timeout': 'Tiempo de espera agotado. Por favor, inténtelo con un archivo más pequeño o más tarde.',
+                'error.unknown': 'Ocurrió un error desconocido: {message}'
             },
             fr: {
                 'page.title': 'Convertisseur PDF/A - Interface de Test',
@@ -562,7 +589,16 @@
                 'status.fileTooLarge': 'Fichier trop volumineux : {size}. La taille maximale est {max}.',
                 'status.converting': 'Conversion en cours... Cela peut prendre un moment',
                 'status.success': '✓ Conversion réussie ! Votre fichier a été téléchargé.',
-                'status.error': '✗ Erreur : {message}'
+                'status.error': '✗ Erreur : {message}',
+                'error.badRequest': 'Fichier ou paramètres invalides. Veuillez vérifier votre fichier et réessayer.',
+                'error.payloadTooLarge': 'La taille du fichier dépasse la limite du serveur. Veuillez utiliser un fichier plus petit.',
+                'error.requestTimeout': 'Délai d\'attente de la demande expiré. Le serveur a mis trop de temps à répondre.',
+                'error.internalServer': 'Une erreur serveur s\'est produite. Veuillez réessayer plus tard.',
+                'error.gatewayTimeout': 'Délai d\'attente de la passerelle expiré. La conversion prend plus de temps que prévu.',
+                'error.networkError': 'Erreur réseau. Veuillez vérifier votre connexion internet.',
+                'error.connectionRefused': 'Impossible de se connecter au serveur. Veuillez réessayer plus tard.',
+                'error.timeout': 'Délai d\'attente expiré. Veuillez réessayer avec un fichier plus petit ou plus tard.',
+                'error.unknown': 'Une erreur inconnue s\'est produite : {message}'
             }
         };
 
@@ -708,6 +744,61 @@
             return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
         }
 
+        // Fetch with timeout helper function
+        async function fetchWithTimeout(url, options = {}, timeoutMs = 300000) {
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(timeout);
+                return response;
+            } catch (error) {
+                clearTimeout(timeout);
+                throw error;
+            }
+        }
+
+        // Get error message based on HTTP status code or error type
+        function getErrorMessage(error, response = null) {
+            // Handle network/timeout errors
+            if (error.name === 'AbortError') {
+                return t('error.timeout');
+            }
+            if (error.message === 'Failed to fetch' || error.message.includes('NetworkError')) {
+                return t('error.networkError');
+            }
+            if (error.message.includes('ECONNREFUSED')) {
+                return t('error.connectionRefused');
+            }
+
+            // Handle HTTP errors by status code
+            if (response) {
+                switch (response.status) {
+                    case 400:
+                        return t('error.badRequest');
+                    case 413:
+                        return t('error.payloadTooLarge');
+                    case 408:
+                        return t('error.requestTimeout');
+                    case 500:
+                    case 502:
+                    case 503:
+                        return t('error.internalServer');
+                    case 504:
+                        return t('error.gatewayTimeout');
+                    default:
+                        return t('error.unknown', { message: `HTTP ${response.status}` });
+                }
+            }
+
+            // Fallback to generic error message
+            return t('error.unknown', { message: error.message });
+        }
+
         // Form submission
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -740,10 +831,11 @@
             showStatus('<span class="spinner"></span>' + t('status.converting'), 'loading');
 
             try {
-                const response = await fetch('/convert', {
+                // Use fetchWithTimeout with 5 minute timeout (300000ms)
+                const response = await fetchWithTimeout('/convert', {
                     method: 'POST',
                     body: formData
-                });
+                }, 300000);
 
                 if (response.ok) {
                     const blob = await response.blob();
@@ -765,30 +857,27 @@
                     form.reset();
                     fileName.textContent = '';
                 } else {
-                    let errorMsg = t('status.error', { message: 'Conversion failed. Please check the file and try again.' });
+                    // Get error message based on status code
+                    let errorMsg = getErrorMessage(null, response);
 
-                    // Try to parse JSON error response
+                    // Try to get more details from response body
                     try {
                         const errorData = await response.json();
                         if (errorData.detail) {
+                            // Append server detail to status code message
                             errorMsg = t('status.error', { message: errorData.detail });
                         }
                     } catch (e) {
-                        // If not JSON, try to get text
-                        try {
-                            const errorText = await response.text();
-                            if (errorText) {
-                                errorMsg = t('status.error', { message: errorText });
-                            }
-                        } catch (e2) {
-                            errorMsg = t('status.error', { message: `HTTP Error: ${response.status}` });
-                        }
+                        // If parsing fails, use the status code message
+                        errorMsg = t('status.error', { message: errorMsg });
                     }
 
                     showStatus(errorMsg, 'error');
                 }
             } catch (error) {
-                showStatus(t('status.error', { message: error.message }), 'error');
+                // Handle network errors, timeouts, etc.
+                const errorMsg = getErrorMessage(error);
+                showStatus(t('status.error', { message: errorMsg }), 'error');
             } finally {
                 convertBtn.disabled = false;
             }
