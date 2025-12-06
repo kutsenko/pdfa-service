@@ -211,6 +211,35 @@
             display: block;
         }
 
+        .status-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .status-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .status-btn-primary {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .status-btn-primary:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
         .status.error {
             background-color: #f8d7da;
             color: #721c24;
@@ -454,6 +483,7 @@
                 'status.fileTooLarge': 'File too large: {size}. Maximum size is {max}.',
                 'status.converting': 'Converting... This may take a moment',
                 'status.success': '✓ Conversion successful! Your file has been downloaded.',
+                'status.viewPdf': '👁️ View PDF',
                 'status.error': '✗ Error: {message}',
                 'error.badRequest': 'Invalid file or parameters. Please check your file and try again.',
                 'error.payloadTooLarge': 'File size exceeds server limit. Please use a smaller file.',
@@ -499,6 +529,7 @@
                 'status.fileTooLarge': 'Datei zu groß: {size}. Maximale Größe ist {max}.',
                 'status.converting': 'Konvertierung läuft... Dies kann einen Moment dauern',
                 'status.success': '✓ Konvertierung erfolgreich! Ihre Datei wurde heruntergeladen.',
+                'status.viewPdf': '👁️ PDF anzeigen',
                 'status.error': '✗ Fehler: {message}',
                 'error.badRequest': 'Ungültige Datei oder Parameter. Bitte überprüfen Sie Ihre Datei und versuchen Sie es erneut.',
                 'error.payloadTooLarge': 'Dateigröße überschreitet Serverlimit. Bitte verwenden Sie eine kleinere Datei.',
@@ -544,6 +575,7 @@
                 'status.fileTooLarge': 'Archivo demasiado grande: {size}. El tamaño máximo es {max}.',
                 'status.converting': 'Convirtiendo... Esto puede tardar un momento',
                 'status.success': '✓ ¡Conversión exitosa! Su archivo ha sido descargado.',
+                'status.viewPdf': '👁️ Ver PDF',
                 'status.error': '✗ Error: {message}',
                 'error.badRequest': 'Archivo o parámetros inválidos. Por favor, verifique su archivo e inténtelo de nuevo.',
                 'error.payloadTooLarge': 'El tamaño del archivo excede el límite del servidor. Por favor, use un archivo más pequeño.',
@@ -589,6 +621,7 @@
                 'status.fileTooLarge': 'Fichier trop volumineux : {size}. La taille maximale est {max}.',
                 'status.converting': 'Conversion en cours... Cela peut prendre un moment',
                 'status.success': '✓ Conversion réussie ! Votre fichier a été téléchargé.',
+                'status.viewPdf': '👁️ Voir le PDF',
                 'status.error': '✗ Erreur : {message}',
                 'error.badRequest': 'Fichier ou paramètres invalides. Veuillez vérifier votre fichier et réessayer.',
                 'error.payloadTooLarge': 'La taille du fichier dépasse la limite du serveur. Veuillez utiliser un fichier plus petit.',
@@ -851,11 +884,23 @@
                     document.body.appendChild(link);
                     link.click();
                     document.body.removeChild(link);
-                    window.URL.revokeObjectURL(url);
 
-                    showStatus(t('status.success'), 'success');
+                    // Show success message with "View PDF" button
+                    showStatus(t('status.success'), 'success', {
+                        label: t('status.viewPdf'),
+                        onClick: () => {
+                            // Open PDF in new tab
+                            window.open(url, '_blank');
+                        }
+                    });
+
                     form.reset();
                     fileName.textContent = '';
+
+                    // Clean up the blob URL after 30 seconds
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(url);
+                    }, 30000);
                 } else {
                     // Get error message based on status code
                     let errorMsg = getErrorMessage(null, response);
@@ -883,13 +928,31 @@
             }
         });
 
-        function showStatus(message, type) {
+        function showStatus(message, type, action = null) {
             statusDiv.innerHTML = message;
             statusDiv.className = 'status ' + type;
+
+            // Add action button if provided
+            if (action && action.label && action.onClick) {
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'status-actions';
+
+                const actionBtn = document.createElement('button');
+                actionBtn.className = 'status-btn status-btn-primary';
+                actionBtn.textContent = action.label;
+                actionBtn.onclick = action.onClick;
+
+                actionsDiv.appendChild(actionBtn);
+                statusDiv.appendChild(actionsDiv);
+            }
+
             if (type === 'success' || type === 'error') {
-                setTimeout(() => {
-                    statusDiv.style.display = 'none';
-                }, 5000);
+                // Don't auto-hide if there's an action button
+                if (!action) {
+                    setTimeout(() => {
+                        statusDiv.style.display = 'none';
+                    }, 5000);
+                }
             }
         }
     </script>
