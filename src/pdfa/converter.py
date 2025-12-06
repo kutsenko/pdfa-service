@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from collections.abc import Callable
 from pathlib import Path
 
 import ocrmypdf
 import pikepdf
 
-from pdfa.compression_config import CompressionConfig
+from pdfa.compression_config import PRESETS, CompressionConfig
+from pdfa.progress_tracker import ProgressInfo, WebSocketProgressBar
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +50,8 @@ def convert_to_pdfa(
     ocr_enabled: bool = True,
     skip_ocr_on_tagged_pdfs: bool = True,
     compression_config: CompressionConfig | None = None,
+    progress_callback: Callable[[ProgressInfo], None] | None = None,
+    cancel_event: asyncio.Event | None = None,
 ) -> None:
     """Convert a PDF to PDF/A using OCRmyPDF.
 
@@ -58,6 +63,8 @@ def convert_to_pdfa(
         ocr_enabled: Whether to perform OCR on the PDF (default: True).
         skip_ocr_on_tagged_pdfs: Skip OCR for PDFs with structure tags (default: True).
         compression_config: Compression settings (default: None, uses defaults).
+        progress_callback: Optional callback for progress updates.
+        cancel_event: Optional event to check for cancellation requests.
 
     """
     if not input_pdf.exists():
@@ -82,6 +89,14 @@ def convert_to_pdfa(
                 f"PDF has structure tags, skipping OCR as requested: {input_pdf}"
             )
 
+            # Preserve vector content for tagged PDFs (office documents)
+            if compression_config.remove_vectors:
+                logger.info(
+                    "Tagged PDF detected - switching to "
+                    "vector-preserving compression mode"
+                )
+                compression_config = PRESETS["preserve"]
+
     logger.info(
         f"Converting PDF to PDF/A-{pdfa_level}: {input_pdf} -> {output_pdf}",
     )
@@ -98,6 +113,22 @@ def convert_to_pdfa(
     output_pdf.parent.mkdir(parents=True, exist_ok=True)
     output_type = f"pdfa-{pdfa_level}"
 
+    # Set up progress bar if callback is provided
+    progress_bar = None
+    if progress_callback:
+        progress_bar = WebSocketProgressBar
+
+        # Create a partial to pass callback and cancel_event
+        def make_progress_bar(*args, **kwargs):  # type: ignore
+            return WebSocketProgressBar(
+                *args,
+                **kwargs,
+                callback=progress_callback,
+                cancel_event=cancel_event,
+            )
+
+        progress_bar = make_progress_bar
+
     try:
         ocrmypdf.ocr(
             str(input_pdf),
@@ -113,6 +144,8 @@ def convert_to_pdfa(
             jpg_quality=compression_config.jpg_quality,
             jbig2_lossy=compression_config.jbig2_lossy,
             jbig2_page_group_size=compression_config.jbig2_page_group_size,
+            # Progress reporting
+            progress_bar=progress_bar,
         )
         logger.info(f"Successfully converted PDF/A file: {output_pdf}")
     except Exception as e:

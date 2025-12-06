@@ -13,3 +13,21 @@ class UnsupportedFormatError(ValueError):
     """Raised when file format is not supported."""
 
     pass
+
+
+class JobCancelledException(Exception):
+    """Raised when a conversion job is cancelled by user request."""
+
+    pass
+
+
+class JobTimeoutException(Exception):
+    """Raised when a conversion job exceeds the timeout limit."""
+
+    pass
+
+
+class JobNotFoundException(Exception):
+    """Raised when a requested job ID is not found."""
+
+    pass
