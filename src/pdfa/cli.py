@@ -69,6 +69,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Disable OCR and convert PDF to PDF/A without text recognition.",
     )
     parser.add_argument(
+        "--force-ocr-on-tagged-pdfs",
+        action="store_true",
+        help=(
+            "Force OCR on PDFs with structure tags. By default, OCR is skipped "
+            "for tagged PDFs to preserve accessibility information."
+        ),
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -99,7 +107,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     logger.debug(
         f"Arguments: input={args.input_file}, output={args.output_pdf}, "
         f"language={args.language}, pdfa_level={args.pdfa_level}, "
-        f"ocr_enabled={not args.no_ocr}"
+        f"ocr_enabled={not args.no_ocr}, "
+        f"force_ocr_on_tagged_pdfs={args.force_ocr_on_tagged_pdfs}"
     )
     logger.debug(
         f"Compression: DPI={compression_config.image_dpi}, "
@@ -152,6 +161,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 language=args.language,
                 pdfa_level=args.pdfa_level,
                 ocr_enabled=not args.no_ocr,
+                skip_ocr_on_tagged_pdfs=not args.force_ocr_on_tagged_pdfs,
                 compression_config=compression_config,
             )
         finally:

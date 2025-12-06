@@ -393,6 +393,17 @@
                 </div>
             </div>
 
+            <!-- Skip OCR for Tagged PDFs -->
+            <div class="form-group">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="skip_ocr_on_tagged_pdfs" name="skip_ocr_on_tagged_pdfs" checked>
+                    <span data-i18n="form.skipOcrOnTagged">Skip OCR for tagged PDFs</span>
+                </label>
+                <div class="supported-formats" data-i18n="form.skipOcrHint">
+                    PDFs with accessibility tags will preserve their structure without OCR
+                </div>
+            </div>
+
             <!-- Buttons -->
             <div class="button-group">
                 <button type="submit" class="btn-convert" id="convertBtn">
@@ -422,6 +433,8 @@
                 'form.compressionProfile': 'Compression Profile',
                 'form.enableOcr': 'Enable OCR (text recognition)',
                 'form.ocrHint': 'Uncheck to skip OCR and only convert to PDF/A format',
+                'form.skipOcrOnTagged': 'Skip OCR for tagged PDFs',
+                'form.skipOcrHint': 'PDFs with accessibility tags will preserve their structure without OCR',
                 'form.convertButton': '🚀 Convert & Download',
                 'form.clearButton': 'Clear',
                 'ocr.english': 'English',
@@ -456,6 +469,8 @@
                 'form.compressionProfile': 'Komprimierungsprofil',
                 'form.enableOcr': 'OCR aktivieren (Texterkennung)',
                 'form.ocrHint': 'Deaktivieren, um OCR zu überspringen und nur in PDF/A zu konvertieren',
+                'form.skipOcrOnTagged': 'OCR für getaggte PDFs überspringen',
+                'form.skipOcrHint': 'PDFs mit Barrierefreiheits-Tags behalten ihre Struktur ohne OCR',
                 'form.convertButton': '🚀 Konvertieren & Herunterladen',
                 'form.clearButton': 'Löschen',
                 'ocr.english': 'Englisch',
@@ -490,6 +505,8 @@
                 'form.compressionProfile': 'Perfil de Compresión',
                 'form.enableOcr': 'Activar OCR (reconocimiento de texto)',
                 'form.ocrHint': 'Desmarque para omitir OCR y solo convertir a formato PDF/A',
+                'form.skipOcrOnTagged': 'Omitir OCR para PDFs etiquetados',
+                'form.skipOcrHint': 'Los PDFs con etiquetas de accesibilidad conservarán su estructura sin OCR',
                 'form.convertButton': '🚀 Convertir y Descargar',
                 'form.clearButton': 'Limpiar',
                 'ocr.english': 'Inglés',
@@ -524,6 +541,8 @@
                 'form.compressionProfile': 'Profil de Compression',
                 'form.enableOcr': 'Activer OCR (reconnaissance de texte)',
                 'form.ocrHint': 'Décochez pour ignorer l\'OCR et convertir uniquement au format PDF/A',
+                'form.skipOcrOnTagged': 'Ignorer l\'OCR pour les PDFs balisés',
+                'form.skipOcrHint': 'Les PDFs avec balises d\'accessibilité conserveront leur structure sans OCR',
                 'form.convertButton': '🚀 Convertir et Télécharger',
                 'form.clearButton': 'Effacer',
                 'ocr.english': 'Anglais',
@@ -630,6 +649,7 @@
         const statusDiv = document.getElementById('status');
         const convertBtn = document.getElementById('convertBtn');
         const ocrCheckbox = document.getElementById('ocr_enabled');
+        const skipOcrOnTaggedCheckbox = document.getElementById('skip_ocr_on_tagged_pdfs');
 
         const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
 
@@ -714,6 +734,7 @@
             formData.append('pdfa_level', document.getElementById('pdfa_level').value);
             formData.append('compression_profile', document.getElementById('compression_profile').value);
             formData.append('ocr_enabled', ocrCheckbox.checked);
+            formData.append('skip_ocr_on_tagged_pdfs', skipOcrOnTaggedCheckbox.checked);
 
             convertBtn.disabled = true;
             showStatus('<span class="spinner"></span>' + t('status.converting'), 'loading');

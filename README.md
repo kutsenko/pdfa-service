@@ -153,6 +153,7 @@ pdfa-cli document.tiff output.pdf
 - `-l, --language`: Tesseract language codes for OCR (default: `deu+eng`)
 - `--pdfa-level`: PDF/A compliance level (1, 2, or 3; default: `2`)
 - `--no-ocr`: Disable OCR and convert without text recognition
+- `--force-ocr-on-tagged-pdfs`: Force OCR on PDFs with structure tags. By default, OCR is skipped for tagged PDFs to preserve accessibility information
 - `-v, --verbose`: Enable verbose (debug) logging
 - `--log-file`: Write logs to a file in addition to stderr
 
@@ -170,6 +171,7 @@ Once the API is running, visit **`http://localhost:8000`** to access the interac
 - Upload documents (PDF, Office, OpenDocument, and image formats)
 - Select OCR language and PDF/A compliance level
 - Toggle OCR on/off
+- Skip OCR for tagged PDFs (enabled by default to preserve accessibility)
 - Download converted files directly from your browser
 
 This is the easiest way to test the service without using the command line.
