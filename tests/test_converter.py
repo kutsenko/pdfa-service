@@ -3,8 +3,6 @@
 from typing import Any
 from unittest.mock import MagicMock, Mock
 
-import pytest
-
 from pdfa import converter
 
 
@@ -70,7 +68,7 @@ def test_has_pdf_tags_error_returns_false(monkeypatch, tmp_path) -> None:
 
 
 def test_convert_to_pdfa_skip_ocr_on_tagged_pdf(monkeypatch, tmp_path) -> None:
-    """convert_to_pdfa should skip OCR for tagged PDFs when skip_ocr_on_tagged_pdfs=True."""
+    """Skip OCR for tagged PDFs when skip_ocr_on_tagged_pdfs=True."""
     calls: dict[str, Any] = {}
 
     def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
@@ -110,7 +108,7 @@ def test_convert_to_pdfa_skip_ocr_on_tagged_pdf(monkeypatch, tmp_path) -> None:
 
 
 def test_convert_to_pdfa_force_ocr_on_tagged_pdf(monkeypatch, tmp_path) -> None:
-    """convert_to_pdfa should perform OCR on tagged PDFs when skip_ocr_on_tagged_pdfs=False."""
+    """Perform OCR on tagged PDFs when skip_ocr_on_tagged_pdfs=False."""
     calls: dict[str, Any] = {}
 
     def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
@@ -150,7 +148,7 @@ def test_convert_to_pdfa_force_ocr_on_tagged_pdf(monkeypatch, tmp_path) -> None:
 
 
 def test_convert_to_pdfa_ocr_on_untagged_pdf(monkeypatch, tmp_path) -> None:
-    """convert_to_pdfa should perform OCR on untagged PDFs regardless of skip_ocr_on_tagged_pdfs."""
+    """Perform OCR on untagged PDFs regardless of skip setting."""
     calls: dict[str, Any] = {}
 
     def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
