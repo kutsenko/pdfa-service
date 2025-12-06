@@ -142,4 +142,12 @@ PRESETS = {
         jbig2_lossy=False,
         jbig2_page_group_size=50,
     ),
+    "preserve": CompressionConfig(
+        image_dpi=300,
+        jpg_quality=95,
+        optimize=0,
+        remove_vectors=False,
+        jbig2_lossy=False,
+        jbig2_page_group_size=0,
+    ),
 }

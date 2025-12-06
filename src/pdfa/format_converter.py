@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import logging
 import subprocess
+import time
+from collections.abc import Callable
 from pathlib import Path
 
 from pdfa.exceptions import OfficeConversionError, UnsupportedFormatError
+from pdfa.progress_tracker import ProgressInfo
 
 logger = logging.getLogger(__name__)
 
@@ -85,12 +88,17 @@ def is_image_file(filename: str) -> bool:
         return False
 
 
-def convert_office_to_pdf(input_file: Path, output_file: Path) -> None:
+def convert_office_to_pdf(
+    input_file: Path,
+    output_file: Path,
+    progress_callback: Callable[[ProgressInfo], None] | None = None,
+) -> None:
     """Convert Office or ODF document to PDF using LibreOffice.
 
     Args:
         input_file: Path to the document file (.docx, .pptx, .xlsx, .odt, .ods, .odp).
         output_file: Path where the PDF should be written.
+        progress_callback: Optional callback for progress updates.
 
     Raises:
         FileNotFoundError: If the input file does not exist.
@@ -103,9 +111,22 @@ def convert_office_to_pdf(input_file: Path, output_file: Path) -> None:
     logger.info(f"Converting Office document to PDF: {input_file}")
     logger.debug(f"Output directory: {output_file.parent}")
 
+    # Send initial progress if callback provided
+    if progress_callback:
+        progress_callback(
+            ProgressInfo(
+                step="Office conversion",
+                current=0,
+                total=100,
+                percentage=0.0,
+                message="Converting Office document to PDF...",
+            )
+        )
+
     try:
-        # LibreOffice --convert-to outputs to the input file's parent directory
-        result = subprocess.run(
+        # Start LibreOffice conversion in background
+        start_time = time.time()
+        process = subprocess.Popen(
             [
                 "libreoffice",
                 "--headless",
@@ -115,26 +136,58 @@ def convert_office_to_pdf(input_file: Path, output_file: Path) -> None:
                 str(output_file.parent),
                 str(input_file),
             ],
-            capture_output=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
             text=True,
-            timeout=300,  # 5 minutes timeout
-            check=False,
         )
 
+        # Poll process and send progress updates
+        timeout = 300  # 5 minutes
+        update_interval = 2  # Update every 2 seconds
+        last_update = start_time
+
+        while process.poll() is None:
+            elapsed = time.time() - start_time
+            if elapsed > timeout:
+                process.kill()
+                raise OfficeConversionError("Conversion timeout after 300 seconds")
+
+            # Send progress update
+            if progress_callback and (time.time() - last_update) >= update_interval:
+                # Estimate progress (0-10% range, linear based on time)
+                percentage = min(10.0, (elapsed / timeout) * 10)
+                progress_callback(
+                    ProgressInfo(
+                        step="Office conversion",
+                        current=int(percentage),
+                        total=100,
+                        percentage=percentage,
+                        message=(
+                            f"Converting Office document to PDF... "
+                            f"({int(elapsed)}s)"
+                        ),
+                    )
+                )
+                last_update = time.time()
+
+            time.sleep(0.5)
+
+        # Get result
+        stdout, stderr = process.communicate()
+        result = process
+
         logger.debug(f"LibreOffice exit code: {result.returncode}")
-        if result.stdout:
-            logger.debug(f"LibreOffice stdout: {result.stdout}")
-        if result.stderr:
-            logger.debug(f"LibreOffice stderr: {result.stderr}")
+        if stdout:
+            logger.debug(f"LibreOffice stdout: {stdout}")
+        if stderr:
+            logger.debug(f"LibreOffice stderr: {stderr}")
 
         if result.returncode != 0:
             logger.error(
                 f"LibreOffice conversion failed with exit code {result.returncode}: "
-                f"{result.stderr}"
+                f"{stderr}"
             )
-            raise OfficeConversionError(
-                f"LibreOffice conversion failed: {result.stderr}"
-            )
+            raise OfficeConversionError(f"LibreOffice conversion failed: {stderr}")
 
         # LibreOffice outputs the PDF with the same base name as input
         # e.g., input.docx -> input.pdf
@@ -149,9 +202,20 @@ def convert_office_to_pdf(input_file: Path, output_file: Path) -> None:
         intermediate_pdf.rename(output_file)
         logger.info(f"Successfully converted to PDF: {output_file}")
 
-    except subprocess.TimeoutExpired as e:
-        logger.error(f"LibreOffice conversion timed out: {e}")
-        raise OfficeConversionError("Conversion timeout after 300 seconds") from e
+        # Send final progress
+        if progress_callback:
+            progress_callback(
+                ProgressInfo(
+                    step="Office conversion",
+                    current=10,
+                    total=100,
+                    percentage=10.0,
+                    message="Office document converted to PDF",
+                )
+            )
+
+    except OfficeConversionError:
+        raise
     except Exception as e:
         logger.error(f"Unexpected error during Office conversion: {e}")
         raise OfficeConversionError(f"Conversion failed: {e}") from e

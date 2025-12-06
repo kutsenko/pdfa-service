@@ -1,0 +1,252 @@
+"""WebSocket message protocol schemas and validation."""
+
+from __future__ import annotations
+
+import base64
+from dataclasses import dataclass
+from typing import Any, Literal
+
+
+@dataclass
+class ClientMessage:
+    """Base class for client-to-server messages."""
+
+    type: str
+
+
+@dataclass
+class SubmitJobMessage(ClientMessage):
+    """Message to submit a new conversion job.
+
+    Attributes:
+        type: Always "submit"
+        filename: Original filename
+        fileData: Base64-encoded file content
+        config: Conversion configuration parameters
+
+    """
+
+    type: Literal["submit"] = "submit"
+    filename: str = ""
+    fileData: str = ""  # noqa: N815 (camelCase for WebSocket protocol)
+    config: dict[str, Any] | None = None
+
+    def validate(self) -> None:
+        """Validate the submit message.
+
+        Raises:
+            ValueError: If validation fails
+
+        """
+        if not self.filename:
+            raise ValueError("filename is required")
+        if not self.fileData:
+            raise ValueError("fileData is required")
+        if self.config is None:
+            self.config = {}
+
+        # Validate base64 encoding
+        try:
+            base64.b64decode(self.fileData, validate=True)
+        except Exception as e:
+            raise ValueError(f"Invalid base64 encoding: {e}") from e
+
+    def get_file_bytes(self) -> bytes:
+        """Decode and return the file content as bytes.
+
+        Returns:
+            The decoded file content
+
+        """
+        return base64.b64decode(self.fileData)
+
+
+@dataclass
+class CancelJobMessage(ClientMessage):
+    """Message to cancel a running job.
+
+    Attributes:
+        type: Always "cancel"
+        job_id: UUID of the job to cancel
+
+    """
+
+    type: Literal["cancel"] = "cancel"
+    job_id: str = ""
+
+    def validate(self) -> None:
+        """Validate the cancel message.
+
+        Raises:
+            ValueError: If validation fails
+
+        """
+        if not self.job_id:
+            raise ValueError("job_id is required")
+
+
+@dataclass
+class PingMessage(ClientMessage):
+    """Keepalive ping message.
+
+    Attributes:
+        type: Always "ping"
+
+    """
+
+    type: Literal["ping"] = "ping"
+
+
+@dataclass
+class ServerMessage:
+    """Base class for server-to-client messages."""
+
+    type: str
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert message to dictionary for JSON serialization.
+
+        Returns:
+            Dictionary representation of the message
+
+        """
+        return {
+            k: v for k, v in self.__dict__.items() if v is not None and k != "type"
+        } | {"type": self.type}
+
+
+@dataclass
+class JobAcceptedMessage(ServerMessage):
+    """Message sent when job is accepted.
+
+    Attributes:
+        type: Always "job_accepted"
+        job_id: UUID of the accepted job
+        status: Current job status
+
+    """
+
+    type: Literal["job_accepted"] = "job_accepted"
+    job_id: str = ""
+    status: str = "queued"
+
+
+@dataclass
+class ProgressMessage(ServerMessage):
+    """Progress update message.
+
+    Attributes:
+        type: Always "progress"
+        job_id: UUID of the job
+        step: Current processing step
+        current: Current progress value
+        total: Total progress value
+        percentage: Progress percentage (0-100)
+        message: Human-readable progress message
+
+    """
+
+    type: Literal["progress"] = "progress"
+    job_id: str = ""
+    step: str = ""
+    current: int = 0
+    total: int = 100
+    percentage: float = 0.0
+    message: str = ""
+
+
+@dataclass
+class CompletedMessage(ServerMessage):
+    """Message sent when job completes successfully.
+
+    Attributes:
+        type: Always "completed"
+        job_id: UUID of the completed job
+        download_url: URL to download the result
+        filename: Name of the output file
+        size_bytes: Size of the output file in bytes
+
+    """
+
+    type: Literal["completed"] = "completed"
+    job_id: str = ""
+    download_url: str = ""
+    filename: str = ""
+    size_bytes: int | None = None
+
+
+@dataclass
+class ErrorMessage(ServerMessage):
+    """Error message.
+
+    Attributes:
+        type: Always "error"
+        job_id: UUID of the job (may be empty for connection errors)
+        error_code: Machine-readable error code
+        message: Human-readable error message
+
+    """
+
+    type: Literal["error"] = "error"
+    job_id: str = ""
+    error_code: str = ""
+    message: str = ""
+
+
+@dataclass
+class CancelledMessage(ServerMessage):
+    """Message sent when job is cancelled.
+
+    Attributes:
+        type: Always "cancelled"
+        job_id: UUID of the cancelled job
+
+    """
+
+    type: Literal["cancelled"] = "cancelled"
+    job_id: str = ""
+
+
+@dataclass
+class PongMessage(ServerMessage):
+    """Keepalive pong response.
+
+    Attributes:
+        type: Always "pong"
+
+    """
+
+    type: Literal["pong"] = "pong"
+
+
+def parse_client_message(data: dict[str, Any]) -> ClientMessage:
+    """Parse a client message from a dictionary.
+
+    Args:
+        data: Dictionary containing the message data
+
+    Returns:
+        Parsed client message
+
+    Raises:
+        ValueError: If message type is invalid or parsing fails
+
+    """
+    msg_type = data.get("type")
+
+    if msg_type == "submit":
+        msg = SubmitJobMessage(
+            filename=data.get("filename", ""),
+            fileData=data.get("fileData", ""),
+            config=data.get("config"),
+        )
+        msg.validate()
+        return msg
+    elif msg_type == "cancel":
+        msg = CancelJobMessage(job_id=data.get("job_id", ""))
+        msg.validate()
+        return msg
+    elif msg_type == "ping":
+        return PingMessage()
+    else:
+        raise ValueError(f"Unknown message type: {msg_type}")
