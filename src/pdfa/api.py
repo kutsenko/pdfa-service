@@ -8,20 +8,38 @@ from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Literal
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-from fastapi.responses import HTMLResponse, Response
+from fastapi import FastAPI, File, Form, HTTPException, UploadFile, WebSocket
+from fastapi.responses import FileResponse, HTMLResponse, Response
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
 from pdfa.compression_config import PRESETS, CompressionConfig
 from pdfa.converter import convert_to_pdfa
-from pdfa.exceptions import OfficeConversionError, UnsupportedFormatError
+from pdfa.exceptions import (
+    JobCancelledException,
+    JobNotFoundException,
+    OfficeConversionError,
+    UnsupportedFormatError,
+)
 from pdfa.format_converter import (
     convert_office_to_pdf,
     is_image_file,
     is_office_document,
 )
 from pdfa.image_converter import convert_image_to_pdf
+from pdfa.job_manager import get_job_manager
 from pdfa.logging_config import get_logger
+from pdfa.progress_tracker import ProgressInfo
+from pdfa.websocket_protocol import (
+    CancelJobMessage,
+    CancelledMessage,
+    CompletedMessage,
+    ErrorMessage,
+    JobAcceptedMessage,
+    PongMessage,
+    ProgressMessage,
+    SubmitJobMessage,
+    parse_client_message,
+)
 
 PdfaLevel = Literal["1", "2", "3"]
 CompressionProfile = Literal["balanced", "quality", "aggressive", "minimal"]
@@ -41,6 +59,23 @@ app = FastAPI(
     description="Convert PDFs to PDF/A using OCRmyPDF.",
     version="0.1.0",
 )
+
+# Initialize job manager
+job_manager = get_job_manager()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Start background tasks on application startup."""
+    logger.info("Starting background tasks...")
+    job_manager.start_background_tasks()
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Stop background tasks on application shutdown."""
+    logger.info("Stopping background tasks...")
+    await job_manager.stop_background_tasks()
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -288,3 +323,232 @@ async def convert_endpoint(
     }
 
     return Response(content=output_bytes, headers=headers, media_type="application/pdf")
+
+
+# ============================================================================
+# WebSocket-based Progress Tracking Endpoints
+# ============================================================================
+
+
+async def process_conversion_job(job_id: str) -> None:
+    """Process a conversion job asynchronously.
+
+    Args:
+        job_id: The job ID to process
+
+    """
+    try:
+        job = job_manager.get_job(job_id)
+        await job_manager.update_job_status(job_id, "processing")
+
+        # Progress callback that broadcasts to WebSocket
+        def progress_callback(progress: ProgressInfo) -> None:
+            # Send progress update to all connected clients
+            message = ProgressMessage(
+                job_id=job_id,
+                step=progress.step,
+                current=progress.current,
+                total=progress.total,
+                percentage=progress.percentage,
+                message=progress.message,
+            )
+            # Run broadcast in event loop
+            asyncio.create_task(job_manager.broadcast_to_job(job_id, message.to_dict()))
+
+        # Determine file type and convert
+        config = job.config
+        pdf_path = job.input_path
+
+        # Convert office/image to PDF if needed
+        if is_office_document(job.filename):
+            logger.info(f"Converting Office document for job {job_id}")
+            pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
+            await asyncio.to_thread(
+                convert_office_to_pdf,
+                job.input_path,
+                pdf_path,
+                progress_callback=progress_callback,
+            )
+        elif is_image_file(job.filename):
+            logger.info(f"Converting image to PDF for job {job_id}")
+            pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
+            await asyncio.to_thread(convert_image_to_pdf, job.input_path, pdf_path)
+
+        # Convert to PDF/A
+        output_path = job.input_path.parent / f"{job.input_path.stem}_pdfa.pdf"
+
+        # Get compression config
+        profile = config.get("compression_profile", "balanced")
+        selected_compression = PRESETS.get(profile, PRESETS["balanced"])
+
+        await asyncio.to_thread(
+            convert_to_pdfa,
+            pdf_path,
+            output_path,
+            language=config.get("language", "deu+eng"),
+            pdfa_level=config.get("pdfa_level", "2"),
+            ocr_enabled=config.get("ocr_enabled", True),
+            skip_ocr_on_tagged_pdfs=config.get("skip_ocr_on_tagged_pdfs", True),
+            compression_config=selected_compression,
+            progress_callback=progress_callback,
+            cancel_event=job.cancel_event,
+        )
+
+        # Job completed successfully
+        await job_manager.update_job_status(
+            job_id, "completed", output_path=output_path
+        )
+
+        # Get file size
+        file_size = output_path.stat().st_size
+
+        # Send completion message
+        message = CompletedMessage(
+            job_id=job_id,
+            download_url=f"/download/{job_id}",
+            filename=f"{job.filename.rsplit('.', 1)[0]}_pdfa.pdf",
+            size_bytes=file_size,
+        )
+        await job_manager.broadcast_to_job(job_id, message.to_dict())
+
+    except JobCancelledException:
+        logger.info(f"Job {job_id} was cancelled")
+        await job_manager.update_job_status(job_id, "cancelled")
+        message = CancelledMessage(job_id=job_id)
+        await job_manager.broadcast_to_job(job_id, message.to_dict())
+
+    except Exception as e:
+        logger.error(f"Job {job_id} failed: {e}", exc_info=True)
+        await job_manager.update_job_status(job_id, "failed", error=str(e))
+
+        # Send error message
+        error_code = "CONVERSION_FAILED"
+        if isinstance(e, OfficeConversionError):
+            error_code = "OFFICE_CONVERSION_FAILED"
+        elif isinstance(e, ocrmypdf_exceptions.PriorOcrFoundError):
+            error_code = "OCR_ALREADY_EXISTS"
+
+        message = ErrorMessage(
+            job_id=job_id,
+            error_code=error_code,
+            message=str(e),
+        )
+        await job_manager.broadcast_to_job(job_id, message.to_dict())
+
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time conversion progress.
+
+    Protocol:
+        Client sends: SubmitJobMessage, CancelJobMessage, PingMessage
+        Server sends: JobAcceptedMessage, ProgressMessage, CompletedMessage,
+                     ErrorMessage, CancelledMessage, PongMessage
+
+    """
+    await websocket.accept()
+    logger.info("WebSocket connection established")
+
+    current_job_id: str | None = None
+
+    try:
+        async for message_data in websocket.iter_json():
+            try:
+                # Parse incoming message
+                message = parse_client_message(message_data)
+
+                if isinstance(message, SubmitJobMessage):
+                    # Create new job
+                    file_data = message.get_file_bytes()
+                    job = job_manager.create_job(
+                        filename=message.filename,
+                        file_data=file_data,
+                        config=message.config or {},
+                    )
+                    current_job_id = job.job_id
+
+                    # Register WebSocket for this job
+                    job_manager.register_websocket(job.job_id, websocket)
+
+                    # Send job accepted message
+                    response = JobAcceptedMessage(
+                        job_id=job.job_id,
+                        status="queued",
+                    )
+                    await websocket.send_json(response.to_dict())
+
+                    # Start processing job in background
+                    asyncio.create_task(process_conversion_job(job.job_id))
+
+                elif isinstance(message, CancelJobMessage):
+                    # Cancel job
+                    try:
+                        await job_manager.cancel_job(message.job_id)
+                        logger.info(f"Job {message.job_id} cancel requested")
+                    except JobNotFoundException:
+                        error_msg = ErrorMessage(
+                            job_id=message.job_id,
+                            error_code="JOB_NOT_FOUND",
+                            message=f"Job {message.job_id} not found",
+                        )
+                        await websocket.send_json(error_msg.to_dict())
+
+                else:  # PingMessage
+                    response = PongMessage()
+                    await websocket.send_json(response.to_dict())
+
+            except ValueError as e:
+                # Invalid message format
+                logger.error(f"Invalid WebSocket message: {e}")
+                error_msg = ErrorMessage(
+                    error_code="INVALID_MESSAGE",
+                    message=str(e),
+                )
+                await websocket.send_json(error_msg.to_dict())
+
+    except Exception as e:
+        logger.error(f"WebSocket error: {e}", exc_info=True)
+    finally:
+        # Unregister WebSocket
+        if current_job_id:
+            job_manager.unregister_websocket(current_job_id, websocket)
+        logger.info("WebSocket connection closed")
+
+
+@app.get("/download/{job_id}")
+async def download_result(job_id: str):
+    """Download the converted PDF for a completed job.
+
+    Args:
+        job_id: The job ID
+
+    Returns:
+        The converted PDF file
+
+    Raises:
+        HTTPException: If job not found or not completed
+
+    """
+    try:
+        job = job_manager.get_job(job_id)
+    except JobNotFoundException:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    if job.status != "completed":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Job not completed (status: {job.status})",
+        )
+
+    if not job.output_path or not job.output_path.exists():
+        raise HTTPException(status_code=404, detail="Output file not found")
+
+    filename = f"{job.filename.rsplit('.', 1)[0]}_pdfa.pdf"
+
+    logger.info(f"Downloading result for job {job_id}: {filename}")
+
+    return FileResponse(
+        path=job.output_path,
+        media_type="application/pdf",
+        filename=filename,
+    )
