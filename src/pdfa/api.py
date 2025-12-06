@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import uuid
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -226,17 +227,21 @@ async def convert_endpoint(
                     f"Office document detected, converting to PDF: {file.filename}"
                 )
                 pdf_path = tmp_path / "converted.pdf"
-                convert_office_to_pdf(input_path, pdf_path)
+                # Run blocking operation in thread pool to avoid blocking event loop
+                await asyncio.to_thread(convert_office_to_pdf, input_path, pdf_path)
             elif is_image:
                 logger.info(f"Image file detected, converting to PDF: {file.filename}")
                 pdf_path = tmp_path / "converted.pdf"
-                convert_image_to_pdf(input_path, pdf_path)
+                # Run blocking operation in thread pool to avoid blocking event loop
+                await asyncio.to_thread(convert_image_to_pdf, input_path, pdf_path)
 
             # Convert to PDF/A
             output_path = tmp_path / "output.pdf"
             # Select compression configuration from profile
             selected_compression = PRESETS.get(compression_profile, compression_config)
-            convert_to_pdfa(
+            # Run blocking OCRmyPDF operation in thread pool to allow parallel requests
+            await asyncio.to_thread(
+                convert_to_pdfa,
                 pdf_path,
                 output_path,
                 language=language,
