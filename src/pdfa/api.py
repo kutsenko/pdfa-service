@@ -43,8 +43,19 @@ app = FastAPI(
 
 @app.get("/", response_class=HTMLResponse)
 async def web_ui() -> str:
-    """Serve the web-based conversion interface (default language: English)."""
-    return await web_ui_lang("en")
+    """Serve the web-based conversion interface with browser language detection."""
+    ui_path = Path(__file__).parent / "web_ui.html"
+    try:
+        html_content = ui_path.read_text(encoding="utf-8")
+        # For root path, inject auto-detection flag
+        html_content = html_content.replace(
+            '<html lang="en" data-lang="en">',
+            '<html lang="en" data-lang="auto">'
+        )
+        return html_content
+    except FileNotFoundError:
+        logger.warning("Web UI file not found at %s", ui_path)
+        return await web_ui_lang("en")
 
 
 @app.get("/{lang}", response_class=HTMLResponse)

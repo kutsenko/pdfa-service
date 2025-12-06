@@ -516,8 +516,37 @@
             }
         };
 
-        // Get current language from HTML data-lang attribute
-        const currentLang = document.documentElement.getAttribute('data-lang') || 'en';
+        // Detect browser language and redirect if on auto mode
+        function detectAndRedirectToPreferredLanguage() {
+            const dataLang = document.documentElement.getAttribute('data-lang');
+
+            // Only auto-detect if data-lang is "auto" (root path /)
+            if (dataLang !== 'auto') {
+                return dataLang;
+            }
+
+            // Get browser language preferences
+            const browserLangs = navigator.languages || [navigator.language || navigator.userLanguage];
+            const supportedLangs = ['en', 'de', 'es', 'fr'];
+
+            // Find first matching supported language
+            for (const browserLang of browserLangs) {
+                // Extract language code (e.g., "de-DE" -> "de", "en-US" -> "en")
+                const langCode = browserLang.split('-')[0].toLowerCase();
+
+                if (supportedLangs.includes(langCode)) {
+                    // Redirect to language-specific URL
+                    window.location.href = `/${langCode}`;
+                    return langCode; // Return while redirecting
+                }
+            }
+
+            // Default to English if no match found
+            return 'en';
+        }
+
+        // Get current language from HTML data-lang attribute or browser detection
+        const currentLang = detectAndRedirectToPreferredLanguage();
 
         // Apply translations
         function applyTranslations(lang) {
