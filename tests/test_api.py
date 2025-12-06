@@ -27,6 +27,7 @@ def test_convert_endpoint_success(monkeypatch, client: TestClient) -> None:
         language,
         pdfa_level,
         ocr_enabled,
+        skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
@@ -65,6 +66,7 @@ def test_convert_endpoint_with_ocr_disabled(monkeypatch, client: TestClient) -> 
         language,
         pdfa_level,
         ocr_enabled,
+        skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
@@ -202,6 +204,7 @@ def test_convert_with_compression_profile_balanced(
         language,
         pdfa_level,
         ocr_enabled,
+        skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
@@ -235,6 +238,7 @@ def test_convert_with_compression_profile_quality(
         language,
         pdfa_level,
         ocr_enabled,
+        skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
@@ -267,6 +271,7 @@ def test_convert_with_compression_profile_aggressive(
         language,
         pdfa_level,
         ocr_enabled,
+        skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
@@ -303,6 +308,7 @@ def test_convert_with_compression_profile_minimal(
         language,
         pdfa_level,
         ocr_enabled,
+        skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")

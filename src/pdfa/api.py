@@ -122,6 +122,7 @@ async def convert_endpoint(
     pdfa_level: PdfaLevel = Form("2"),
     compression_profile: CompressionProfile = Form("balanced"),
     ocr_enabled: bool = Form(True),
+    skip_ocr_on_tagged_pdfs: bool = Form(True),
 ) -> Response:
     """Convert the uploaded PDF, Office, ODF, or image file into PDF/A.
 
@@ -135,12 +136,14 @@ async def convert_endpoint(
         pdfa_level: PDF/A compliance level (default: '2').
         compression_profile: Compression profile to use (default: 'balanced').
         ocr_enabled: Whether to perform OCR (default: True).
+        skip_ocr_on_tagged_pdfs: Skip OCR for tagged PDFs (default: True).
 
     """
     logger.info(
         f"Conversion request received: filename={file.filename}, "
         f"language={language}, pdfa_level={pdfa_level}, "
-        f"compression_profile={compression_profile}, ocr_enabled={ocr_enabled}"
+        f"compression_profile={compression_profile}, ocr_enabled={ocr_enabled}, "
+        f"skip_ocr_on_tagged_pdfs={skip_ocr_on_tagged_pdfs}"
     )
 
     # Supported MIME types
@@ -239,6 +242,7 @@ async def convert_endpoint(
                 language=language,
                 pdfa_level=pdfa_level,
                 ocr_enabled=ocr_enabled,
+                skip_ocr_on_tagged_pdfs=skip_ocr_on_tagged_pdfs,
                 compression_config=selected_compression,
             )
 

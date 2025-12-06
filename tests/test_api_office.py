@@ -33,6 +33,7 @@ class TestConvertOfficeDocuments:
             language,
             pdfa_level,
             ocr_enabled,
+            skip_ocr_on_tagged_pdfs=True,
             compression_config=None,
         ) -> None:
             output_pdf.write_bytes(b"%PDF-1.4 pdfa")
@@ -71,6 +72,7 @@ class TestConvertOfficeDocuments:
             language,
             pdfa_level,
             ocr_enabled,
+            skip_ocr_on_tagged_pdfs=True,
             compression_config=None,
         ) -> None:
             output_pdf.write_bytes(b"%PDF-1.4 pdfa")
@@ -107,6 +109,7 @@ class TestConvertOfficeDocuments:
             language,
             pdfa_level,
             ocr_enabled,
+            skip_ocr_on_tagged_pdfs=True,
             compression_config=None,
         ) -> None:
             output_pdf.write_bytes(b"%PDF-1.4 pdfa")
