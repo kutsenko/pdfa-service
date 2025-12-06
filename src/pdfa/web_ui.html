@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF/A Converter - Test Interface</title>
+    <title data-i18n="page.title">PDF/A Converter - Test Interface</title>
     <style>
         * {
             margin: 0;
@@ -258,6 +258,38 @@
             margin-top: 5px;
         }
 
+        .language-switcher {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 1000;
+        }
+
+        .language-switcher a {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 6px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .language-switcher a:hover {
+            background: white;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .language-switcher a.active {
+            background: #667eea;
+            color: white;
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 25px;
@@ -270,28 +302,41 @@
             .options-grid {
                 grid-template-columns: 1fr;
             }
+
+            .language-switcher {
+                position: static;
+                justify-content: center;
+                margin-bottom: 15px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="language-switcher">
+        <a href="/en" data-lang-code="en">EN</a>
+        <a href="/de" data-lang-code="de">DE</a>
+        <a href="/es" data-lang-code="es">ES</a>
+        <a href="/fr" data-lang-code="fr">FR</a>
+    </div>
+
     <div class="container">
         <div class="header">
-            <h1>📄 PDF/A Converter</h1>
-            <p class="subtitle">Convert your documents to archival PDF/A format with OCR</p>
+            <h1><span data-i18n="header.title">📄 PDF/A Converter</span></h1>
+            <p class="subtitle" data-i18n="header.subtitle">Convert your documents to archival PDF/A format with OCR</p>
         </div>
 
         <div class="info-box">
-            ℹ️ Supported formats: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP
+            <span data-i18n="info.supportedFormats">ℹ️ Supported formats: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP</span>
         </div>
 
         <form id="converterForm">
             <!-- File Upload -->
             <div class="form-group">
-                <label for="file">Select File</label>
+                <label for="file" data-i18n="form.selectFile">Select File</label>
                 <div class="file-upload-wrapper" id="uploadArea">
                     <div class="file-icon">📁</div>
-                    <div class="upload-text">Click to upload or drag and drop</div>
-                    <div class="upload-subtext">PDF, Office, or OpenDocument files</div>
+                    <div class="upload-text" data-i18n="form.uploadText">Click to upload or drag and drop</div>
+                    <div class="upload-subtext" data-i18n="form.uploadSubtext">PDF, Office, or OpenDocument files</div>
                     <input type="file" id="file" name="file" accept=".pdf,.docx,.pptx,.xlsx,.odt,.ods,.odp" required>
                     <div class="file-name" id="fileName"></div>
                 </div>
@@ -301,23 +346,23 @@
             <div class="options-grid">
                 <!-- Language Selection -->
                 <div class="form-group">
-                    <label for="language">OCR Language</label>
+                    <label for="language" data-i18n="form.ocrLanguage">OCR Language</label>
                     <select id="language" name="language">
-                        <option value="eng">English</option>
-                        <option value="deu">Deutsch (German)</option>
-                        <option value="deu+eng" selected>Deutsch + English</option>
-                        <option value="fra">Français (French)</option>
-                        <option value="fra+eng">Français + English</option>
-                        <option value="spa">Español (Spanish)</option>
-                        <option value="spa+eng">Español + English</option>
-                        <option value="ita">Italiano (Italian)</option>
-                        <option value="ita+eng">Italiano + English</option>
+                        <option value="eng" data-i18n="ocr.english">English</option>
+                        <option value="deu" data-i18n="ocr.german">Deutsch (German)</option>
+                        <option value="deu+eng" selected data-i18n="ocr.germanEnglish">Deutsch + English</option>
+                        <option value="fra" data-i18n="ocr.french">Français (French)</option>
+                        <option value="fra+eng" data-i18n="ocr.frenchEnglish">Français + English</option>
+                        <option value="spa" data-i18n="ocr.spanish">Español (Spanish)</option>
+                        <option value="spa+eng" data-i18n="ocr.spanishEnglish">Español + English</option>
+                        <option value="ita" data-i18n="ocr.italian">Italiano (Italian)</option>
+                        <option value="ita+eng" data-i18n="ocr.italianEnglish">Italiano + English</option>
                     </select>
                 </div>
 
                 <!-- PDF/A Level -->
                 <div class="form-group">
-                    <label for="pdfa_level">PDF/A Level</label>
+                    <label for="pdfa_level" data-i18n="form.pdfaLevel">PDF/A Level</label>
                     <select id="pdfa_level" name="pdfa_level">
                         <option value="1">PDF/A-1</option>
                         <option value="2" selected>PDF/A-2</option>
@@ -330,9 +375,9 @@
             <div class="form-group">
                 <label class="checkbox-label">
                     <input type="checkbox" id="ocr_enabled" name="ocr_enabled" checked>
-                    Enable OCR (text recognition)
+                    <span data-i18n="form.enableOcr">Enable OCR (text recognition)</span>
                 </label>
-                <div class="supported-formats">
+                <div class="supported-formats" data-i18n="form.ocrHint">
                     Uncheck to skip OCR and only convert to PDF/A format
                 </div>
             </div>
@@ -340,9 +385,9 @@
             <!-- Buttons -->
             <div class="button-group">
                 <button type="submit" class="btn-convert" id="convertBtn">
-                    🚀 Convert & Download
+                    <span data-i18n="form.convertButton">🚀 Convert & Download</span>
                 </button>
-                <button type="reset" class="btn-reset">Clear</button>
+                <button type="reset" class="btn-reset" data-i18n="form.clearButton">Clear</button>
             </div>
 
             <!-- Status Message -->
@@ -351,6 +396,173 @@
     </div>
 
     <script>
+        // I18N Translations
+        const translations = {
+            en: {
+                'page.title': 'PDF/A Converter - Test Interface',
+                'header.title': '📄 PDF/A Converter',
+                'header.subtitle': 'Convert your documents to archival PDF/A format with OCR',
+                'info.supportedFormats': 'ℹ️ Supported formats: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP',
+                'form.selectFile': 'Select File',
+                'form.uploadText': 'Click to upload or drag and drop',
+                'form.uploadSubtext': 'PDF, Office, or OpenDocument files',
+                'form.ocrLanguage': 'OCR Language',
+                'form.pdfaLevel': 'PDF/A Level',
+                'form.enableOcr': 'Enable OCR (text recognition)',
+                'form.ocrHint': 'Uncheck to skip OCR and only convert to PDF/A format',
+                'form.convertButton': '🚀 Convert & Download',
+                'form.clearButton': 'Clear',
+                'ocr.english': 'English',
+                'ocr.german': 'Deutsch (German)',
+                'ocr.germanEnglish': 'Deutsch + English',
+                'ocr.french': 'Français (French)',
+                'ocr.frenchEnglish': 'Français + English',
+                'ocr.spanish': 'Español (Spanish)',
+                'ocr.spanishEnglish': 'Español + English',
+                'ocr.italian': 'Italiano (Italian)',
+                'ocr.italianEnglish': 'Italiano + English',
+                'status.selectFile': 'Please select a file first',
+                'status.fileTooLarge': 'File too large: {size}. Maximum size is {max}.',
+                'status.converting': 'Converting... This may take a moment',
+                'status.success': '✓ Conversion successful! Your file has been downloaded.',
+                'status.error': '✗ Error: {message}'
+            },
+            de: {
+                'page.title': 'PDF/A Konverter - Testoberfläche',
+                'header.title': '📄 PDF/A Konverter',
+                'header.subtitle': 'Konvertieren Sie Ihre Dokumente in das archivierbare PDF/A-Format mit OCR',
+                'info.supportedFormats': 'ℹ️ Unterstützte Formate: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP',
+                'form.selectFile': 'Datei auswählen',
+                'form.uploadText': 'Klicken Sie zum Hochladen oder ziehen Sie die Datei hierher',
+                'form.uploadSubtext': 'PDF-, Office- oder OpenDocument-Dateien',
+                'form.ocrLanguage': 'OCR-Sprache',
+                'form.pdfaLevel': 'PDF/A-Level',
+                'form.enableOcr': 'OCR aktivieren (Texterkennung)',
+                'form.ocrHint': 'Deaktivieren, um OCR zu überspringen und nur in PDF/A zu konvertieren',
+                'form.convertButton': '🚀 Konvertieren & Herunterladen',
+                'form.clearButton': 'Löschen',
+                'ocr.english': 'Englisch',
+                'ocr.german': 'Deutsch',
+                'ocr.germanEnglish': 'Deutsch + Englisch',
+                'ocr.french': 'Französisch',
+                'ocr.frenchEnglish': 'Französisch + Englisch',
+                'ocr.spanish': 'Spanisch',
+                'ocr.spanishEnglish': 'Spanisch + Englisch',
+                'ocr.italian': 'Italienisch',
+                'ocr.italianEnglish': 'Italienisch + Englisch',
+                'status.selectFile': 'Bitte wählen Sie zuerst eine Datei aus',
+                'status.fileTooLarge': 'Datei zu groß: {size}. Maximale Größe ist {max}.',
+                'status.converting': 'Konvertierung läuft... Dies kann einen Moment dauern',
+                'status.success': '✓ Konvertierung erfolgreich! Ihre Datei wurde heruntergeladen.',
+                'status.error': '✗ Fehler: {message}'
+            },
+            es: {
+                'page.title': 'Convertidor PDF/A - Interfaz de Prueba',
+                'header.title': '📄 Convertidor PDF/A',
+                'header.subtitle': 'Convierta sus documentos al formato archivístico PDF/A con OCR',
+                'info.supportedFormats': 'ℹ️ Formatos compatibles: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP',
+                'form.selectFile': 'Seleccionar archivo',
+                'form.uploadText': 'Haga clic para cargar o arrastre y suelte',
+                'form.uploadSubtext': 'Archivos PDF, Office u OpenDocument',
+                'form.ocrLanguage': 'Idioma OCR',
+                'form.pdfaLevel': 'Nivel PDF/A',
+                'form.enableOcr': 'Activar OCR (reconocimiento de texto)',
+                'form.ocrHint': 'Desmarque para omitir OCR y solo convertir a formato PDF/A',
+                'form.convertButton': '🚀 Convertir y Descargar',
+                'form.clearButton': 'Limpiar',
+                'ocr.english': 'Inglés',
+                'ocr.german': 'Alemán',
+                'ocr.germanEnglish': 'Alemán + Inglés',
+                'ocr.french': 'Francés',
+                'ocr.frenchEnglish': 'Francés + Inglés',
+                'ocr.spanish': 'Español',
+                'ocr.spanishEnglish': 'Español + Inglés',
+                'ocr.italian': 'Italiano',
+                'ocr.italianEnglish': 'Italiano + Inglés',
+                'status.selectFile': 'Por favor, seleccione primero un archivo',
+                'status.fileTooLarge': 'Archivo demasiado grande: {size}. El tamaño máximo es {max}.',
+                'status.converting': 'Convirtiendo... Esto puede tardar un momento',
+                'status.success': '✓ ¡Conversión exitosa! Su archivo ha sido descargado.',
+                'status.error': '✗ Error: {message}'
+            },
+            fr: {
+                'page.title': 'Convertisseur PDF/A - Interface de Test',
+                'header.title': '📄 Convertisseur PDF/A',
+                'header.subtitle': 'Convertissez vos documents au format archivistique PDF/A avec OCR',
+                'info.supportedFormats': 'ℹ️ Formats pris en charge : PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP',
+                'form.selectFile': 'Sélectionner un fichier',
+                'form.uploadText': 'Cliquez pour télécharger ou glissez-déposez',
+                'form.uploadSubtext': 'Fichiers PDF, Office ou OpenDocument',
+                'form.ocrLanguage': 'Langue OCR',
+                'form.pdfaLevel': 'Niveau PDF/A',
+                'form.enableOcr': 'Activer OCR (reconnaissance de texte)',
+                'form.ocrHint': 'Décochez pour ignorer l\'OCR et convertir uniquement au format PDF/A',
+                'form.convertButton': '🚀 Convertir et Télécharger',
+                'form.clearButton': 'Effacer',
+                'ocr.english': 'Anglais',
+                'ocr.german': 'Allemand',
+                'ocr.germanEnglish': 'Allemand + Anglais',
+                'ocr.french': 'Français',
+                'ocr.frenchEnglish': 'Français + Anglais',
+                'ocr.spanish': 'Espagnol',
+                'ocr.spanishEnglish': 'Espagnol + Anglais',
+                'ocr.italian': 'Italien',
+                'ocr.italianEnglish': 'Italien + Anglais',
+                'status.selectFile': 'Veuillez d\'abord sélectionner un fichier',
+                'status.fileTooLarge': 'Fichier trop volumineux : {size}. La taille maximale est {max}.',
+                'status.converting': 'Conversion en cours... Cela peut prendre un moment',
+                'status.success': '✓ Conversion réussie ! Votre fichier a été téléchargé.',
+                'status.error': '✗ Erreur : {message}'
+            }
+        };
+
+        // Get current language from HTML data-lang attribute
+        const currentLang = document.documentElement.getAttribute('data-lang') || 'en';
+
+        // Apply translations
+        function applyTranslations(lang) {
+            const t = translations[lang] || translations.en;
+
+            // Translate all elements with data-i18n attribute
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (t[key]) {
+                    element.textContent = t[key];
+                }
+            });
+
+            // Update page title
+            if (t['page.title']) {
+                document.title = t['page.title'];
+            }
+
+            // Mark active language in switcher
+            document.querySelectorAll('.language-switcher a').forEach(link => {
+                const linkLang = link.getAttribute('data-lang-code');
+                if (linkLang === lang) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        // Helper function to get translated text with placeholders
+        function t(key, replacements = {}) {
+            const translations_current = translations[currentLang] || translations.en;
+            let text = translations_current[key] || key;
+
+            // Replace placeholders like {size}, {max}, etc.
+            Object.keys(replacements).forEach(placeholder => {
+                text = text.replace(`{${placeholder}}`, replacements[placeholder]);
+            });
+
+            return text;
+        }
+
+        // Apply translations on page load
+        applyTranslations(currentLang);
+
         const form = document.getElementById('converterForm');
         const fileInput = document.getElementById('file');
         const uploadArea = document.getElementById('uploadArea');
@@ -393,7 +605,10 @@
 
                 // Validate file size
                 if (file.size > MAX_FILE_SIZE) {
-                    showStatus(`✗ File too large: ${formatFileSize(file.size)}. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}.`, 'error');
+                    showStatus(t('status.fileTooLarge', {
+                        size: formatFileSize(file.size),
+                        max: formatFileSize(MAX_FILE_SIZE)
+                    }), 'error');
                     fileInput.value = '';
                     fileName.textContent = '';
                     return;
@@ -418,7 +633,7 @@
             e.preventDefault();
 
             if (!fileInput.files.length) {
-                showStatus('Please select a file first', 'error');
+                showStatus(t('status.selectFile'), 'error');
                 return;
             }
 
@@ -426,7 +641,10 @@
 
             // Validate file size
             if (file.size > MAX_FILE_SIZE) {
-                showStatus(`File too large: ${formatFileSize(file.size)}. Maximum size is ${formatFileSize(MAX_FILE_SIZE)}.`, 'error');
+                showStatus(t('status.fileTooLarge', {
+                    size: formatFileSize(file.size),
+                    max: formatFileSize(MAX_FILE_SIZE)
+                }), 'error');
                 return;
             }
 
@@ -437,7 +655,7 @@
             formData.append('ocr_enabled', ocrCheckbox.checked);
 
             convertBtn.disabled = true;
-            showStatus('<span class="spinner"></span>Converting... This may take a moment', 'loading');
+            showStatus('<span class="spinner"></span>' + t('status.converting'), 'loading');
 
             try {
                 const response = await fetch('/convert', {
@@ -461,34 +679,34 @@
                     document.body.removeChild(link);
                     window.URL.revokeObjectURL(url);
 
-                    showStatus('✓ Conversion successful! Your file has been downloaded.', 'success');
+                    showStatus(t('status.success'), 'success');
                     form.reset();
                     fileName.textContent = '';
                 } else {
-                    let errorMsg = 'Conversion failed. Please check the file and try again.';
+                    let errorMsg = t('status.error', { message: 'Conversion failed. Please check the file and try again.' });
 
                     // Try to parse JSON error response
                     try {
                         const errorData = await response.json();
                         if (errorData.detail) {
-                            errorMsg = errorData.detail;
+                            errorMsg = t('status.error', { message: errorData.detail });
                         }
                     } catch (e) {
                         // If not JSON, try to get text
                         try {
                             const errorText = await response.text();
                             if (errorText) {
-                                errorMsg = errorText;
+                                errorMsg = t('status.error', { message: errorText });
                             }
                         } catch (e2) {
-                            errorMsg = `HTTP Error: ${response.status}`;
+                            errorMsg = t('status.error', { message: `HTTP Error: ${response.status}` });
                         }
                     }
 
-                    showStatus('✗ Error: ' + errorMsg, 'error');
+                    showStatus(errorMsg, 'error');
                 }
             } catch (error) {
-                showStatus('✗ Error: ' + error.message, 'error');
+                showStatus(t('status.error', { message: error.message }), 'error');
             } finally {
                 convertBtn.disabled = false;
             }

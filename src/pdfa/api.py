@@ -43,10 +43,32 @@ app = FastAPI(
 
 @app.get("/", response_class=HTMLResponse)
 async def web_ui() -> str:
-    """Serve the web-based conversion interface."""
+    """Serve the web-based conversion interface (default language: English)."""
+    return await web_ui_lang("en")
+
+
+@app.get("/{lang}", response_class=HTMLResponse)
+async def web_ui_lang(lang: str) -> str:
+    """Serve the web-based conversion interface in specified language.
+
+    Args:
+        lang: Language code (en, de, es, fr)
+    """
+    # Validate language code
+    supported_langs = {"en", "de", "es", "fr"}
+    if lang not in supported_langs:
+        # For unsupported paths, let FastAPI handle it (will show 404 or other routes)
+        raise HTTPException(status_code=404, detail=f"Language '{lang}' not supported")
+
     ui_path = Path(__file__).parent / "web_ui.html"
     try:
-        return ui_path.read_text(encoding="utf-8")
+        html_content = ui_path.read_text(encoding="utf-8")
+        # Inject the language code into the HTML
+        html_content = html_content.replace(
+            '<html lang="en">',
+            f'<html lang="{lang}" data-lang="{lang}">'
+        )
+        return html_content
     except FileNotFoundError:
         logger.warning("Web UI file not found at %s", ui_path)
         # Fallback HTML UI (line length exceptions acceptable for HTML/CSS)
