@@ -63,6 +63,7 @@ async def web_ui_lang(lang: str) -> str:
 
     Args:
         lang: Language code (en, de, es, fr)
+
     """
     # Validate language code
     supported_langs = {"en", "de", "es", "fr"}
