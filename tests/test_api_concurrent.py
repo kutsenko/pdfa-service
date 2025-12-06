@@ -108,8 +108,6 @@ async def test_concurrent_requests_async() -> None:
     ) as ac:
         test_pdf_content = b"%PDF-1.4 test"
 
-        start_time = time.time()
-
         # Make 3 concurrent requests
         tasks = []
         for i in range(3):
@@ -121,7 +119,6 @@ async def test_concurrent_requests_async() -> None:
             tasks.append(task)
 
         responses = await asyncio.gather(*tasks)
-        elapsed_time = time.time() - start_time
 
         # Without fix: this would take ~3 seconds (sequential)
         # With fix: this should take ~1 second (parallel)
