@@ -11,7 +11,7 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import HTMLResponse, Response
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
-from pdfa.compression_config import CompressionConfig
+from pdfa.compression_config import PRESETS, CompressionConfig
 from pdfa.converter import convert_to_pdfa
 from pdfa.exceptions import OfficeConversionError, UnsupportedFormatError
 from pdfa.format_converter import (
@@ -23,6 +23,7 @@ from pdfa.image_converter import convert_image_to_pdf
 from pdfa.logging_config import get_logger
 
 PdfaLevel = Literal["1", "2", "3"]
+CompressionProfile = Literal["balanced", "quality", "aggressive", "minimal"]
 
 logger = get_logger(__name__)
 
@@ -119,6 +120,7 @@ async def convert_endpoint(
     file: UploadFile = File(...),
     language: str = Form("deu+eng"),
     pdfa_level: PdfaLevel = Form("2"),
+    compression_profile: CompressionProfile = Form("balanced"),
     ocr_enabled: bool = Form(True),
 ) -> Response:
     """Convert the uploaded PDF, Office, ODF, or image file into PDF/A.
@@ -131,12 +133,14 @@ async def convert_endpoint(
         file: PDF, Office, ODF, or image file to convert.
         language: Tesseract language codes for OCR (default: 'deu+eng').
         pdfa_level: PDF/A compliance level (default: '2').
+        compression_profile: Compression profile to use (default: 'balanced').
         ocr_enabled: Whether to perform OCR (default: True).
 
     """
     logger.info(
         f"Conversion request received: filename={file.filename}, "
-        f"language={language}, pdfa_level={pdfa_level}, ocr_enabled={ocr_enabled}"
+        f"language={language}, pdfa_level={pdfa_level}, "
+        f"compression_profile={compression_profile}, ocr_enabled={ocr_enabled}"
     )
 
     # Supported MIME types
@@ -227,13 +231,15 @@ async def convert_endpoint(
 
             # Convert to PDF/A
             output_path = tmp_path / "output.pdf"
+            # Select compression configuration from profile
+            selected_compression = PRESETS.get(compression_profile, compression_config)
             convert_to_pdfa(
                 pdf_path,
                 output_path,
                 language=language,
                 pdfa_level=pdfa_level,
                 ocr_enabled=ocr_enabled,
-                compression_config=compression_config,
+                compression_config=selected_compression,
             )
 
         except FileNotFoundError as error:

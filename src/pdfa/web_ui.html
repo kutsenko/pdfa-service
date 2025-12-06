@@ -369,6 +369,17 @@
                         <option value="3">PDF/A-3</option>
                     </select>
                 </div>
+
+                <!-- Compression Profile -->
+                <div class="form-group">
+                    <label for="compression_profile" data-i18n="form.compressionProfile">Compression Profile</label>
+                    <select id="compression_profile" name="compression_profile">
+                        <option value="balanced" selected data-i18n="compression.balanced">Balanced (150 DPI, Quality 85)</option>
+                        <option value="quality" data-i18n="compression.quality">High Quality (300 DPI, Quality 95)</option>
+                        <option value="aggressive" data-i18n="compression.aggressive">Aggressive (100 DPI, Quality 75)</option>
+                        <option value="minimal" data-i18n="compression.minimal">Minimal Size (72 DPI, Quality 70)</option>
+                    </select>
+                </div>
             </div>
 
             <!-- OCR Toggle -->
@@ -408,6 +419,7 @@
                 'form.uploadSubtext': 'PDF, Office, or OpenDocument files',
                 'form.ocrLanguage': 'OCR Language',
                 'form.pdfaLevel': 'PDF/A Level',
+                'form.compressionProfile': 'Compression Profile',
                 'form.enableOcr': 'Enable OCR (text recognition)',
                 'form.ocrHint': 'Uncheck to skip OCR and only convert to PDF/A format',
                 'form.convertButton': '🚀 Convert & Download',
@@ -421,6 +433,10 @@
                 'ocr.spanishEnglish': 'Español + English',
                 'ocr.italian': 'Italiano (Italian)',
                 'ocr.italianEnglish': 'Italiano + English',
+                'compression.balanced': 'Balanced (150 DPI, Quality 85)',
+                'compression.quality': 'High Quality (300 DPI, Quality 95)',
+                'compression.aggressive': 'Aggressive (100 DPI, Quality 75)',
+                'compression.minimal': 'Minimal Size (72 DPI, Quality 70)',
                 'status.selectFile': 'Please select a file first',
                 'status.fileTooLarge': 'File too large: {size}. Maximum size is {max}.',
                 'status.converting': 'Converting... This may take a moment',
@@ -437,6 +453,7 @@
                 'form.uploadSubtext': 'PDF-, Office- oder OpenDocument-Dateien',
                 'form.ocrLanguage': 'OCR-Sprache',
                 'form.pdfaLevel': 'PDF/A-Level',
+                'form.compressionProfile': 'Komprimierungsprofil',
                 'form.enableOcr': 'OCR aktivieren (Texterkennung)',
                 'form.ocrHint': 'Deaktivieren, um OCR zu überspringen und nur in PDF/A zu konvertieren',
                 'form.convertButton': '🚀 Konvertieren & Herunterladen',
@@ -450,6 +467,10 @@
                 'ocr.spanishEnglish': 'Spanisch + Englisch',
                 'ocr.italian': 'Italienisch',
                 'ocr.italianEnglish': 'Italienisch + Englisch',
+                'compression.balanced': 'Ausgewogen (150 DPI, Qualität 85)',
+                'compression.quality': 'Hohe Qualität (300 DPI, Qualität 95)',
+                'compression.aggressive': 'Aggressiv (100 DPI, Qualität 75)',
+                'compression.minimal': 'Minimale Größe (72 DPI, Qualität 70)',
                 'status.selectFile': 'Bitte wählen Sie zuerst eine Datei aus',
                 'status.fileTooLarge': 'Datei zu groß: {size}. Maximale Größe ist {max}.',
                 'status.converting': 'Konvertierung läuft... Dies kann einen Moment dauern',
@@ -466,6 +487,7 @@
                 'form.uploadSubtext': 'Archivos PDF, Office u OpenDocument',
                 'form.ocrLanguage': 'Idioma OCR',
                 'form.pdfaLevel': 'Nivel PDF/A',
+                'form.compressionProfile': 'Perfil de Compresión',
                 'form.enableOcr': 'Activar OCR (reconocimiento de texto)',
                 'form.ocrHint': 'Desmarque para omitir OCR y solo convertir a formato PDF/A',
                 'form.convertButton': '🚀 Convertir y Descargar',
@@ -479,6 +501,10 @@
                 'ocr.spanishEnglish': 'Español + Inglés',
                 'ocr.italian': 'Italiano',
                 'ocr.italianEnglish': 'Italiano + Inglés',
+                'compression.balanced': 'Equilibrado (150 DPI, Calidad 85)',
+                'compression.quality': 'Alta Calidad (300 DPI, Calidad 95)',
+                'compression.aggressive': 'Agresivo (100 DPI, Calidad 75)',
+                'compression.minimal': 'Tamaño Mínimo (72 DPI, Calidad 70)',
                 'status.selectFile': 'Por favor, seleccione primero un archivo',
                 'status.fileTooLarge': 'Archivo demasiado grande: {size}. El tamaño máximo es {max}.',
                 'status.converting': 'Convirtiendo... Esto puede tardar un momento',
@@ -495,6 +521,7 @@
                 'form.uploadSubtext': 'Fichiers PDF, Office ou OpenDocument',
                 'form.ocrLanguage': 'Langue OCR',
                 'form.pdfaLevel': 'Niveau PDF/A',
+                'form.compressionProfile': 'Profil de Compression',
                 'form.enableOcr': 'Activer OCR (reconnaissance de texte)',
                 'form.ocrHint': 'Décochez pour ignorer l\'OCR et convertir uniquement au format PDF/A',
                 'form.convertButton': '🚀 Convertir et Télécharger',
@@ -508,6 +535,10 @@
                 'ocr.spanishEnglish': 'Espagnol + Anglais',
                 'ocr.italian': 'Italien',
                 'ocr.italianEnglish': 'Italien + Anglais',
+                'compression.balanced': 'Équilibré (150 DPI, Qualité 85)',
+                'compression.quality': 'Haute Qualité (300 DPI, Qualité 95)',
+                'compression.aggressive': 'Agressif (100 DPI, Qualité 75)',
+                'compression.minimal': 'Taille Minimale (72 DPI, Qualité 70)',
                 'status.selectFile': 'Veuillez d\'abord sélectionner un fichier',
                 'status.fileTooLarge': 'Fichier trop volumineux : {size}. La taille maximale est {max}.',
                 'status.converting': 'Conversion en cours... Cela peut prendre un moment',
@@ -681,6 +712,7 @@
             formData.append('file', file);
             formData.append('language', document.getElementById('language').value);
             formData.append('pdfa_level', document.getElementById('pdfa_level').value);
+            formData.append('compression_profile', document.getElementById('compression_profile').value);
             formData.append('ocr_enabled', ocrCheckbox.checked);
 
             convertBtn.disabled = true;
