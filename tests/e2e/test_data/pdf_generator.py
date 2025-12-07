@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 from reportlab.lib.pagesizes import A4, letter
-from reportlab.lib.units import inch
 from reportlab.pdfgen import canvas
 
 
@@ -78,7 +77,7 @@ def create_medium_pdf(output_path: Path, num_pages: int = 10) -> None:
 
         # Footer
         c.setFont("Helvetica-Oblique", 8)
-        c.drawString(width - 150, 50, f"Generated for testing")
+        c.drawString(width - 150, 50, "Generated for testing")
 
         c.showPage()
 
