@@ -483,13 +483,22 @@ def test_websocket_cancel_message(client: TestClient) -> None:
         response = websocket.receive_json()
         job_id = response["job_id"]
 
-        # Send cancel message
+        # Send cancel message immediately
         websocket.send_json({"type": "cancel", "job_id": job_id})
 
-        # WebSocket should remain open
+        # WebSocket should remain open - send ping
         websocket.send_json({"type": "ping"})
-        pong = websocket.receive_json()
-        assert pong["type"] == "pong"
+
+        # Drain messages until we get pong (may receive progress, cancelled, etc.)
+        for _ in range(5):  # Safety limit
+            response = websocket.receive_json()
+            if response.get("type") == "pong":
+                break
+        else:
+            # If we didn't break, we didn't get pong
+            assert False, f"Expected pong message, got: {response}"
+
+        assert response["type"] == "pong"
 
 
 def test_websocket_invalid_message_type(client: TestClient) -> None:

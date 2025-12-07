@@ -368,6 +368,23 @@ async def process_conversion_job(job_id: str) -> None:
                 pass  # Nothing more we can do
             return
 
+        # Send initial progress message to inform client that processing has started
+        initial_progress = ProgressMessage(
+            job_id=job_id,
+            step="Starting conversion",
+            current=0,
+            total=100,
+            percentage=0,
+            message="Preparing document for conversion...",
+        )
+        try:
+            await job_manager.broadcast_to_job(job_id, initial_progress.to_dict())
+        except Exception as broadcast_error:
+            logger.warning(
+                f"Failed to broadcast initial progress for job {job_id}: {broadcast_error}"
+            )
+            # Continue anyway - this is not critical
+
         # Progress callback that broadcasts to WebSocket
         def progress_callback(progress: ProgressInfo) -> None:
             # Send progress update to all connected clients
