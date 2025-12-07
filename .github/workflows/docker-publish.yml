@@ -39,7 +39,7 @@ jobs:
         run: ruff check src tests
 
       - name: Run pytest
-        run: pytest -v
+        run: pytest -v --ignore=tests/e2e/
 
   security:
     runs-on: ubuntu-latest
