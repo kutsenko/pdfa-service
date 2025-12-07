@@ -145,7 +145,7 @@ PRESETS = {
     "preserve": CompressionConfig(
         image_dpi=300,
         jpg_quality=95,
-        optimize=0,
+        optimize=1,  # Lossless optimization, avoids warnings
         remove_vectors=False,
         jbig2_lossy=False,
         jbig2_page_group_size=1,  # Minimum valid value
