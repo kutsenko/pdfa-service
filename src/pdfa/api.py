@@ -7,6 +7,7 @@ import uuid
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Literal
+from urllib.parse import quote
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile, WebSocket
 from fastapi.responses import FileResponse, HTMLResponse, Response
@@ -317,9 +318,13 @@ async def convert_endpoint(
         f"(output size: {len(output_bytes)} bytes)"
     )
 
+    # Use RFC 5987 encoding for filenames with Unicode characters
+    # This ensures compatibility with all characters including umlauts, accents, etc.
+    filename_encoded = quote(filename)
+
     headers = {
         "Content-Type": "application/pdf",
-        "Content-Disposition": f'attachment; filename="{filename}"',
+        "Content-Disposition": f"attachment; filename*=UTF-8''{filename_encoded}",
     }
 
     return Response(content=output_bytes, headers=headers, media_type="application/pdf")
