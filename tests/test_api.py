@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -120,6 +121,39 @@ def test_convert_endpoint_handles_conversion_failure(
 
     assert response.status_code == 500
     assert response.json()["detail"] == "OCRmyPDF failed: ocr failure"
+
+
+def test_convert_endpoint_unicode_filename(monkeypatch, client: TestClient) -> None:
+    """Unicode filenames (umlauts, accents) should be properly encoded in headers."""
+
+    def fake_convert(
+        input_pdf: Path,
+        output_pdf: Path,
+        *_: Any,
+        **__: Any,
+    ) -> None:
+        # Create a fake output PDF
+        output_pdf.write_bytes(b"%PDF-1.4 converted")
+
+    monkeypatch.setattr(api, "convert_to_pdfa", fake_convert)
+
+    # Test with German umlauts, French accents, and combining characters
+    unicode_filename = "Testdokumént_mit_Ümlauten_und_Akzénten.pdf"
+    response = client.post(
+        "/convert",
+        files={"file": (unicode_filename, b"%PDF-1.4 fake", "application/pdf")},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+
+    # Check that Content-Disposition header uses RFC 5987 encoding
+    content_disposition = response.headers.get("content-disposition", "")
+    assert "filename*=UTF-8''" in content_disposition
+    # The filename should be URL-encoded in the header
+    assert (
+        "Testdokum" in content_disposition or "Testdokum%C3%A9nt" in content_disposition
+    )
 
 
 def test_web_ui_root_path(client: TestClient) -> None:
