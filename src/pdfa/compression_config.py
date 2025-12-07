@@ -148,6 +148,6 @@ PRESETS = {
         optimize=0,
         remove_vectors=False,
         jbig2_lossy=False,
-        jbig2_page_group_size=0,
+        jbig2_page_group_size=1,  # Minimum valid value
     ),
 }
