@@ -33,22 +33,27 @@ class TestWebUIBasics:
     def test_upload_and_convert_flow(self, page: Page, small_pdf: Path) -> None:
         """Test basic upload and conversion."""
         page.goto("http://localhost:8000")
-        
+
         # Upload file
         page.set_input_files('input[type="file"]', small_pdf)
         page.wait_for_timeout(500)
-        
+
         # Click convert
         page.click("#convertBtn")
-        
-        # Wait longer for WebSocket connection and processing
-        page.wait_for_timeout(5000)
-        
-        # Check that something happened (progress or status)
-        progress_visible = page.locator("#progressContainer").is_visible()
-        status_visible = page.locator("#status").is_visible()
-        
-        assert progress_visible or status_visible, "Either progress or status should be visible"
+
+        # Wait for either progress container or status to become visible
+        # Check multiple times within a reasonable window
+        found_visible = False
+        for _ in range(50):  # Check for up to 5 seconds (50 * 100ms)
+            page.wait_for_timeout(100)
+            progress_visible = page.locator("#progressContainer").is_visible()
+            status_visible = page.locator("#status").is_visible()
+
+            if progress_visible or status_visible:
+                found_visible = True
+                break
+
+        assert found_visible, "Either progress or status should become visible after conversion starts"
 
     def test_progress_not_stuck_on_starting(self, page: Page, small_pdf: Path) -> None:
         """Test that progress doesn't show 'Starting...' - THIS IS THE KEY TEST."""
