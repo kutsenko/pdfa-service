@@ -14,7 +14,6 @@ Tests cover:
 
 from __future__ import annotations
 
-import time
 from pathlib import Path
 
 import pytest
@@ -109,8 +108,10 @@ class TestBasicConversionFlow:
         progress_container = page.locator("#progressContainer")
         # Wait for progress container to have visible class
         page.wait_for_timeout(500)
-        progress_classes = progress_container.get_attribute('class')
-        assert progress_classes and 'visible' in progress_classes, 'Progress container should be visible'
+        progress_classes = progress_container.get_attribute("class")
+        assert (
+            progress_classes and "visible" in progress_classes
+        ), "Progress container should be visible"
 
         # Wait for completion or error (with longer timeout)
         # Either status message or download should appear
@@ -152,8 +153,10 @@ class TestProgressUpdates:
         progress_container = page.locator("#progressContainer")
         # Wait for progress container to have visible class
         page.wait_for_timeout(500)
-        progress_classes = progress_container.get_attribute('class')
-        assert progress_classes and 'visible' in progress_classes, 'Progress container should be visible'
+        progress_classes = progress_container.get_attribute("class")
+        assert (
+            progress_classes and "visible" in progress_classes
+        ), "Progress container should be visible"
 
     def test_progress_bar_updates(
         self, page_with_server: Page, test_pdfs: dict[str, Path]
@@ -176,11 +179,12 @@ class TestProgressUpdates:
         progress_container = page.locator("#progressContainer")
         # Wait for progress container to have visible class
         page.wait_for_timeout(500)
-        progress_classes = progress_container.get_attribute('class')
-        assert progress_classes and 'visible' in progress_classes, 'Progress container should be visible'
+        progress_classes = progress_container.get_attribute("class")
+        assert (
+            progress_classes and "visible" in progress_classes
+        ), "Progress container should be visible"
 
         # Get progress elements
-        progress_fill = page.locator("#progressFill")
         progress_percentage = page.locator("#progressPercentage")
         progress_message = page.locator("#progressMessage")
 
@@ -198,8 +202,6 @@ class TestProgressUpdates:
         # Wait a bit for progress to potentially update
         page.wait_for_timeout(2000)
 
-        # Check if progress has updated
-        updated_percentage = progress_percentage.inner_text()
         # Even if it's still 0%, that's fine - we just check it's not "Starting..."
 
     def test_status_message_not_stuck_on_starting(
@@ -223,8 +225,10 @@ class TestProgressUpdates:
         progress_container = page.locator("#progressContainer")
         # Wait for progress container to have visible class
         page.wait_for_timeout(500)
-        progress_classes = progress_container.get_attribute('class')
-        assert progress_classes and 'visible' in progress_classes, 'Progress container should be visible'
+        progress_classes = progress_container.get_attribute("class")
+        assert (
+            progress_classes and "visible" in progress_classes
+        ), "Progress container should be visible"
 
         # Sample progress message multiple times
         progress_message = page.locator("#progressMessage")
@@ -263,8 +267,10 @@ class TestProgressUpdates:
         progress_container = page.locator("#progressContainer")
         # Wait for progress container to have visible class
         page.wait_for_timeout(500)
-        progress_classes = progress_container.get_attribute('class')
-        assert progress_classes and 'visible' in progress_classes, 'Progress container should be visible'
+        progress_classes = progress_container.get_attribute("class")
+        assert (
+            progress_classes and "visible" in progress_classes
+        ), "Progress container should be visible"
 
         # Sample percentage multiple times
         progress_percentage = page.locator("#progressPercentage")
@@ -309,8 +315,10 @@ class TestLargeFileConversion:
         progress_container = page.locator("#progressContainer")
         # Wait for progress container to have visible class
         page.wait_for_timeout(500)
-        progress_classes = progress_container.get_attribute('class')
-        assert progress_classes and 'visible' in progress_classes, 'Progress container should be visible'
+        progress_classes = progress_container.get_attribute("class")
+        assert (
+            progress_classes and "visible" in progress_classes
+        ), "Progress container should be visible"
 
         # Wait for completion with extended timeout (large file)
         status_div = page.locator("#status")
@@ -352,8 +360,10 @@ class TestLargeFileConversion:
         progress_container = page.locator("#progressContainer")
         # Wait for progress container to have visible class
         page.wait_for_timeout(500)
-        progress_classes = progress_container.get_attribute('class')
-        assert progress_classes and 'visible' in progress_classes, 'Progress container should be visible'
+        progress_classes = progress_container.get_attribute("class")
+        assert (
+            progress_classes and "visible" in progress_classes
+        ), "Progress container should be visible"
 
         # Track progress updates
         progress_percentage = page.locator("#progressPercentage")
@@ -372,7 +382,9 @@ class TestLargeFileConversion:
             updates.append({"time": i * 2, "percentage": pct, "message": msg})
 
             # Check if conversion is done
-            if not progress_container.get_attribute("class") or "visible" not in progress_container.get_attribute("class"):
+            if not progress_container.get_attribute(
+                "class"
+            ) or "visible" not in progress_container.get_attribute("class"):
                 break
 
             # Progress should change over time
@@ -392,7 +404,9 @@ class TestLargeFileConversion:
 class TestErrorHandling:
     """Test error handling in the UI."""
 
-    def test_invalid_file_type_shows_error(self, page_with_server: Page, tmp_path: Path) -> None:
+    def test_invalid_file_type_shows_error(
+        self, page_with_server: Page, tmp_path: Path
+    ) -> None:
         """Test that uploading invalid file type shows an error."""
         page = page_with_server
         page.goto("http://localhost:8000")
@@ -422,7 +436,9 @@ class TestErrorHandling:
             or "invalid" in status_text.lower()
         ), f"Expected error message, got: {status_text}"
 
-    def test_empty_file_shows_error(self, page_with_server: Page, tmp_path: Path) -> None:
+    def test_empty_file_shows_error(
+        self, page_with_server: Page, tmp_path: Path
+    ) -> None:
         """Test that uploading empty file shows an error."""
         page = page_with_server
         page.goto("http://localhost:8000")
