@@ -319,6 +319,112 @@
             color: white;
         }
 
+        /* Progress Bar Styles */
+        .progress-container {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9ff;
+            border-radius: 8px;
+            border: 1px solid #e0e7ff;
+        }
+
+        .progress-container.visible {
+            display: block;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .progress-step {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .cancel-btn {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .cancel-btn:hover {
+            background-color: #dc2626;
+        }
+
+        .cancel-btn:disabled {
+            background-color: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        .progress-bar-wrapper {
+            width: 100%;
+            height: 24px;
+            background-color: #e0e7ff;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .progress-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .ws-status {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .ws-status.connected {
+            background-color: #10b981;
+        }
+
+        .ws-status.disconnected {
+            background-color: #ef4444;
+        }
+
+        .ws-status.connecting {
+            background-color: #f59e0b;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 25px;
@@ -336,6 +442,12 @@
                 position: static;
                 justify-content: center;
                 margin-bottom: 15px;
+            }
+
+            .progress-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
             }
         }
     </style>
@@ -443,6 +555,28 @@
 
             <!-- Status Message -->
             <div class="status" id="status"></div>
+
+            <!-- Progress Container (WebSocket) -->
+            <div class="progress-container" id="progressContainer">
+                <div class="progress-header">
+                    <div class="progress-step" id="progressStep">Processing...</div>
+                    <button class="cancel-btn" id="cancelBtn" onclick="cancelJob()">
+                        <span data-i18n="button.cancel">Cancel</span>
+                    </button>
+                </div>
+                <div class="progress-bar-wrapper">
+                    <div class="progress-bar-fill" id="progressFill" style="width: 0%;">
+                        <span id="progressPercentage">0%</span>
+                    </div>
+                </div>
+                <div class="progress-details">
+                    <span id="progressMessage">Starting...</span>
+                    <span>
+                        <span class="ws-status" id="wsStatus"></span>
+                        <span id="wsStatusText" data-i18n="ws.connecting">Connecting...</span>
+                    </span>
+                </div>
+            </div>
         </form>
     </div>
 
@@ -493,7 +627,25 @@
                 'error.networkError': 'Network error. Please check your internet connection.',
                 'error.connectionRefused': 'Cannot connect to server. Please try again later.',
                 'error.timeout': 'Request timeout. Please try again with a smaller file or later.',
-                'error.unknown': 'An unknown error occurred: {message}'
+                'error.unknown': 'An unknown error occurred: {message}',
+                // WebSocket-specific translations
+                'ws.connecting': 'Connecting...',
+                'ws.connected': 'Connected',
+                'ws.disconnected': 'Disconnected - reconnecting...',
+                'ws.reconnected': 'Reconnected',
+                'ws.error': 'WebSocket error',
+                'progress.office': 'Converting Office document to PDF...',
+                'progress.scanning': 'Analyzing PDF structure...',
+                'progress.ocr': 'OCR processing: page {current} of {total}',
+                'progress.pdfa': 'Converting to PDF/A format...',
+                'button.cancel': 'Cancel',
+                'status.queued': 'Queued - waiting for processing...',
+                'status.processing': 'Processing...',
+                'status.cancelling': 'Cancelling...',
+                'status.cancelled': 'Conversion cancelled',
+                'error.job_timeout': 'Conversion timeout exceeded',
+                'error.job_cancelled': 'Job was cancelled',
+                'error.ws_connection': 'WebSocket connection failed'
             },
             de: {
                 'page.title': 'PDF/A Konverter - Testoberfläche',
@@ -539,7 +691,25 @@
                 'error.networkError': 'Netzwerkfehler. Bitte überprüfen Sie Ihre Internetverbindung.',
                 'error.connectionRefused': 'Verbindung zum Server fehlgeschlagen. Bitte versuchen Sie es später erneut.',
                 'error.timeout': 'Zeitüberschreitung. Bitte versuchen Sie es mit einer kleineren Datei oder später erneut.',
-                'error.unknown': 'Ein unbekannter Fehler ist aufgetreten: {message}'
+                'error.unknown': 'Ein unbekannter Fehler ist aufgetreten: {message}',
+                // WebSocket-specific translations
+                'ws.connecting': 'Verbindung wird hergestellt...',
+                'ws.connected': 'Verbunden',
+                'ws.disconnected': 'Verbindung unterbrochen - Wiederverbindung...',
+                'ws.reconnected': 'Wiederverbunden',
+                'ws.error': 'WebSocket-Fehler',
+                'progress.office': 'Office-Dokument wird zu PDF konvertiert...',
+                'progress.scanning': 'PDF-Struktur wird analysiert...',
+                'progress.ocr': 'OCR-Verarbeitung: Seite {current} von {total}',
+                'progress.pdfa': 'Konvertierung zu PDF/A-Format...',
+                'button.cancel': 'Abbrechen',
+                'status.queued': 'In Warteschlange - warte auf Verarbeitung...',
+                'status.processing': 'Verarbeitung läuft...',
+                'status.cancelling': 'Wird abgebrochen...',
+                'status.cancelled': 'Konvertierung abgebrochen',
+                'error.job_timeout': 'Konvertierungs-Timeout überschritten',
+                'error.job_cancelled': 'Job wurde abgebrochen',
+                'error.ws_connection': 'WebSocket-Verbindung fehlgeschlagen'
             },
             es: {
                 'page.title': 'Convertidor PDF/A - Interfaz de Prueba',
@@ -585,7 +755,25 @@
                 'error.networkError': 'Error de red. Por favor, verifique su conexión a internet.',
                 'error.connectionRefused': 'No se puede conectar al servidor. Por favor, inténtelo de nuevo más tarde.',
                 'error.timeout': 'Tiempo de espera agotado. Por favor, inténtelo con un archivo más pequeño o más tarde.',
-                'error.unknown': 'Ocurrió un error desconocido: {message}'
+                'error.unknown': 'Ocurrió un error desconocido: {message}',
+                // WebSocket-specific translations
+                'ws.connecting': 'Conectando...',
+                'ws.connected': 'Conectado',
+                'ws.disconnected': 'Desconectado - reconectando...',
+                'ws.reconnected': 'Reconectado',
+                'ws.error': 'Error de WebSocket',
+                'progress.office': 'Convirtiendo documento Office a PDF...',
+                'progress.scanning': 'Analizando estructura del PDF...',
+                'progress.ocr': 'Procesamiento OCR: página {current} de {total}',
+                'progress.pdfa': 'Convirtiendo a formato PDF/A...',
+                'button.cancel': 'Cancelar',
+                'status.queued': 'En cola - esperando procesamiento...',
+                'status.processing': 'Procesando...',
+                'status.cancelling': 'Cancelando...',
+                'status.cancelled': 'Conversión cancelada',
+                'error.job_timeout': 'Tiempo de conversión excedido',
+                'error.job_cancelled': 'El trabajo fue cancelado',
+                'error.ws_connection': 'Falló la conexión WebSocket'
             },
             fr: {
                 'page.title': 'Convertisseur PDF/A - Interface de Test',
@@ -631,7 +819,25 @@
                 'error.networkError': 'Erreur réseau. Veuillez vérifier votre connexion internet.',
                 'error.connectionRefused': 'Impossible de se connecter au serveur. Veuillez réessayer plus tard.',
                 'error.timeout': 'Délai d\'attente expiré. Veuillez réessayer avec un fichier plus petit ou plus tard.',
-                'error.unknown': 'Une erreur inconnue s\'est produite : {message}'
+                'error.unknown': 'Une erreur inconnue s\'est produite : {message}',
+                // WebSocket-specific translations
+                'ws.connecting': 'Connexion en cours...',
+                'ws.connected': 'Connecté',
+                'ws.disconnected': 'Déconnecté - reconnexion...',
+                'ws.reconnected': 'Reconnecté',
+                'ws.error': 'Erreur WebSocket',
+                'progress.office': 'Conversion du document Office en PDF...',
+                'progress.scanning': 'Analyse de la structure PDF...',
+                'progress.ocr': 'Traitement OCR : page {current} sur {total}',
+                'progress.pdfa': 'Conversion au format PDF/A...',
+                'button.cancel': 'Annuler',
+                'status.queued': 'En file d\'attente - en attente de traitement...',
+                'status.processing': 'Traitement en cours...',
+                'status.cancelling': 'Annulation...',
+                'status.cancelled': 'Conversion annulée',
+                'error.job_timeout': 'Délai de conversion dépassé',
+                'error.job_cancelled': 'Le travail a été annulé',
+                'error.ws_connection': 'Échec de la connexion WebSocket'
             }
         };
 
@@ -953,6 +1159,467 @@
                         statusDiv.style.display = 'none';
                     }, 5000);
                 }
+            }
+        }
+
+        // WebSocket Conversion Client
+        class ConversionClient {
+            constructor() {
+                this.ws = null;
+                this.currentJobId = null;
+                this.reconnectAttempts = 0;
+                this.maxReconnectAttempts = 5;
+                this.reconnectDelay = 2000;
+                this.isIntentionallyClosed = false;
+                this.pingInterval = null;
+            }
+
+            connect() {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    return; // Already connected
+                }
+
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${protocol}//${window.location.host}/ws`;
+
+                this.updateWSStatus('connecting');
+
+                try {
+                    this.ws = new WebSocket(wsUrl);
+
+                    this.ws.onopen = () => this.handleOpen();
+                    this.ws.onmessage = (event) => this.handleMessage(event);
+                    this.ws.onclose = (event) => this.handleClose(event);
+                    this.ws.onerror = (error) => this.handleError(error);
+                } catch (error) {
+                    console.error('WebSocket connection failed:', error);
+                    this.updateWSStatus('disconnected');
+                }
+            }
+
+            handleOpen() {
+                console.log('WebSocket connected');
+                this.reconnectAttempts = 0;
+                this.updateWSStatus('connected');
+
+                // Start ping interval (every 30 seconds)
+                this.pingInterval = setInterval(() => {
+                    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                        this.ws.send(JSON.stringify({ type: 'ping' }));
+                    }
+                }, 30000);
+            }
+
+            handleMessage(event) {
+                try {
+                    const message = JSON.parse(event.data);
+                    console.log('WebSocket message:', message);
+
+                    switch (message.type) {
+                        case 'job_accepted':
+                            this.handleJobAccepted(message);
+                            break;
+                        case 'progress':
+                            this.handleProgress(message);
+                            break;
+                        case 'completed':
+                            this.handleCompleted(message);
+                            break;
+                        case 'error':
+                            this.handleJobError(message);
+                            break;
+                        case 'cancelled':
+                            this.handleCancelled(message);
+                            break;
+                        case 'pong':
+                            // Keepalive response
+                            break;
+                        default:
+                            console.warn('Unknown message type:', message.type);
+                    }
+                } catch (error) {
+                    console.error('Error parsing WebSocket message:', error);
+                }
+            }
+
+            handleClose(event) {
+                console.log('WebSocket closed:', event.code, event.reason);
+                if (this.pingInterval) {
+                    clearInterval(this.pingInterval);
+                    this.pingInterval = null;
+                }
+
+                if (!this.isIntentionallyClosed) {
+                    this.updateWSStatus('disconnected');
+                    this.attemptReconnect();
+                }
+            }
+
+            handleError(error) {
+                console.error('WebSocket error:', error);
+                this.updateWSStatus('disconnected');
+            }
+
+            attemptReconnect() {
+                if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+                    console.error('Max reconnection attempts reached');
+                    showStatus(t('error.ws_connection'), 'error');
+                    return;
+                }
+
+                this.reconnectAttempts++;
+                const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+
+                console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+
+                setTimeout(() => {
+                    this.connect();
+                }, delay);
+            }
+
+            async submitJob(file, config) {
+                if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+                    throw new Error(t('error.ws_connection'));
+                }
+
+                // Show progress container
+                this.showProgress();
+
+                // Base64-encode file
+                const base64 = await this.fileToBase64(file);
+
+                // Send submit message
+                const message = {
+                    type: 'submit',
+                    filename: file.name,
+                    fileData: base64,
+                    config: config
+                };
+
+                this.ws.send(JSON.stringify(message));
+            }
+
+            async fileToBase64(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        // Remove data URL prefix (e.g., "data:application/pdf;base64,")
+                        const base64 = reader.result.split(',')[1];
+                        resolve(base64);
+                    };
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            handleJobAccepted(message) {
+                this.currentJobId = message.job_id;
+                this.updateProgress({
+                    step: t('status.queued'),
+                    percentage: 0,
+                    message: t('status.queued')
+                });
+            }
+
+            handleProgress(message) {
+                this.updateProgress({
+                    step: message.step,
+                    percentage: message.percentage,
+                    current: message.current,
+                    total: message.total,
+                    message: message.message
+                });
+            }
+
+            handleCompleted(message) {
+                this.hideProgress();
+
+                // Download the file
+                const downloadUrl = message.download_url;
+                const filename = message.filename;
+
+                // Create download link
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+
+                // Show success message
+                showStatus(t('status.success'), 'success', {
+                    label: t('status.viewPdf'),
+                    onClick: () => {
+                        window.open(downloadUrl, '_blank');
+                    }
+                });
+
+                // Reset form
+                form.reset();
+                fileName.textContent = '';
+                this.currentJobId = null;
+            }
+
+            handleJobError(message) {
+                this.hideProgress();
+
+                let errorMsg = message.message;
+
+                // Map error codes to translated messages
+                if (message.error_code === 'JOB_TIMEOUT') {
+                    errorMsg = t('error.job_timeout');
+                } else if (message.error_code === 'JOB_CANCELLED') {
+                    errorMsg = t('error.job_cancelled');
+                }
+
+                showStatus(t('status.error', { message: errorMsg }), 'error');
+                this.currentJobId = null;
+            }
+
+            handleCancelled(message) {
+                this.hideProgress();
+                showStatus(t('status.cancelled'), 'error');
+                this.currentJobId = null;
+            }
+
+            cancelJob() {
+                if (!this.currentJobId) return;
+
+                // Disable cancel button
+                const cancelBtn = document.getElementById('cancelBtn');
+                if (cancelBtn) {
+                    cancelBtn.disabled = true;
+                }
+
+                // Update status
+                this.updateProgress({
+                    step: t('status.cancelling'),
+                    percentage: 0,
+                    message: t('status.cancelling')
+                });
+
+                // Send cancel message
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify({
+                        type: 'cancel',
+                        job_id: this.currentJobId
+                    }));
+                }
+            }
+
+            showProgress() {
+                const progressContainer = document.getElementById('progressContainer');
+                if (progressContainer) {
+                    progressContainer.classList.add('visible');
+                }
+
+                // Hide status div
+                statusDiv.style.display = 'none';
+
+                // Disable convert button
+                convertBtn.disabled = true;
+
+                // Enable cancel button
+                const cancelBtn = document.getElementById('cancelBtn');
+                if (cancelBtn) {
+                    cancelBtn.disabled = false;
+                }
+            }
+
+            hideProgress() {
+                const progressContainer = document.getElementById('progressContainer');
+                if (progressContainer) {
+                    progressContainer.classList.remove('visible');
+                }
+
+                // Enable convert button
+                convertBtn.disabled = false;
+            }
+
+            updateProgress({ step, percentage, current, total, message }) {
+                const progressStep = document.getElementById('progressStep');
+                const progressFill = document.getElementById('progressFill');
+                const progressPercentage = document.getElementById('progressPercentage');
+                const progressMessage = document.getElementById('progressMessage');
+
+                if (progressStep) {
+                    progressStep.textContent = step || t('status.processing');
+                }
+
+                if (progressFill && progressPercentage && percentage !== undefined) {
+                    progressFill.style.width = `${percentage}%`;
+                    progressPercentage.textContent = `${Math.round(percentage)}%`;
+                }
+
+                if (progressMessage && message) {
+                    // Translate OCR progress message if applicable
+                    if (current !== undefined && total !== undefined) {
+                        progressMessage.textContent = t('progress.ocr', { current, total });
+                    } else {
+                        progressMessage.textContent = message;
+                    }
+                }
+            }
+
+            updateWSStatus(status) {
+                const wsStatus = document.getElementById('wsStatus');
+                const wsStatusText = document.getElementById('wsStatusText');
+
+                if (wsStatus) {
+                    wsStatus.className = 'ws-status ' + status;
+                }
+
+                if (wsStatusText) {
+                    if (status === 'connected') {
+                        wsStatusText.textContent = t('ws.connected');
+                    } else if (status === 'connecting') {
+                        wsStatusText.textContent = t('ws.connecting');
+                    } else if (status === 'disconnected') {
+                        wsStatusText.textContent = t('ws.disconnected');
+                    }
+                }
+            }
+
+            disconnect() {
+                this.isIntentionallyClosed = true;
+                if (this.ws) {
+                    this.ws.close();
+                }
+                if (this.pingInterval) {
+                    clearInterval(this.pingInterval);
+                    this.pingInterval = null;
+                }
+            }
+        }
+
+        // Global cancel function (called from cancel button onclick)
+        function cancelJob() {
+            if (window.conversionClient) {
+                window.conversionClient.cancelJob();
+            }
+        }
+
+        // Check WebSocket support and initialize
+        function supportsWebSocket() {
+            return 'WebSocket' in window && window.WebSocket !== null;
+        }
+
+        // Initialize WebSocket client if supported
+        if (supportsWebSocket()) {
+            window.conversionClient = new ConversionClient();
+            window.conversionClient.connect();
+
+            // Modify form submission to use WebSocket
+            const originalFormHandler = form.onsubmit;
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                if (!fileInput.files.length) {
+                    showStatus(t('status.selectFile'), 'error');
+                    return;
+                }
+
+                const file = fileInput.files[0];
+
+                // Validate file size
+                if (file.size > MAX_FILE_SIZE) {
+                    showStatus(t('status.fileTooLarge', {
+                        size: formatFileSize(file.size),
+                        max: formatFileSize(MAX_FILE_SIZE)
+                    }), 'error');
+                    return;
+                }
+
+                // Prepare config
+                const config = {
+                    language: document.getElementById('language').value,
+                    pdfa_level: document.getElementById('pdfa_level').value,
+                    compression_profile: document.getElementById('compression_profile').value,
+                    ocr_enabled: ocrCheckbox.checked,
+                    skip_ocr_on_tagged_pdfs: skipOcrOnTaggedCheckbox.checked
+                };
+
+                try {
+                    // Use WebSocket if connected, otherwise fall back to fetch
+                    if (window.conversionClient && window.conversionClient.ws &&
+                        window.conversionClient.ws.readyState === WebSocket.OPEN) {
+                        await window.conversionClient.submitJob(file, config);
+                    } else {
+                        // Fallback to traditional fetch (existing implementation)
+                        console.log('WebSocket not available, using fetch fallback');
+                        await useFetchFallback(file, config);
+                    }
+                } catch (error) {
+                    console.error('Conversion error:', error);
+                    showStatus(t('status.error', { message: error.message }), 'error');
+                    convertBtn.disabled = false;
+                }
+            });
+        }
+
+        // Fallback fetch implementation (original code)
+        async function useFetchFallback(file, config) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('language', config.language);
+            formData.append('pdfa_level', config.pdfa_level);
+            formData.append('compression_profile', config.compression_profile);
+            formData.append('ocr_enabled', config.ocr_enabled);
+            formData.append('skip_ocr_on_tagged_pdfs', config.skip_ocr_on_tagged_pdfs);
+
+            convertBtn.disabled = true;
+            showStatus('<span class="spinner"></span>' + t('status.converting'), 'loading');
+
+            try {
+                const response = await fetchWithTimeout('/convert', {
+                    method: 'POST',
+                    body: formData
+                }, 300000);
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+
+                    const originalName = file.name;
+                    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.')) || originalName;
+                    link.download = nameWithoutExt + '_pdfa.pdf';
+
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+
+                    showStatus(t('status.success'), 'success', {
+                        label: t('status.viewPdf'),
+                        onClick: () => {
+                            window.open(url, '_blank');
+                        }
+                    });
+
+                    form.reset();
+                    fileName.textContent = '';
+
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(url);
+                    }, 30000);
+                } else {
+                    let errorMsg = getErrorMessage(null, response);
+                    try {
+                        const errorData = await response.json();
+                        if (errorData.detail) {
+                            errorMsg = t('status.error', { message: errorData.detail });
+                        }
+                    } catch (e) {
+                        errorMsg = t('status.error', { message: errorMsg });
+                    }
+                    showStatus(errorMsg, 'error');
+                }
+            } catch (error) {
+                const errorMsg = getErrorMessage(error);
+                showStatus(t('status.error', { message: errorMsg }), 'error');
+            } finally {
+                convertBtn.disabled = false;
             }
         }
     </script>

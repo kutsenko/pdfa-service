@@ -176,8 +176,8 @@ class TestConvertOfficeToPdf:
         with pytest.raises(FileNotFoundError):
             convert_office_to_pdf(input_file, output_file)
 
-    @patch("pdfa.format_converter.subprocess.run")
-    def test_convert_success(self, mock_run: MagicMock, tmp_path: Path) -> None:
+    @patch("pdfa.format_converter.subprocess.Popen")
+    def test_convert_success(self, mock_popen: MagicMock, tmp_path: Path) -> None:
         """convert_office_to_pdf should convert Office file to PDF."""
         # Create input file
         input_file = tmp_path / "document.docx"
@@ -189,15 +189,18 @@ class TestConvertOfficeToPdf:
         intermediate_pdf = tmp_path / "document.pdf"
         intermediate_pdf.write_bytes(b"%PDF-1.4 test")
 
-        # Mock subprocess
-        mock_run.return_value.returncode = 0
-        mock_run.return_value.stderr = ""
+        # Mock subprocess.Popen
+        mock_process = MagicMock()
+        mock_process.poll.return_value = 0  # Process finished
+        mock_process.returncode = 0
+        mock_process.communicate.return_value = ("", "")
+        mock_popen.return_value = mock_process
 
         convert_office_to_pdf(input_file, output_file)
 
         # Verify subprocess was called correctly
-        mock_run.assert_called_once()
-        call_args = mock_run.call_args
+        mock_popen.assert_called_once()
+        call_args = mock_popen.call_args
         assert call_args[0][0][0] == "libreoffice"
         assert "--headless" in call_args[0][0]
         assert "--convert-to" in call_args[0][0]
@@ -208,9 +211,9 @@ class TestConvertOfficeToPdf:
         assert output_file.exists()
         assert output_file.read_bytes() == b"%PDF-1.4 test"
 
-    @patch("pdfa.format_converter.subprocess.run")
+    @patch("pdfa.format_converter.subprocess.Popen")
     def test_convert_libreoffice_failure(
-        self, mock_run: MagicMock, tmp_path: Path
+        self, mock_popen: MagicMock, tmp_path: Path
     ) -> None:
         """convert_office_to_pdf should raise error on LibreOffice failure."""
         input_file = tmp_path / "document.docx"
@@ -219,31 +222,49 @@ class TestConvertOfficeToPdf:
         output_file = tmp_path / "output.pdf"
 
         # Mock subprocess failure
-        mock_run.return_value.returncode = 1
-        mock_run.return_value.stderr = "LibreOffice error message"
+        mock_process = MagicMock()
+        mock_process.poll.return_value = 1  # Process finished with error
+        mock_process.returncode = 1
+        mock_process.communicate.return_value = ("", "LibreOffice error message")
+        mock_popen.return_value = mock_process
 
         with pytest.raises(OfficeConversionError):
             convert_office_to_pdf(input_file, output_file)
 
-    @patch("pdfa.format_converter.subprocess.run")
-    def test_convert_timeout(self, mock_run: MagicMock, tmp_path: Path) -> None:
+    @patch("pdfa.format_converter.time.time")
+    @patch("pdfa.format_converter.subprocess.Popen")
+    def test_convert_timeout(
+        self, mock_popen: MagicMock, mock_time: MagicMock, tmp_path: Path
+    ) -> None:
         """convert_office_to_pdf should raise error on timeout."""
-        import subprocess
-
         input_file = tmp_path / "document.docx"
         input_file.write_text("dummy content")
 
         output_file = tmp_path / "output.pdf"
 
-        # Mock subprocess timeout
-        mock_run.side_effect = subprocess.TimeoutExpired("libreoffice", 300)
+        # Mock time to simulate timeout (start at 0, then jump to 301 seconds)
+        mock_time.side_effect = [
+            0,
+            0,
+            0,
+            301,
+        ]  # start_time, last_update, elapsed check, elapsed > timeout
 
-        with pytest.raises(OfficeConversionError):
+        # Mock subprocess that never finishes
+        mock_process = MagicMock()
+        mock_process.poll.return_value = None  # Process still running
+        mock_process.kill = MagicMock()
+        mock_popen.return_value = mock_process
+
+        with pytest.raises(OfficeConversionError, match="timeout"):
             convert_office_to_pdf(input_file, output_file)
 
-    @patch("pdfa.format_converter.subprocess.run")
+        # Verify process was killed
+        mock_process.kill.assert_called_once()
+
+    @patch("pdfa.format_converter.subprocess.Popen")
     def test_convert_missing_output_pdf(
-        self, mock_run: MagicMock, tmp_path: Path
+        self, mock_popen: MagicMock, tmp_path: Path
     ) -> None:
         """Raise error if LibreOffice doesn't produce output PDF."""
         input_file = tmp_path / "document.docx"
@@ -252,8 +273,11 @@ class TestConvertOfficeToPdf:
         output_file = tmp_path / "output.pdf"
 
         # Mock subprocess success but no output file
-        mock_run.return_value.returncode = 0
-        mock_run.return_value.stderr = ""
+        mock_process = MagicMock()
+        mock_process.poll.return_value = 0  # Process finished
+        mock_process.returncode = 0
+        mock_process.communicate.return_value = ("", "")
+        mock_popen.return_value = mock_process
 
         with pytest.raises(OfficeConversionError):
             convert_office_to_pdf(input_file, output_file)
