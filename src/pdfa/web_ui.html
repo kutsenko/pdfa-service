@@ -1422,6 +1422,15 @@
                 // Announce completion to screen readers
                 this.announceToScreenReader(t('status.success') + '. ' + t('status.viewPdf'));
 
+                // Auto-hide success message after 10 seconds
+                setTimeout(() => {
+                    const statusDiv = document.getElementById('status');
+                    if (statusDiv && statusDiv.classList.contains('success')) {
+                        statusDiv.style.display = 'none';
+                        statusDiv.className = 'status';
+                    }
+                }, 10000);
+
                 // Reset form
                 form.reset();
                 fileName.textContent = '';
@@ -1517,9 +1526,31 @@
             hideProgress() {
                 const progressContainer = document.getElementById('progressContainer');
                 const progressBarWrapper = document.getElementById('progressBarWrapper');
+                const progressFill = document.getElementById('progressFill');
+                const progressPercentage = document.getElementById('progressPercentage');
+                const progressMessage = document.getElementById('progressMessage');
+                const progressStep = document.getElementById('progressStep');
 
                 if (progressContainer) {
                     progressContainer.classList.remove('visible');
+                }
+
+                // Reset progress bar to 0
+                if (progressFill) {
+                    progressFill.style.width = '0%';
+                }
+
+                if (progressPercentage) {
+                    progressPercentage.textContent = '0%';
+                }
+
+                // Clear progress messages
+                if (progressMessage) {
+                    progressMessage.textContent = '';
+                }
+
+                if (progressStep) {
+                    progressStep.textContent = 'Processing...';
                 }
 
                 // Clear ARIA busy state
