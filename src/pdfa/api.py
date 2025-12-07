@@ -352,8 +352,18 @@ async def process_conversion_job(job_id: str) -> None:
                 percentage=progress.percentage,
                 message=progress.message,
             )
-            # Run broadcast in event loop
-            asyncio.create_task(job_manager.broadcast_to_job(job_id, message.to_dict()))
+            # Schedule broadcast from thread-safe context
+            try:
+                loop = asyncio.get_event_loop()
+                asyncio.run_coroutine_threadsafe(
+                    job_manager.broadcast_to_job(job_id, message.to_dict()), loop
+                )
+            except RuntimeError:
+                # No event loop available (e.g., in tests), skip broadcast
+                logger.debug(
+                    f"No event loop available for progress broadcast: {job_id}"
+                )
+                pass
 
         # Determine file type and convert
         config = job.config

@@ -338,3 +338,265 @@ def test_web_ui_has_compression_profile_selector(client: TestClient) -> None:
     assert 'value="quality"' in response.text
     assert 'value="aggressive"' in response.text
     assert 'value="minimal"' in response.text
+
+
+# WebSocket Integration Tests
+
+
+def test_websocket_connection(client: TestClient) -> None:
+    """Test WebSocket connection can be established."""
+    with client.websocket_connect("/ws") as websocket:
+        # Connection established successfully
+        assert websocket is not None
+
+
+def test_websocket_ping_pong(client: TestClient) -> None:
+    """Test WebSocket ping/pong mechanism."""
+    with client.websocket_connect("/ws") as websocket:
+        # Send ping message
+        websocket.send_json({"type": "ping"})
+
+        # Receive pong response
+        response = websocket.receive_json()
+        assert response["type"] == "pong"
+
+
+def test_websocket_submit_job(monkeypatch, client: TestClient) -> None:
+    """Test job submission via WebSocket."""
+    import base64
+
+    def fake_convert(
+        input_pdf,
+        output_pdf,
+        *,
+        language,
+        pdfa_level,
+        ocr_enabled,
+        skip_ocr_on_tagged_pdfs=True,
+        compression_config=None,
+        progress_callback=None,
+        cancel_event=None,
+    ) -> None:
+        # Simulate conversion
+        output_pdf.write_bytes(b"%PDF-1.4 converted")
+
+    monkeypatch.setattr(api, "convert_to_pdfa", fake_convert)
+
+    with client.websocket_connect("/ws") as websocket:
+        # Encode sample PDF
+        pdf_data = base64.b64encode(b"%PDF-1.4 test").decode()
+
+        # Submit job
+        websocket.send_json(
+            {
+                "type": "submit",
+                "filename": "test.pdf",
+                "fileData": pdf_data,
+                "config": {
+                    "language": "eng",
+                    "pdfa_level": "2",
+                    "compression_profile": "balanced",
+                    "ocr_enabled": True,
+                    "skip_ocr_on_tagged_pdfs": True,
+                },
+            }
+        )
+
+        # Receive job_accepted message
+        response = websocket.receive_json()
+        assert response["type"] == "job_accepted"
+        assert "job_id" in response
+        job_id = response["job_id"]
+
+        # Receive completion message (job processes quickly with mock)
+        messages = []
+        while True:
+            try:
+                msg = websocket.receive_json()
+                messages.append(msg)
+                if msg["type"] == "completed":
+                    break
+            except Exception:
+                break
+
+        # Verify we got completion
+        completed_messages = [m for m in messages if m["type"] == "completed"]
+        assert len(completed_messages) == 1
+
+        completed = completed_messages[0]
+        assert completed["job_id"] == job_id
+        assert "download_url" in completed
+        assert completed["download_url"].startswith("/download/")
+
+
+def test_websocket_cancel_message(client: TestClient) -> None:
+    """Test WebSocket accepts cancel messages."""
+    import base64
+
+    with client.websocket_connect("/ws") as websocket:
+        # Submit a job first
+        pdf_data = base64.b64encode(b"%PDF-1.4 test").decode()
+        websocket.send_json(
+            {
+                "type": "submit",
+                "filename": "test.pdf",
+                "fileData": pdf_data,
+                "config": {},
+            }
+        )
+
+        # Get job_id
+        response = websocket.receive_json()
+        job_id = response["job_id"]
+
+        # Send cancel message
+        websocket.send_json({"type": "cancel", "job_id": job_id})
+
+        # WebSocket should remain open
+        websocket.send_json({"type": "ping"})
+        pong = websocket.receive_json()
+        assert pong["type"] == "pong"
+
+
+def test_websocket_invalid_message_type(client: TestClient) -> None:
+    """Test WebSocket handles invalid message types gracefully."""
+    with client.websocket_connect("/ws") as websocket:
+        # Send invalid message type
+        websocket.send_json({"type": "invalid_type"})
+
+        # Should receive an error message
+        response = websocket.receive_json()
+        assert response["type"] == "error"
+
+        # Connection should still work
+        websocket.send_json({"type": "ping"})
+        pong = websocket.receive_json()
+        assert pong["type"] == "pong"
+
+
+def test_websocket_missing_filename(client: TestClient) -> None:
+    """Test WebSocket rejects job submission without filename."""
+    import base64
+
+    with client.websocket_connect("/ws") as websocket:
+        pdf_data = base64.b64encode(b"%PDF-1.4 test").decode()
+
+        # Submit job without filename
+        websocket.send_json(
+            {
+                "type": "submit",
+                "fileData": pdf_data,
+                "config": {},
+            }
+        )
+
+        # Should receive error
+        response = websocket.receive_json()
+        assert response["type"] == "error"
+
+
+def test_websocket_invalid_base64(client: TestClient) -> None:
+    """Test WebSocket rejects invalid base64 data."""
+    with client.websocket_connect("/ws") as websocket:
+        # Submit job with invalid base64
+        websocket.send_json(
+            {
+                "type": "submit",
+                "filename": "test.pdf",
+                "fileData": "not-valid-base64!!!",
+                "config": {},
+            }
+        )
+
+        # Should receive error
+        response = websocket.receive_json()
+        assert response["type"] == "error"
+
+
+def test_download_endpoint_success(monkeypatch, client: TestClient) -> None:
+    """Test download endpoint returns converted file."""
+    import tempfile
+    import uuid
+    from pathlib import Path
+
+    from pdfa.job_manager import Job, get_job_manager
+
+    job_manager = get_job_manager()
+
+    # Create a temporary file to serve
+    with tempfile.TemporaryDirectory() as tmpdir:
+        output_path = Path(tmpdir) / "output.pdf"
+        output_path.write_bytes(b"%PDF-1.4 converted")
+
+        # Create a job in completed state
+        job_id = str(uuid.uuid4())
+        import asyncio
+
+        job = Job(
+            job_id=job_id,
+            status="completed",
+            filename="test.pdf",
+            input_path=Path(tmpdir) / "input.pdf",
+            output_path=output_path,
+            config={},
+            progress=None,
+            created_at=0,
+            cancel_event=asyncio.Event(),
+            websockets=set(),
+        )
+
+        # Add job to manager
+        job_manager.jobs[job_id] = job
+
+        try:
+            # Request download
+            response = client.get(f"/download/{job_id}")
+
+            assert response.status_code == 200
+            assert response.headers["content-type"] == "application/pdf"
+            assert response.content == b"%PDF-1.4 converted"
+        finally:
+            # Cleanup
+            if job_id in job_manager.jobs:
+                del job_manager.jobs[job_id]
+
+
+def test_download_endpoint_not_found(client: TestClient) -> None:
+    """Test download endpoint returns 404 for unknown job."""
+    response = client.get("/download/unknown-job-id")
+    assert response.status_code == 404
+
+
+def test_download_endpoint_not_completed(client: TestClient) -> None:
+    """Test download endpoint returns 400 for non-completed job."""
+    import asyncio
+    import uuid
+    from pathlib import Path
+
+    from pdfa.job_manager import Job, get_job_manager
+
+    job_manager = get_job_manager()
+
+    job_id = str(uuid.uuid4())
+    job = Job(
+        job_id=job_id,
+        status="processing",
+        filename="test.pdf",
+        input_path=Path("/tmp/input.pdf"),
+        output_path=None,
+        config={},
+        progress=None,
+        created_at=0,
+        cancel_event=asyncio.Event(),
+        websockets=set(),
+    )
+
+    job_manager.jobs[job_id] = job
+
+    try:
+        response = client.get(f"/download/{job_id}")
+        assert response.status_code == 400
+        assert "not completed" in response.json()["detail"]
+    finally:
+        if job_id in job_manager.jobs:
+            del job_manager.jobs[job_id]
