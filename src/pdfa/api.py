@@ -343,8 +343,30 @@ async def process_conversion_job(job_id: str) -> None:
 
     """
     try:
-        job = job_manager.get_job(job_id)
-        await job_manager.update_job_status(job_id, "processing")
+        # Get job - if this fails, job doesn't exist and we can't update status
+        try:
+            job = job_manager.get_job(job_id)
+        except JobNotFoundException as e:
+            logger.error(f"Job {job_id} not found in process_conversion_job: {e}")
+            # Can't update status or broadcast since job doesn't exist
+            return
+
+        # Update status to processing - catch any errors here too
+        try:
+            await job_manager.update_job_status(job_id, "processing")
+        except Exception as e:
+            logger.error(
+                f"Failed to update job {job_id} status to processing: {e}",
+                exc_info=True,
+            )
+            # Try to set to failed state
+            try:
+                await job_manager.update_job_status(
+                    job_id, "failed", error=f"Failed to start job: {e}"
+                )
+            except Exception:
+                pass  # Nothing more we can do
+            return
 
         # Progress callback that broadcasts to WebSocket
         def progress_callback(progress: ProgressInfo) -> None:
@@ -434,21 +456,36 @@ async def process_conversion_job(job_id: str) -> None:
 
     except Exception as e:
         logger.error(f"Job {job_id} failed: {e}", exc_info=True)
-        await job_manager.update_job_status(job_id, "failed", error=str(e))
 
-        # Send error message
-        error_code = "CONVERSION_FAILED"
-        if isinstance(e, OfficeConversionError):
-            error_code = "OFFICE_CONVERSION_FAILED"
-        elif isinstance(e, ocrmypdf_exceptions.PriorOcrFoundError):
-            error_code = "OCR_ALREADY_EXISTS"
+        # Try to update status and broadcast error - wrap in try/except to ensure
+        # we always try to notify the client even if status update fails
+        try:
+            await job_manager.update_job_status(job_id, "failed", error=str(e))
+        except Exception as update_error:
+            logger.error(
+                f"Failed to update status for job {job_id}: {update_error}",
+                exc_info=True,
+            )
 
-        message = ErrorMessage(
-            job_id=job_id,
-            error_code=error_code,
-            message=str(e),
-        )
-        await job_manager.broadcast_to_job(job_id, message.to_dict())
+        # Send error message to client - always try this even if status update failed
+        try:
+            error_code = "CONVERSION_FAILED"
+            if isinstance(e, OfficeConversionError):
+                error_code = "OFFICE_CONVERSION_FAILED"
+            elif isinstance(e, ocrmypdf_exceptions.PriorOcrFoundError):
+                error_code = "OCR_ALREADY_EXISTS"
+
+            message = ErrorMessage(
+                job_id=job_id,
+                error_code=error_code,
+                message=str(e),
+            )
+            await job_manager.broadcast_to_job(job_id, message.to_dict())
+        except Exception as broadcast_error:
+            logger.error(
+                f"Failed to broadcast error message for job {job_id}: {broadcast_error}",
+                exc_info=True,
+            )
 
 
 @app.websocket("/ws")
@@ -555,13 +592,34 @@ async def download_result(job_id: str):
             detail=f"Job not completed (status: {job.status})",
         )
 
-    if not job.output_path or not job.output_path.exists():
-        raise HTTPException(status_code=404, detail="Output file not found")
+    # Check if output path exists
+    if not job.output_path:
+        logger.error(f"Job {job_id} has no output_path despite being completed")
+        raise HTTPException(
+            status_code=500,
+            detail="Job completed but output file path is missing",
+        )
+
+    # Check file existence - handle race condition where file might be deleted
+    # between status check and FileResponse
+    if not job.output_path.exists():
+        logger.error(
+            f"Output file for job {job_id} not found at {job.output_path} "
+            "(may have been cleaned up)"
+        )
+        raise HTTPException(
+            status_code=404,
+            detail="Output file not found (may have been cleaned up after TTL expired)",
+        )
 
     filename = f"{job.filename.rsplit('.', 1)[0]}_pdfa.pdf"
 
     logger.info(f"Downloading result for job {job_id}: {filename}")
 
+    # Use FileResponse which handles the file reading
+    # Note: There's still a small race condition window between exists() check
+    # and FileResponse reading the file, but FileResponse will handle
+    # FileNotFoundError gracefully
     return FileResponse(
         path=job.output_path,
         media_type="application/pdf",
