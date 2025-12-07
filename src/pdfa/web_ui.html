@@ -1495,9 +1495,31 @@
             showProgress() {
                 const progressContainer = document.getElementById('progressContainer');
                 const progressBarWrapper = document.getElementById('progressBarWrapper');
+                const progressFill = document.getElementById('progressFill');
+                const progressPercentage = document.getElementById('progressPercentage');
+                const progressMessage = document.getElementById('progressMessage');
+                const progressStep = document.getElementById('progressStep');
 
                 if (progressContainer) {
                     progressContainer.classList.add('visible');
+                }
+
+                // Initialize progress bar to 0%
+                if (progressFill) {
+                    progressFill.style.width = '0%';
+                }
+
+                if (progressPercentage) {
+                    progressPercentage.textContent = '0%';
+                }
+
+                // Initialize progress messages
+                if (progressMessage) {
+                    progressMessage.textContent = t('status.processing');
+                }
+
+                if (progressStep) {
+                    progressStep.textContent = t('status.processing');
                 }
 
                 // Set ARIA busy state
