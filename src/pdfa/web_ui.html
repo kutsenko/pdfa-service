@@ -450,6 +450,19 @@
                 gap: 10px;
             }
         }
+
+        /* Screen reader only - visually hidden but accessible */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
     </style>
 </head>
 <body>
@@ -460,35 +473,52 @@
         <a href="/fr" data-lang-code="fr">FR</a>
     </div>
 
-    <div class="container">
-        <div class="header">
+    <div class="container" role="main">
+        <header class="header">
             <h1><span data-i18n="header.title">📄 PDF/A Converter</span></h1>
             <p class="subtitle" data-i18n="header.subtitle">Convert your documents to archival PDF/A format with OCR</p>
-        </div>
+        </header>
 
-        <div class="info-box">
+        <div class="info-box" role="note" aria-label="Supported file formats">
             <span data-i18n="info.supportedFormats">ℹ️ Supported formats: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP</span>
         </div>
 
-        <form id="converterForm">
+        <!-- Screen reader live region for announcements -->
+        <div id="srAnnouncements"
+             class="sr-only"
+             role="status"
+             aria-live="polite"
+             aria-atomic="true"></div>
+
+        <form id="converterForm" aria-label="PDF/A conversion form">
             <!-- File Upload -->
             <div class="form-group">
                 <label for="file" data-i18n="form.selectFile">Select File</label>
-                <div class="file-upload-wrapper" id="uploadArea">
-                    <div class="file-icon">📁</div>
+                <div class="file-upload-wrapper"
+                     id="uploadArea"
+                     role="button"
+                     tabindex="0"
+                     aria-label="Click or drag and drop to upload a file">
+                    <div class="file-icon" aria-hidden="true">📁</div>
                     <div class="upload-text" data-i18n="form.uploadText">Click to upload or drag and drop</div>
                     <div class="upload-subtext" data-i18n="form.uploadSubtext">PDF, Office, or OpenDocument files</div>
-                    <input type="file" id="file" name="file" accept=".pdf,.docx,.pptx,.xlsx,.odt,.ods,.odp" required>
-                    <div class="file-name" id="fileName"></div>
+                    <input type="file"
+                           id="file"
+                           name="file"
+                           accept=".pdf,.docx,.pptx,.xlsx,.odt,.ods,.odp"
+                           required
+                           aria-required="true"
+                           aria-describedby="uploadSubtext">
+                    <div class="file-name" id="fileName" role="status" aria-live="polite"></div>
                 </div>
             </div>
 
             <!-- Options Grid -->
-            <div class="options-grid">
+            <div class="options-grid" role="group" aria-label="Conversion options">
                 <!-- Language Selection -->
                 <div class="form-group">
                     <label for="language" data-i18n="form.ocrLanguage">OCR Language</label>
-                    <select id="language" name="language">
+                    <select id="language" name="language" aria-label="Select OCR language">
                         <option value="eng" data-i18n="ocr.english">English</option>
                         <option value="deu" data-i18n="ocr.german">Deutsch (German)</option>
                         <option value="deu+eng" selected data-i18n="ocr.germanEnglish">Deutsch + English</option>
@@ -504,7 +534,7 @@
                 <!-- PDF/A Level -->
                 <div class="form-group">
                     <label for="pdfa_level" data-i18n="form.pdfaLevel">PDF/A Level</label>
-                    <select id="pdfa_level" name="pdfa_level">
+                    <select id="pdfa_level" name="pdfa_level" aria-label="Select PDF/A compliance level">
                         <option value="1">PDF/A-1</option>
                         <option value="2" selected>PDF/A-2</option>
                         <option value="3">PDF/A-3</option>
@@ -514,7 +544,7 @@
                 <!-- Compression Profile -->
                 <div class="form-group">
                     <label for="compression_profile" data-i18n="form.compressionProfile">Compression Profile</label>
-                    <select id="compression_profile" name="compression_profile">
+                    <select id="compression_profile" name="compression_profile" aria-label="Select compression profile">
                         <option value="balanced" selected data-i18n="compression.balanced">Balanced (150 DPI, Quality 85)</option>
                         <option value="quality" data-i18n="compression.quality">High Quality (300 DPI, Quality 95)</option>
                         <option value="aggressive" data-i18n="compression.aggressive">Aggressive (100 DPI, Quality 75)</option>
@@ -554,26 +584,50 @@
             </div>
 
             <!-- Status Message -->
-            <div class="status" id="status"></div>
+            <div class="status"
+                 id="status"
+                 role="alert"
+                 aria-live="assertive"
+                 aria-atomic="true"></div>
 
             <!-- Progress Container (WebSocket) -->
-            <div class="progress-container" id="progressContainer">
+            <div class="progress-container"
+                 id="progressContainer"
+                 role="region"
+                 aria-label="Conversion progress"
+                 aria-live="polite"
+                 aria-atomic="false">
                 <div class="progress-header">
-                    <div class="progress-step" id="progressStep">Processing...</div>
-                    <button class="cancel-btn" id="cancelBtn" onclick="cancelJob()">
+                    <div class="progress-step"
+                         id="progressStep"
+                         role="status"
+                         aria-live="polite">Processing...</div>
+                    <button class="cancel-btn"
+                            id="cancelBtn"
+                            onclick="cancelJob()"
+                            aria-label="Cancel conversion">
                         <span data-i18n="button.cancel">Cancel</span>
                     </button>
                 </div>
-                <div class="progress-bar-wrapper">
+                <div class="progress-bar-wrapper"
+                     role="progressbar"
+                     aria-valuemin="0"
+                     aria-valuemax="100"
+                     aria-valuenow="0"
+                     aria-label="Conversion progress"
+                     id="progressBarWrapper">
                     <div class="progress-bar-fill" id="progressFill" style="width: 0%;">
-                        <span id="progressPercentage">0%</span>
+                        <span id="progressPercentage" aria-hidden="true">0%</span>
                     </div>
                 </div>
                 <div class="progress-details">
-                    <span id="progressMessage">Starting...</span>
+                    <span id="progressMessage" role="status" aria-live="polite">Starting...</span>
                     <span>
-                        <span class="ws-status" id="wsStatus"></span>
-                        <span id="wsStatusText" data-i18n="ws.connecting">Connecting...</span>
+                        <span class="ws-status" id="wsStatus" aria-hidden="true"></span>
+                        <span id="wsStatusText"
+                              role="status"
+                              aria-live="polite"
+                              data-i18n="ws.connecting">Connecting...</span>
                     </span>
                 </div>
             </div>
@@ -931,6 +985,15 @@
         // File upload area click
         uploadArea.addEventListener('click', () => fileInput.click());
 
+        // Keyboard accessibility for upload area
+        uploadArea.addEventListener('keydown', (e) => {
+            // Trigger file input on Enter or Space
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInput.click();
+            }
+        });
+
         // Drag and drop
         uploadArea.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -1172,6 +1235,8 @@
                 this.reconnectDelay = 2000;
                 this.isIntentionallyClosed = false;
                 this.pingInterval = null;
+                this.lastAnnouncementTime = 0;
+                this.announcementThrottle = 3000; // Announce max every 3 seconds
             }
 
             connect() {
@@ -1354,6 +1419,9 @@
                     }
                 });
 
+                // Announce completion to screen readers
+                this.announceToScreenReader(t('status.success') + '. ' + t('status.viewPdf'));
+
                 // Reset form
                 form.reset();
                 fileName.textContent = '';
@@ -1373,12 +1441,20 @@
                 }
 
                 showStatus(t('status.error', { message: errorMsg }), 'error');
+
+                // Announce error to screen readers
+                this.announceToScreenReader(t('status.error', { message: errorMsg }));
+
                 this.currentJobId = null;
             }
 
             handleCancelled(message) {
                 this.hideProgress();
                 showStatus(t('status.cancelled'), 'error');
+
+                // Announce cancellation to screen readers
+                this.announceToScreenReader(t('status.cancelled'));
+
                 this.currentJobId = null;
             }
 
@@ -1409,31 +1485,52 @@
 
             showProgress() {
                 const progressContainer = document.getElementById('progressContainer');
+                const progressBarWrapper = document.getElementById('progressBarWrapper');
+
                 if (progressContainer) {
                     progressContainer.classList.add('visible');
+                }
+
+                // Set ARIA busy state
+                if (progressBarWrapper) {
+                    progressBarWrapper.setAttribute('aria-busy', 'true');
+                    progressBarWrapper.setAttribute('aria-valuenow', '0');
                 }
 
                 // Hide status div
                 statusDiv.style.display = 'none';
 
-                // Disable convert button
+                // Disable convert button and mark as busy
                 convertBtn.disabled = true;
+                convertBtn.setAttribute('aria-busy', 'true');
 
                 // Enable cancel button
                 const cancelBtn = document.getElementById('cancelBtn');
                 if (cancelBtn) {
                     cancelBtn.disabled = false;
                 }
+
+                // Announce start of conversion
+                this.announceToScreenReader(t('status.processing'));
             }
 
             hideProgress() {
                 const progressContainer = document.getElementById('progressContainer');
+                const progressBarWrapper = document.getElementById('progressBarWrapper');
+
                 if (progressContainer) {
                     progressContainer.classList.remove('visible');
                 }
 
-                // Enable convert button
+                // Clear ARIA busy state
+                if (progressBarWrapper) {
+                    progressBarWrapper.setAttribute('aria-busy', 'false');
+                    progressBarWrapper.setAttribute('aria-valuenow', '0');
+                }
+
+                // Enable convert button and clear busy state
                 convertBtn.disabled = false;
+                convertBtn.setAttribute('aria-busy', 'false');
             }
 
             updateProgress({ step, percentage, current, total, message }) {
@@ -1441,6 +1538,7 @@
                 const progressFill = document.getElementById('progressFill');
                 const progressPercentage = document.getElementById('progressPercentage');
                 const progressMessage = document.getElementById('progressMessage');
+                const progressBarWrapper = document.getElementById('progressBarWrapper');
 
                 if (progressStep) {
                     progressStep.textContent = step || t('status.processing');
@@ -1449,15 +1547,31 @@
                 if (progressFill && progressPercentage && percentage !== undefined) {
                     progressFill.style.width = `${percentage}%`;
                     progressPercentage.textContent = `${Math.round(percentage)}%`;
+
+                    // Update ARIA attributes for screen readers
+                    if (progressBarWrapper) {
+                        progressBarWrapper.setAttribute('aria-valuenow', Math.round(percentage));
+                        progressBarWrapper.setAttribute('aria-busy', 'true');
+                    }
                 }
 
+                let srMessage = '';
                 if (progressMessage && message) {
                     // Translate OCR progress message if applicable
                     if (current !== undefined && total !== undefined) {
                         progressMessage.textContent = t('progress.ocr', { current, total });
+                        srMessage = `${step}: ${Math.round(percentage)}%. Page ${current} of ${total}`;
                     } else {
                         progressMessage.textContent = message;
+                        srMessage = `${step}: ${Math.round(percentage)}%. ${message}`;
                     }
+                } else if (step && percentage !== undefined) {
+                    srMessage = `${step}: ${Math.round(percentage)}%`;
+                }
+
+                // Announce progress to screen readers (throttled)
+                if (srMessage) {
+                    this.announceToScreenReader(srMessage);
                 }
             }
 
@@ -1488,6 +1602,26 @@
                 if (this.pingInterval) {
                     clearInterval(this.pingInterval);
                     this.pingInterval = null;
+                }
+            }
+
+            announceToScreenReader(message) {
+                // Throttle announcements to avoid overwhelming screen readers
+                const now = Date.now();
+                if (now - this.lastAnnouncementTime < this.announcementThrottle) {
+                    return; // Skip this announcement
+                }
+
+                this.lastAnnouncementTime = now;
+
+                const srAnnouncements = document.getElementById('srAnnouncements');
+                if (srAnnouncements) {
+                    // Clear and update the announcement
+                    srAnnouncements.textContent = '';
+                    // Use setTimeout to ensure screen reader picks up the change
+                    setTimeout(() => {
+                        srAnnouncements.textContent = message;
+                    }, 100);
                 }
             }
         }
