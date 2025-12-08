@@ -392,12 +392,6 @@ async def process_conversion_job(job_id: str) -> None:
 
         # Progress callback that broadcasts to WebSocket
         def progress_callback(progress: ProgressInfo) -> None:
-            # Print to stdout for debugging (bypasses logger)
-            print(
-                f"[PROGRESS CALLBACK] Job {job_id}: {progress.step} - "
-                f"{progress.percentage}% ({progress.current}/{progress.total})",
-                flush=True,
-            )
             # Log that we received a progress update
             logger.info(
                 f"Progress callback called for job {job_id}: "
