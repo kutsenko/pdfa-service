@@ -118,15 +118,14 @@ def convert_to_pdfa(
     plugin_manager = None
     if progress_callback:
         # Create a temporary plugin that provides our custom progress bar class
-        import pluggy
         from ocrmypdf import hookimpl
+        from ocrmypdf.api import get_plugin_manager
 
         # Create a wrapper class that injects callback and cancel_event
         class ConfiguredProgressBar(WebSocketProgressBar):
             """WebSocketProgressBar pre-configured with callback and cancel_event."""
 
             def __init__(self, *args, **kwargs):
-                print(f"[ConfiguredProgressBar.__init__] Called with args={args}, kwargs={kwargs}", flush=True)
                 # Inject our callback and cancel_event into all instances
                 super().__init__(
                     *args,
@@ -134,7 +133,6 @@ def convert_to_pdfa(
                     callback=progress_callback,
                     cancel_event=cancel_event,
                 )
-                print(f"[ConfiguredProgressBar.__init__] Instance created", flush=True)
 
         # Create a plugin that returns our configured progress bar class
         class ProgressPlugin:
@@ -142,12 +140,12 @@ def convert_to_pdfa(
             def get_progressbar_class(self):
                 return ConfiguredProgressBar
 
-        # Create plugin manager and register our plugin
-        plugin_manager = pluggy.PluginManager("ocrmypdf")
-        plugin_manager.add_hookspecs(ocrmypdf.pluginspec)
+        # Get a plugin manager with built-in OCRmyPDF plugins
+        plugin_manager = get_plugin_manager([])
+
+        # Register our custom progress plugin
         plugin_manager.register(ProgressPlugin())
 
-        print(f"[CONVERTER] Registered custom progress bar plugin", flush=True)
         logger.info("Registered custom progress bar plugin")
 
     try:
@@ -167,8 +165,8 @@ def convert_to_pdfa(
             jbig2_page_group_size=compression_config.jbig2_page_group_size,
             # Plugin manager for progress tracking
             plugin_manager=plugin_manager,
-            # Disable built-in progress bar (we use our plugin instead)
-            progress_bar=False,
+            # Enable progress bars (our plugin provides the custom implementation)
+            progress_bar=True,
         )
         logger.info(f"Successfully converted PDF/A file: {output_pdf}")
     except Exception as e:
