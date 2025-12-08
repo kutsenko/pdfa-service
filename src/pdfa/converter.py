@@ -8,6 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import ocrmypdf
+import ocrmypdf.pluginspec
 import pikepdf
 
 from pdfa.compression_config import PRESETS, CompressionConfig
@@ -113,21 +114,41 @@ def convert_to_pdfa(
     output_pdf.parent.mkdir(parents=True, exist_ok=True)
     output_type = f"pdfa-{pdfa_level}"
 
-    # Set up progress bar if callback is provided
-    progress_bar = None
+    # Set up progress tracking via OCRmyPDF plugin system
+    plugin_manager = None
     if progress_callback:
-        progress_bar = WebSocketProgressBar
+        # Create a temporary plugin that provides our custom progress bar class
+        import pluggy
+        from ocrmypdf import hookimpl
 
-        # Create a partial to pass callback and cancel_event
-        def make_progress_bar(*args, **kwargs):  # type: ignore
-            return WebSocketProgressBar(
-                *args,
-                **kwargs,
-                callback=progress_callback,
-                cancel_event=cancel_event,
-            )
+        # Create a wrapper class that injects callback and cancel_event
+        class ConfiguredProgressBar(WebSocketProgressBar):
+            """WebSocketProgressBar pre-configured with callback and cancel_event."""
 
-        progress_bar = make_progress_bar
+            def __init__(self, *args, **kwargs):
+                print(f"[ConfiguredProgressBar.__init__] Called with args={args}, kwargs={kwargs}", flush=True)
+                # Inject our callback and cancel_event into all instances
+                super().__init__(
+                    *args,
+                    **kwargs,
+                    callback=progress_callback,
+                    cancel_event=cancel_event,
+                )
+                print(f"[ConfiguredProgressBar.__init__] Instance created", flush=True)
+
+        # Create a plugin that returns our configured progress bar class
+        class ProgressPlugin:
+            @hookimpl
+            def get_progressbar_class(self):
+                return ConfiguredProgressBar
+
+        # Create plugin manager and register our plugin
+        plugin_manager = pluggy.PluginManager("ocrmypdf")
+        plugin_manager.add_hookspecs(ocrmypdf.pluginspec)
+        plugin_manager.register(ProgressPlugin())
+
+        print(f"[CONVERTER] Registered custom progress bar plugin", flush=True)
+        logger.info("Registered custom progress bar plugin")
 
     try:
         ocrmypdf.ocr(
@@ -144,8 +165,10 @@ def convert_to_pdfa(
             jpg_quality=compression_config.jpg_quality,
             jbig2_lossy=compression_config.jbig2_lossy,
             jbig2_page_group_size=compression_config.jbig2_page_group_size,
-            # Progress reporting
-            progress_bar=progress_bar,
+            # Plugin manager for progress tracking
+            plugin_manager=plugin_manager,
+            # Disable built-in progress bar (we use our plugin instead)
+            progress_bar=False,
         )
         logger.info(f"Successfully converted PDF/A file: {output_pdf}")
     except Exception as e:
