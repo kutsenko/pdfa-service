@@ -385,8 +385,26 @@ async def process_conversion_job(job_id: str) -> None:
             )
             # Continue anyway - this is not critical
 
+        # Get the current event loop BEFORE entering the thread
+        # This is critical because asyncio.get_event_loop() doesn't work reliably
+        # from within a thread created by asyncio.to_thread()
+        event_loop = asyncio.get_running_loop()
+
         # Progress callback that broadcasts to WebSocket
         def progress_callback(progress: ProgressInfo) -> None:
+            # Print to stdout for debugging (bypasses logger)
+            print(
+                f"[PROGRESS CALLBACK] Job {job_id}: {progress.step} - "
+                f"{progress.percentage}% ({progress.current}/{progress.total})",
+                flush=True,
+            )
+            # Log that we received a progress update
+            logger.info(
+                f"Progress callback called for job {job_id}: "
+                f"{progress.step} - {progress.percentage}% "
+                f"({progress.current}/{progress.total})"
+            )
+
             # Send progress update to all connected clients
             message = ProgressMessage(
                 job_id=job_id,
@@ -396,18 +414,22 @@ async def process_conversion_job(job_id: str) -> None:
                 percentage=progress.percentage,
                 message=progress.message,
             )
-            # Schedule broadcast from thread-safe context
+            # Schedule broadcast from thread-safe context using the captured event loop
             try:
-                loop = asyncio.get_event_loop()
-                asyncio.run_coroutine_threadsafe(
-                    job_manager.broadcast_to_job(job_id, message.to_dict()), loop
+                future = asyncio.run_coroutine_threadsafe(
+                    job_manager.broadcast_to_job(job_id, message.to_dict()), event_loop
                 )
-            except RuntimeError:
-                # No event loop available (e.g., in tests), skip broadcast
-                logger.debug(
-                    f"No event loop available for progress broadcast: {job_id}"
+                # Wait for the broadcast to complete (with timeout)
+                future.result(timeout=2.0)
+                logger.info(
+                    f"Successfully broadcast progress for job {job_id}: {progress.percentage}%"
                 )
-                pass
+            except Exception as e:
+                # Log any errors but don't fail the conversion
+                logger.error(
+                    f"Failed to broadcast progress for job {job_id}: {e}",
+                    exc_info=True,
+                )
 
         # Determine file type and convert
         config = job.config
