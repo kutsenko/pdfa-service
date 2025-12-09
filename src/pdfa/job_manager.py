@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import time
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -129,6 +130,7 @@ class JobManager:
         # Background task handles
         self.cleanup_task: asyncio.Task | None = None
         self.timeout_task: asyncio.Task | None = None
+        self.keepalive_task: asyncio.Task | None = None
 
     def create_job(
         self, filename: str, file_data: bytes, config: dict[str, Any]
@@ -322,13 +324,45 @@ class JobManager:
         """
         try:
             job = self.get_job(job_id)
+            message_type = message.get("type", "unknown")
+
+            logger.info(
+                f"Broadcasting message type '{message_type}' to job {job_id} "
+                f"({len(job.websockets)} connections)"
+            )
+
+            # Track successful sends
+            success_count = 0
+            failed_connections = []
+
             for ws in list(job.websockets):
                 try:
                     await ws.send_json(message)
+                    success_count += 1
                 except Exception as e:
-                    logger.error(f"Error sending to WebSocket for job {job_id}: {e}")
-                    job.websockets.discard(ws)
+                    logger.error(
+                        f"Error sending to WebSocket for job {job_id}: {e}",
+                        exc_info=True,
+                    )
+                    failed_connections.append(ws)
+
+            # Remove failed connections
+            for ws in failed_connections:
+                job.websockets.discard(ws)
+
+            logger.info(
+                f"Broadcast complete for job {job_id}: {success_count} successful, "
+                f"{len(failed_connections)} failed"
+            )
+
+            # For critical completion/error messages, add a small delay to ensure
+            # the message is fully transmitted before any cleanup happens
+            if message_type in ("completed", "error", "cancelled"):
+                await asyncio.sleep(0.1)
+                logger.debug(f"Completion message delay complete for job {job_id}")
+
         except JobNotFoundException:
+            logger.warning(f"Attempted broadcast to non-existent job {job_id}")
             pass  # Job may have been deleted
 
     def get_active_jobs(self) -> list[Job]:
@@ -405,6 +439,36 @@ class JobManager:
             except Exception as e:
                 logger.error(f"Error in timeout monitor: {e}", exc_info=True)
 
+    async def websocket_keepalive(self) -> None:
+        """Background task to send keep-alive pings to WebSocket connections.
+
+        This helps maintain connections during long-running conversions by
+        sending periodic ping messages to all active jobs.
+        """
+        while True:
+            try:
+                await asyncio.sleep(self.config.ws_ping_interval)
+
+                # Send keep-alive to all processing jobs
+                for job in self.get_active_jobs():
+                    if len(job.websockets) > 0:
+                        ping_message = {"type": "ping", "timestamp": time.time()}
+                        try:
+                            await self.broadcast_to_job(job.job_id, ping_message)
+                            logger.debug(
+                                f"Sent keep-alive ping to job {job.job_id} "
+                                f"({len(job.websockets)} connections)"
+                            )
+                        except Exception as e:
+                            logger.error(
+                                f"Error sending keep-alive to job {job.job_id}: {e}"
+                            )
+
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.error(f"Error in WebSocket keep-alive: {e}", exc_info=True)
+
     def start_background_tasks(self) -> None:
         """Start background cleanup and monitoring tasks."""
         if self.cleanup_task is None or self.cleanup_task.done():
@@ -414,6 +478,10 @@ class JobManager:
         if self.timeout_task is None or self.timeout_task.done():
             self.timeout_task = asyncio.create_task(self.timeout_monitor())
             logger.info("Started timeout monitor background task")
+
+        if self.keepalive_task is None or self.keepalive_task.done():
+            self.keepalive_task = asyncio.create_task(self.websocket_keepalive())
+            logger.info("Started WebSocket keep-alive background task")
 
     async def stop_background_tasks(self) -> None:
         """Stop background tasks."""
@@ -428,6 +496,13 @@ class JobManager:
             self.timeout_task.cancel()
             try:
                 await self.timeout_task
+            except asyncio.CancelledError:
+                pass
+
+        if self.keepalive_task:
+            self.keepalive_task.cancel()
+            try:
+                await self.keepalive_task
             except asyncio.CancelledError:
                 pass
 
