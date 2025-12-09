@@ -120,6 +120,26 @@ pytest
 3. Manually fix issues that can't be auto-fixed
 4. Re-run tests to ensure fixes didn't break functionality
 
+#### Test Quality Requirements
+
+**CRITICAL: All tests must pass. No failing tests are allowed in the codebase.**
+
+- **Zero Tolerance for Failing Tests**: The test suite must be 100% green at all times
+- **No Disabled Tests**: Do not disable, skip, or comment out failing tests
+- **Fix or Remove**: If a test fails, either:
+  1. Fix the test if it's incorrect
+  2. Fix the code if the implementation is wrong
+  3. Remove the test if it's no longer relevant (with justification)
+- **Before Every Commit**: Run `pytest` and ensure all tests pass
+- **CI/CD Requirement**: All tests must pass in CI before merging
+- **Test Maintenance**: Keep tests up-to-date with code changes
+
+If you discover a failing test:
+1. Investigate the root cause immediately
+2. Fix the test or the underlying code
+3. Never commit code with known failing tests
+4. Document any test fixes in commit messages
+
 #### Handling Linting Errors
 
 **Critical errors (must fix):**
