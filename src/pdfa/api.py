@@ -28,7 +28,7 @@ from pdfa.format_converter import (
 )
 from pdfa.image_converter import convert_image_to_pdf
 from pdfa.job_manager import get_job_manager
-from pdfa.logging_config import get_logger
+from pdfa.logging_config import configure_logging, get_logger
 from pdfa.progress_tracker import ProgressInfo
 from pdfa.websocket_protocol import (
     CancelJobMessage,
@@ -68,6 +68,9 @@ job_manager = get_job_manager()
 @app.on_event("startup")
 async def startup_event():
     """Start background tasks on application startup."""
+    # Configure logging for all modules
+    configure_logging()
+    logger.info("Logging configured")
     logger.info("Starting background tasks...")
     job_manager.start_background_tasks()
 
