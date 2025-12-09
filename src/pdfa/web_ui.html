@@ -1236,7 +1236,9 @@
                 this.isIntentionallyClosed = false;
                 this.pingInterval = null;
                 this.lastAnnouncementTime = 0;
-                this.announcementThrottle = 3000; // Announce max every 3 seconds
+                this.announcementThrottle = 5000; // Announce max every 5 seconds
+                this.lastAnnouncedPercentage = -1; // Track last announced percentage
+                this.percentageMilestones = [0, 25, 50, 75, 100]; // Always announce these
             }
 
             connect() {
@@ -1622,9 +1624,9 @@
                     srMessage = `${step}: ${Math.round(percentage)}%`;
                 }
 
-                // Announce progress to screen readers (throttled)
-                if (srMessage) {
-                    this.announceToScreenReader(srMessage);
+                // Announce progress to screen readers (intelligently throttled)
+                if (srMessage && percentage !== undefined) {
+                    this.announceToScreenReader(srMessage, Math.round(percentage));
                 }
             }
 
@@ -1658,14 +1660,27 @@
                 }
             }
 
-            announceToScreenReader(message) {
-                // Throttle announcements to avoid overwhelming screen readers
+            announceToScreenReader(message, percentage = null) {
                 const now = Date.now();
-                if (now - this.lastAnnouncementTime < this.announcementThrottle) {
-                    return; // Skip this announcement
+
+                // Intelligent announcement logic:
+                // 1. Always announce milestones (0%, 25%, 50%, 75%, 100%)
+                // 2. Throttle other announcements to avoid overwhelming
+                const isMilestone = percentage !== null &&
+                    this.percentageMilestones.includes(percentage) &&
+                    percentage !== this.lastAnnouncedPercentage;
+
+                const timeSinceLastAnnouncement = now - this.lastAnnouncementTime;
+                const shouldThrottle = timeSinceLastAnnouncement < this.announcementThrottle;
+
+                if (!isMilestone && shouldThrottle) {
+                    return; // Skip this announcement (not milestone, too soon)
                 }
 
                 this.lastAnnouncementTime = now;
+                if (percentage !== null) {
+                    this.lastAnnouncedPercentage = percentage;
+                }
 
                 const srAnnouncements = document.getElementById('srAnnouncements');
                 if (srAnnouncements) {
