@@ -86,6 +86,9 @@ class WebSocketProgressBar:
             Self
 
         """
+        logger.info(
+            f"Progress tracking started: {self.desc} (0/{self.total} {self.unit})"
+        )
         if not self.disable and self.callback:
             self._send_progress()
         return self
@@ -101,6 +104,10 @@ class WebSocketProgressBar:
             # Send final progress at 100%
             self.current = self.total
             self._send_progress(force=True)
+        logger.info(
+            f"Progress tracking completed: {self.desc} "
+            f"({self.current}/{self.total} {self.unit})"
+        )
 
     def update(self, n: int = 1, *, completed: int | None = None) -> None:
         """Update progress.
@@ -167,9 +174,16 @@ class WebSocketProgressBar:
             message=message,
         )
 
+        # Log progress event
+        logger.info(
+            f"Progress event: {self.desc} - {percentage:.1f}% "
+            f"({self.current}/{self.total} {self.unit})"
+        )
+
         # Call the callback
         try:
             self.callback(progress_info)
+            logger.debug(f"Progress callback executed successfully for {self.desc}")
         except Exception as e:
             logger.error(f"Error in progress callback: {e}", exc_info=True)
 
