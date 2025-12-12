@@ -185,3 +185,349 @@ def test_convert_to_pdfa_ocr_on_untagged_pdf(monkeypatch, tmp_path) -> None:
 
     # OCR should be enabled (force_ocr=True) because PDF has no tags
     assert calls["kwargs"]["force_ocr"] is True
+
+
+def test_needs_ocr_text_pdf(monkeypatch, tmp_path) -> None:
+    """needs_ocr should return False for PDFs with searchable text."""
+    # Mock pikepdf to simulate a PDF with text content
+    mock_page = MagicMock()
+    mock_page.__contains__ = Mock(return_value=True)  # Has /Contents
+
+    # Create a mock Contents stream with PDF text operators
+    # Simulate text content: (Sample text with more than 50 characters)Tj
+    mock_contents = MagicMock()
+    text_data = b"(Sample text with more than 50 characters for testing purposes)Tj"
+    mock_contents.read_bytes = Mock(return_value=text_data)
+    mock_page.Contents = mock_contents
+
+    mock_pdf = MagicMock()
+    mock_pdf.pages = [mock_page]
+    mock_pdf.__len__ = Mock(return_value=1)
+
+    mock_open = MagicMock()
+    mock_open.__enter__ = Mock(return_value=mock_pdf)
+    mock_open.__exit__ = Mock(return_value=False)
+
+    mock_pikepdf = Mock()
+    mock_pikepdf.open = Mock(return_value=mock_open)
+
+    monkeypatch.setattr(converter, "pikepdf", mock_pikepdf)
+
+    pdf_path = tmp_path / "text.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 test")
+
+    ocr_needed, reason = converter.needs_ocr(pdf_path)
+
+    assert ocr_needed is False
+    assert "text detected" in reason.lower()
+
+
+def test_needs_ocr_scanned_pdf(monkeypatch, tmp_path) -> None:
+    """needs_ocr should return True for PDFs without searchable text."""
+    # Mock pikepdf to simulate a scanned PDF (no text content)
+    mock_page = MagicMock()
+    mock_page.__contains__ = Mock(return_value=False)  # No /Contents
+
+    mock_pdf = MagicMock()
+    mock_pdf.pages = [mock_page, mock_page, mock_page]
+    mock_pdf.__len__ = Mock(return_value=3)
+
+    mock_open = MagicMock()
+    mock_open.__enter__ = Mock(return_value=mock_pdf)
+    mock_open.__exit__ = Mock(return_value=False)
+
+    mock_pikepdf = Mock()
+    mock_pikepdf.open = Mock(return_value=mock_open)
+
+    monkeypatch.setattr(converter, "pikepdf", mock_pikepdf)
+
+    pdf_path = tmp_path / "scanned.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 test")
+
+    ocr_needed, reason = converter.needs_ocr(pdf_path)
+
+    assert ocr_needed is True
+    assert "needs ocr" in reason.lower()
+
+
+def test_needs_ocr_mixed_content_mostly_scanned(monkeypatch, tmp_path) -> None:
+    """needs_ocr should handle mixed content (33% text) correctly."""
+    # Mock 3 pages: 1 with text, 2 without (33% text ratio < 66% threshold)
+    page_with_text = MagicMock()
+    page_with_text.__contains__ = Mock(return_value=True)
+    mock_contents = MagicMock()
+    text_data = b"(This page has more than 50 characters of text content)Tj"
+    mock_contents.read_bytes = Mock(return_value=text_data)
+    page_with_text.Contents = mock_contents
+
+    page_without_text = MagicMock()
+    page_without_text.__contains__ = Mock(return_value=False)
+
+    mock_pdf = MagicMock()
+    mock_pdf.pages = [page_with_text, page_without_text, page_without_text]
+    mock_pdf.__len__ = Mock(return_value=3)
+
+    mock_open = MagicMock()
+    mock_open.__enter__ = Mock(return_value=mock_pdf)
+    mock_open.__exit__ = Mock(return_value=False)
+
+    mock_pikepdf = Mock()
+    mock_pikepdf.open = Mock(return_value=mock_open)
+
+    monkeypatch.setattr(converter, "pikepdf", mock_pikepdf)
+
+    pdf_path = tmp_path / "mixed.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 test")
+
+    ocr_needed, reason = converter.needs_ocr(pdf_path)
+
+    # Should need OCR because only 33% of pages have text
+    assert ocr_needed is True
+
+
+def test_needs_ocr_mixed_content_mostly_text(monkeypatch, tmp_path) -> None:
+    """needs_ocr should skip OCR when >= 66% pages have text."""
+    # Mock 3 pages: 2 with text, 1 without (66% text ratio >= 66% threshold)
+    page_with_text = MagicMock()
+    page_with_text.__contains__ = Mock(return_value=True)
+    mock_contents = MagicMock()
+    text_data = b"(This page has more than 50 characters of text content)Tj"
+    mock_contents.read_bytes = Mock(return_value=text_data)
+    page_with_text.Contents = mock_contents
+
+    page_without_text = MagicMock()
+    page_without_text.__contains__ = Mock(return_value=False)
+
+    mock_pdf = MagicMock()
+    mock_pdf.pages = [page_with_text, page_with_text, page_without_text]
+    mock_pdf.__len__ = Mock(return_value=3)
+
+    mock_open = MagicMock()
+    mock_open.__enter__ = Mock(return_value=mock_pdf)
+    mock_open.__exit__ = Mock(return_value=False)
+
+    mock_pikepdf = Mock()
+    mock_pikepdf.open = Mock(return_value=mock_open)
+
+    monkeypatch.setattr(converter, "pikepdf", mock_pikepdf)
+
+    pdf_path = tmp_path / "mostly_text.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 test")
+
+    ocr_needed, reason = converter.needs_ocr(pdf_path)
+
+    # Should skip OCR because 66% of pages have text
+    assert ocr_needed is False
+
+
+def test_needs_ocr_single_page_text(monkeypatch, tmp_path) -> None:
+    """needs_ocr should return False for single-page PDF with text."""
+    # Mock single page with sufficient text (>= 50 chars)
+    mock_page = MagicMock()
+    mock_page.__contains__ = Mock(return_value=True)
+    mock_contents = MagicMock()
+    text_data = b"(This is a single page with more than 50 characters)Tj"
+    mock_contents.read_bytes = Mock(return_value=text_data)
+    mock_page.Contents = mock_contents
+
+    mock_pdf = MagicMock()
+    mock_pdf.pages = [mock_page]
+    mock_pdf.__len__ = Mock(return_value=1)
+
+    mock_open = MagicMock()
+    mock_open.__enter__ = Mock(return_value=mock_pdf)
+    mock_open.__exit__ = Mock(return_value=False)
+
+    mock_pikepdf = Mock()
+    mock_pikepdf.open = Mock(return_value=mock_open)
+
+    monkeypatch.setattr(converter, "pikepdf", mock_pikepdf)
+
+    pdf_path = tmp_path / "single_text.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 test")
+
+    ocr_needed, reason = converter.needs_ocr(pdf_path)
+
+    assert ocr_needed is False
+    assert "text detected" in reason.lower()
+
+
+def test_needs_ocr_single_page_minimal_text(monkeypatch, tmp_path) -> None:
+    """needs_ocr should return True for single-page PDF with minimal text."""
+    # Mock single page with insufficient text (< 50 chars)
+    mock_page = MagicMock()
+    mock_page.__contains__ = Mock(return_value=True)
+    mock_contents = MagicMock()
+    text_data = b"(Short)Tj"  # Only 5 chars
+    mock_contents.read_bytes = Mock(return_value=text_data)
+    mock_page.Contents = mock_contents
+
+    mock_pdf = MagicMock()
+    mock_pdf.pages = [mock_page]
+    mock_pdf.__len__ = Mock(return_value=1)
+
+    mock_open = MagicMock()
+    mock_open.__enter__ = Mock(return_value=mock_pdf)
+    mock_open.__exit__ = Mock(return_value=False)
+
+    mock_pikepdf = Mock()
+    mock_pikepdf.open = Mock(return_value=mock_open)
+
+    monkeypatch.setattr(converter, "pikepdf", mock_pikepdf)
+
+    pdf_path = tmp_path / "single_minimal.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 test")
+
+    ocr_needed, reason = converter.needs_ocr(pdf_path)
+
+    assert ocr_needed is True
+    assert "needs ocr" in reason.lower()
+
+
+def test_needs_ocr_error_handling(monkeypatch, tmp_path) -> None:
+    """needs_ocr should return True (safe default) on errors."""
+    mock_pikepdf = Mock()
+    mock_pikepdf.open = Mock(side_effect=Exception("Read error"))
+
+    monkeypatch.setattr(converter, "pikepdf", mock_pikepdf)
+
+    pdf_path = tmp_path / "error.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 test")
+
+    ocr_needed, reason = converter.needs_ocr(pdf_path)
+
+    # Should default to OCR on error
+    assert ocr_needed is True
+    assert "failed" in reason.lower() or "error" in reason.lower()
+
+
+def test_needs_ocr_empty_pdf(monkeypatch, tmp_path) -> None:
+    """needs_ocr should return True for PDFs with no pages."""
+    # Mock PDF with 0 pages
+    mock_pdf = MagicMock()
+    mock_pdf.pages = []
+    mock_pdf.__len__ = Mock(return_value=0)
+
+    mock_open = MagicMock()
+    mock_open.__enter__ = Mock(return_value=mock_pdf)
+    mock_open.__exit__ = Mock(return_value=False)
+
+    mock_pikepdf = Mock()
+    mock_pikepdf.open = Mock(return_value=mock_open)
+
+    monkeypatch.setattr(converter, "pikepdf", mock_pikepdf)
+
+    pdf_path = tmp_path / "empty.pdf"
+    pdf_path.write_bytes(b"%PDF-1.4 test")
+
+    ocr_needed, reason = converter.needs_ocr(pdf_path)
+
+    assert ocr_needed is True
+    assert "no pages" in reason.lower()
+
+
+def test_convert_to_pdfa_auto_skip_ocr_text_pdf(monkeypatch, tmp_path) -> None:
+    """convert_to_pdfa should automatically skip OCR for text PDFs."""
+    calls: dict[str, Any] = {}
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
+        calls["kwargs"] = kwargs
+
+    # Mock has_pdf_tags to return False (not a tagged PDF)
+    monkeypatch.setattr(converter, "has_pdf_tags", Mock(return_value=False))
+
+    # Mock needs_ocr to return False (text detected)
+    monkeypatch.setattr(
+        converter, "needs_ocr", Mock(return_value=(False, "Text detected"))
+    )
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    input_pdf = tmp_path / "text.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    converter.convert_to_pdfa(
+        input_pdf,
+        output_pdf,
+        language="eng",
+        pdfa_level="2",
+        ocr_enabled=True,
+        skip_ocr_on_tagged_pdfs=True,
+    )
+
+    # OCR should be disabled (force_ocr=False)
+    assert calls["kwargs"]["force_ocr"] is False
+    assert calls["kwargs"]["skip_text"] is True
+
+
+def test_convert_to_pdfa_auto_run_ocr_scanned_pdf(monkeypatch, tmp_path) -> None:
+    """convert_to_pdfa should automatically run OCR for scanned PDFs."""
+    calls: dict[str, Any] = {}
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
+        calls["kwargs"] = kwargs
+
+    # Mock has_pdf_tags to return False (not a tagged PDF)
+    monkeypatch.setattr(converter, "has_pdf_tags", Mock(return_value=False))
+
+    # Mock needs_ocr to return True (needs OCR)
+    monkeypatch.setattr(
+        converter, "needs_ocr", Mock(return_value=(True, "No text detected"))
+    )
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    input_pdf = tmp_path / "scanned.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    converter.convert_to_pdfa(
+        input_pdf,
+        output_pdf,
+        language="eng",
+        pdfa_level="2",
+        ocr_enabled=True,
+        skip_ocr_on_tagged_pdfs=True,
+    )
+
+    # OCR should be enabled (force_ocr=True)
+    assert calls["kwargs"]["force_ocr"] is True
+    assert calls["kwargs"]["skip_text"] is False
+
+
+def test_convert_to_pdfa_tagged_pdf_takes_priority(monkeypatch, tmp_path) -> None:
+    """Tagged PDF detection should take priority over text detection."""
+    calls: dict[str, Any] = {}
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
+        calls["kwargs"] = kwargs
+
+    # Mock has_pdf_tags to return True (tagged PDF)
+    monkeypatch.setattr(converter, "has_pdf_tags", Mock(return_value=True))
+
+    # Mock needs_ocr - should NOT be called for tagged PDFs
+    needs_ocr_mock = Mock(return_value=(False, "Text detected"))
+    monkeypatch.setattr(converter, "needs_ocr", needs_ocr_mock)
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    input_pdf = tmp_path / "tagged.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    converter.convert_to_pdfa(
+        input_pdf,
+        output_pdf,
+        language="eng",
+        pdfa_level="2",
+        ocr_enabled=True,
+        skip_ocr_on_tagged_pdfs=True,
+    )
+
+    # needs_ocr should NOT have been called (tagged PDFs take priority)
+    needs_ocr_mock.assert_not_called()
+
+    # OCR should be disabled
+    assert calls["kwargs"]["force_ocr"] is False
+    assert calls["kwargs"]["skip_text"] is True
