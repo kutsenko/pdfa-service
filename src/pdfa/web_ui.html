@@ -1231,10 +1231,14 @@
                 this.ws = null;
                 this.currentJobId = null;
                 this.reconnectAttempts = 0;
-                this.maxReconnectAttempts = 5;
-                this.reconnectDelay = 2000;
+                this.maxReconnectAttempts = 30; // Increased from 5 for long conversions
+                this.reconnectDelay = 2000; // Base delay: 2 seconds
+                this.maxReconnectDelay = 30000; // Cap delay at 30 seconds
+                this.reconnectResetTime = 60000; // Reset counter after 60s stable connection
                 this.isIntentionallyClosed = false;
                 this.pingInterval = null;
+                this.statusPollInterval = null;
+                this.connectionStableTimer = null;
                 this.lastAnnouncementTime = 0;
                 this.announcementThrottle = 5000; // Announce max every 5 seconds
                 this.lastAnnouncedPercentage = -1; // Track last announced percentage
@@ -1266,8 +1270,13 @@
 
             handleOpen() {
                 console.log('WebSocket connected');
-                this.reconnectAttempts = 0;
                 this.updateWSStatus('connected');
+
+                // Stop status polling if it was running
+                if (this.statusPollInterval) {
+                    clearInterval(this.statusPollInterval);
+                    this.statusPollInterval = null;
+                }
 
                 // Start ping interval (every 30 seconds)
                 this.pingInterval = setInterval(() => {
@@ -1275,6 +1284,15 @@
                         this.ws.send(JSON.stringify({ type: 'ping' }));
                     }
                 }, 30000);
+
+                // Reset reconnect counter after stable connection (60 seconds)
+                if (this.connectionStableTimer) {
+                    clearTimeout(this.connectionStableTimer);
+                }
+                this.connectionStableTimer = setTimeout(() => {
+                    console.log('Connection stable - resetting reconnect counter');
+                    this.reconnectAttempts = 0;
+                }, this.reconnectResetTime);
             }
 
             handleMessage(event) {
@@ -1311,13 +1329,27 @@
 
             handleClose(event) {
                 console.log('WebSocket closed:', event.code, event.reason);
+
+                // Clear ping interval
                 if (this.pingInterval) {
                     clearInterval(this.pingInterval);
                     this.pingInterval = null;
                 }
 
+                // Clear stable connection timer
+                if (this.connectionStableTimer) {
+                    clearTimeout(this.connectionStableTimer);
+                    this.connectionStableTimer = null;
+                }
+
                 if (!this.isIntentionallyClosed) {
                     this.updateWSStatus('disconnected');
+
+                    // If we have an active job, start status polling as fallback
+                    if (this.currentJobId) {
+                        this.startStatusPolling();
+                    }
+
                     this.attemptReconnect();
                 }
             }
@@ -1330,14 +1362,30 @@
             attemptReconnect() {
                 if (this.reconnectAttempts >= this.maxReconnectAttempts) {
                     console.error('Max reconnection attempts reached');
-                    showStatus(t('error.ws_connection'), 'error');
+                    showStatus(
+                        `${t('error.ws_connection')} - Using status polling as fallback`,
+                        'warning'
+                    );
+                    // Continue with status polling if job is active
                     return;
                 }
 
                 this.reconnectAttempts++;
-                const delay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+                // Exponential backoff with max delay cap
+                const calculatedDelay = this.reconnectDelay * Math.pow(2, this.reconnectAttempts - 1);
+                const delay = Math.min(calculatedDelay, this.maxReconnectDelay);
 
-                console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
+                console.log(
+                    `Reconnecting in ${delay / 1000}s (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+                );
+
+                // Show user-friendly status
+                if (this.reconnectAttempts > 3) {
+                    showStatus(
+                        `Connection lost - Reconnecting (attempt ${this.reconnectAttempts})...`,
+                        'warning'
+                    );
+                }
 
                 setTimeout(() => {
                     this.connect();
@@ -1649,14 +1697,141 @@
                 }
             }
 
+            startStatusPolling() {
+                // If already polling, don't start again
+                if (this.statusPollInterval) {
+                    return;
+                }
+
+                console.log('Starting status polling fallback for job:', this.currentJobId);
+
+                // Poll every 2 seconds
+                this.statusPollInterval = setInterval(async () => {
+                    try {
+                        const response = await fetch(`/api/v1/jobs/${this.currentJobId}/status`);
+
+                        if (!response.ok) {
+                            if (response.status === 404) {
+                                // Job not found - might have been cleaned up
+                                console.log('Job not found in status polling');
+                                this.stopStatusPolling();
+                                return;
+                            }
+                            throw new Error(`Status poll failed: ${response.status}`);
+                        }
+
+                        const status = await response.json();
+                        console.log('Status poll result:', status);
+
+                        // Update progress if available
+                        if (status.progress !== undefined && status.message) {
+                            this.updateProgress(status.progress, status.message, status.step || 'processing');
+                        }
+
+                        // Handle completion
+                        if (status.status === 'completed' && status.download_url) {
+                            console.log('Job completed (via polling)');
+                            this.stopStatusPolling();
+                            this.handleCompletedViaPolling({
+                                job_id: status.job_id,
+                                download_url: status.download_url,
+                                filename: status.filename_output || status.filename,
+                                size_bytes: 0 // Not available in status endpoint
+                            });
+                        } else if (status.status === 'failed') {
+                            console.error('Job failed (via polling)');
+                            this.stopStatusPolling();
+                            showStatus(status.error || t('error.conversion'), 'error');
+                            this.hideProgress();
+                        }
+
+                    } catch (error) {
+                        console.error('Status polling error:', error);
+                        // Don't stop polling on error - keep trying
+                    }
+                }, 2000);
+            }
+
+            stopStatusPolling() {
+                if (this.statusPollInterval) {
+                    clearInterval(this.statusPollInterval);
+                    this.statusPollInterval = null;
+                    console.log('Stopped status polling');
+                }
+            }
+
+            handleCompletedViaPolling(data) {
+                // Similar to handleCompleted but triggered by polling instead of WebSocket
+                console.log('Conversion completed (via polling):', data.filename);
+
+                // Update UI
+                this.updateProgress(100, t('status.complete'), 'completed');
+
+                // Show download button
+                const downloadBtn = document.getElementById('downloadBtn');
+                if (downloadBtn) {
+                    downloadBtn.style.display = 'inline-block';
+                    downloadBtn.onclick = () => {
+                        window.location.href = data.download_url;
+                    };
+                }
+
+                // Hide progress after a delay
+                setTimeout(() => {
+                    this.hideProgress();
+                }, 2000);
+
+                // Show success message
+                showStatus(t('status.success'), 'success');
+
+                // Announce completion
+                this.announceToScreenReader(`${t('status.complete')}. ${t('status.success')}`, 100);
+            }
+
+            updateProgress(percentage, message, step) {
+                const progressFill = document.getElementById('progressFill');
+                const progressPercentage = document.getElementById('progressPercentage');
+                const progressMessage = document.getElementById('progressMessage');
+                const progressStep = document.getElementById('progressStep');
+                const progressBarWrapper = document.getElementById('progressBarWrapper');
+
+                if (progressFill) {
+                    progressFill.style.width = `${percentage}%`;
+                }
+
+                if (progressPercentage) {
+                    progressPercentage.textContent = `${Math.round(percentage)}%`;
+                }
+
+                if (progressMessage) {
+                    progressMessage.textContent = message;
+                }
+
+                if (progressStep) {
+                    progressStep.textContent = step;
+                }
+
+                if (progressBarWrapper) {
+                    progressBarWrapper.setAttribute('aria-valuenow', Math.round(percentage));
+                }
+            }
+
             disconnect() {
                 this.isIntentionallyClosed = true;
+
+                // Stop status polling
+                this.stopStatusPolling();
+
                 if (this.ws) {
                     this.ws.close();
                 }
                 if (this.pingInterval) {
                     clearInterval(this.pingInterval);
                     this.pingInterval = null;
+                }
+                if (this.connectionStableTimer) {
+                    clearTimeout(this.connectionStableTimer);
+                    this.connectionStableTimer = null;
                 }
             }
 
