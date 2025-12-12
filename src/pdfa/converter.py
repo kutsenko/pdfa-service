@@ -16,6 +16,11 @@ from pdfa.progress_tracker import ProgressInfo, WebSocketProgressBar
 
 logger = logging.getLogger(__name__)
 
+# OCR detection thresholds
+MIN_CHARS_PER_PAGE = 50  # Minimum characters to consider page "has text"
+MIN_TEXT_RATIO = 0.66  # Minimum ratio of pages with text to skip OCR
+DEFAULT_SAMPLE_PAGES = 3  # Number of pages to sample for detection
+
 
 def has_pdf_tags(pdf_path: Path) -> bool:
     """Check if a PDF has structure tags (is tagged).
@@ -40,6 +45,131 @@ def has_pdf_tags(pdf_path: Path) -> bool:
         logger.warning(f"Could not check PDF tags for {pdf_path}: {e}")
         # If we can't check, assume it doesn't have tags (safe default)
         return False
+
+
+def needs_ocr(
+    pdf_path: Path, sample_pages: int = DEFAULT_SAMPLE_PAGES
+) -> tuple[bool, str]:
+    """Determine if a PDF needs OCR based on text content analysis.
+
+    Analyzes the first N pages of a PDF to detect existing searchable text.
+    Uses character count thresholds to distinguish between text PDFs and
+    scanned documents.
+
+    Args:
+        pdf_path: Path to the PDF file to analyze.
+        sample_pages: Number of pages to sample (default: DEFAULT_SAMPLE_PAGES).
+
+    Returns:
+        Tuple of (needs_ocr, reason):
+        - needs_ocr: True if OCR should be performed, False if text exists
+        - reason: Human-readable explanation for logging
+
+    Detection Logic:
+        - Extracts text from first N pages
+        - Pages with >= MIN_CHARS_PER_PAGE characters are considered "has text"
+        - If >= MIN_TEXT_RATIO of pages have text → skip OCR
+        - Otherwise → perform OCR
+
+    Edge Cases:
+        - Empty PDFs → needs OCR
+        - Very short text → needs OCR (likely metadata/noise)
+        - Single page → uses absolute threshold (MIN_CHARS_PER_PAGE)
+
+    """
+    try:
+        with pikepdf.open(pdf_path) as pdf:
+            num_pages = len(pdf.pages)
+
+            if num_pages == 0:
+                return True, "PDF has no pages"
+
+            # Sample first N pages (or all pages if fewer)
+            pages_to_check = min(sample_pages, num_pages)
+            pages_with_text = 0
+            total_chars = 0
+
+            for page_num in range(pages_to_check):
+                page = pdf.pages[page_num]
+
+                # Extract text content from page
+                text = ""
+                if "/Contents" in page:
+                    try:
+                        # Get page content stream
+                        contents = page.Contents
+                        if isinstance(contents, list):
+                            # Multiple content streams
+                            for content in contents:
+                                text += content.read_bytes().decode(
+                                    "latin-1", errors="ignore"
+                                )
+                        else:
+                            text += contents.read_bytes().decode(
+                                "latin-1", errors="ignore"
+                            )
+                    except Exception as e:
+                        logger.debug(
+                            f"Could not extract text from page {page_num}: {e}"
+                        )
+                        continue
+
+                # Count actual text characters
+                # Simple heuristic: look for Tj, TJ operators (PDF text-showing)
+                import re
+
+                # Match text between parentheses (PDF text strings)
+                text_matches = re.findall(r"\(([^)]*)\)", text)
+                text_content = "".join(text_matches)
+
+                # Count characters (keep spaces, remove only newlines/returns)
+                char_count = len(
+                    text_content.strip().replace("\n", "").replace("\r", "")
+                )
+                total_chars += char_count
+
+                if char_count >= MIN_CHARS_PER_PAGE:
+                    pages_with_text += 1
+                    logger.debug(
+                        f"Page {page_num} has {char_count} characters (has text)"
+                    )
+                else:
+                    logger.debug(
+                        f"Page {page_num} has {char_count} characters (no text)"
+                    )
+
+            # Decision logic
+            if pages_to_check == 1:
+                # Single page: absolute threshold
+                if total_chars >= MIN_CHARS_PER_PAGE:
+                    return (
+                        False,
+                        f"Single page has {total_chars} characters (text detected)",
+                    )
+                else:
+                    return (
+                        True,
+                        f"Single page has only {total_chars} characters (needs OCR)",
+                    )
+            else:
+                # Multiple pages: ratio-based threshold
+                text_ratio = pages_with_text / pages_to_check
+
+                if text_ratio >= MIN_TEXT_RATIO:
+                    return False, (
+                        f"{pages_with_text}/{pages_to_check} pages have text "
+                        f"({text_ratio:.1%}, {total_chars} total chars) - text detected"
+                    )
+                else:
+                    return True, (
+                        f"Only {pages_with_text}/{pages_to_check} pages have text "
+                        f"({text_ratio:.1%}, {total_chars} total chars) - needs OCR"
+                    )
+
+    except Exception as e:
+        logger.warning(f"Could not analyze PDF text content for {pdf_path}: {e}")
+        # Safe default: perform OCR if we can't determine
+        return True, f"Text analysis failed: {e}"
 
 
 def convert_to_pdfa(
@@ -79,10 +209,12 @@ def convert_to_pdfa(
     # Validate configuration
     compression_config.validate()
 
-    # Check if we should skip OCR for tagged PDFs
+    # Determine if OCR is actually needed
     actual_ocr_enabled = ocr_enabled
     skip_text = False
+
     if ocr_enabled and skip_ocr_on_tagged_pdfs:
+        # First check: Tagged PDFs (Office documents)
         if has_pdf_tags(input_pdf):
             actual_ocr_enabled = False
             skip_text = True
@@ -97,6 +229,17 @@ def convert_to_pdfa(
                     "vector-preserving compression mode"
                 )
                 compression_config = PRESETS["preserve"]
+
+        # Second check: Text content detection (for all other PDFs)
+        else:
+            ocr_needed, reason = needs_ocr(input_pdf)
+
+            if not ocr_needed:
+                actual_ocr_enabled = False
+                skip_text = True
+                logger.info(f"Skipping OCR: {reason} - {input_pdf}")
+            else:
+                logger.info(f"Performing OCR: {reason} - {input_pdf}")
 
     logger.info(
         f"Converting PDF to PDF/A-{pdfa_level}: {input_pdf} -> {output_pdf}",
