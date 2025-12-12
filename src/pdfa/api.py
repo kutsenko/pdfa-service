@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import uuid
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -54,6 +55,13 @@ logger.info(
     f"JPG quality={compression_config.jpg_quality}, "
     f"Optimize={compression_config.optimize}"
 )
+
+# Progress broadcast timeout configuration
+# For long-running conversions with many WebSocket clients, broadcasting progress
+# updates can take longer than the default 2 seconds. Increase this if you have
+# many concurrent clients or slow network conditions.
+PROGRESS_BROADCAST_TIMEOUT = int(os.getenv("PROGRESS_BROADCAST_TIMEOUT", "10"))
+logger.info(f"Progress broadcast timeout: {PROGRESS_BROADCAST_TIMEOUT} seconds")
 
 app = FastAPI(
     title="PDF/A Conversion Service",
@@ -417,12 +425,21 @@ async def process_conversion_job(job_id: str) -> None:
                     job_manager.broadcast_to_job(job_id, message.to_dict()), event_loop
                 )
                 # Wait for the broadcast to complete (with timeout)
-                future.result(timeout=2.0)
+                # Increased from 2s to 10s default to handle multiple concurrent clients
+                future.result(timeout=PROGRESS_BROADCAST_TIMEOUT)
                 logger.info(
                     f"Successfully broadcast progress for job {job_id}: {progress.percentage}%"
                 )
+            except TimeoutError:
+                # Broadcasting took too long - log warning but don't fail conversion
+                # This can happen with many concurrent WebSocket clients or slow networks
+                logger.warning(
+                    f"Progress broadcast timeout ({PROGRESS_BROADCAST_TIMEOUT}s) "
+                    f"for job {job_id} at {progress.percentage}%. "
+                    f"Some clients may have missed this update."
+                )
             except Exception as e:
-                # Log any errors but don't fail the conversion
+                # Log any other errors but don't fail the conversion
                 logger.error(
                     f"Failed to broadcast progress for job {job_id}: {e}",
                     exc_info=True,
@@ -601,6 +618,74 @@ async def websocket_endpoint(websocket: WebSocket):
         if current_job_id:
             job_manager.unregister_websocket(current_job_id, websocket)
         logger.info("WebSocket connection closed")
+
+
+@app.get("/api/v1/jobs/{job_id}/status")
+async def get_job_status(job_id: str):
+    """Get the current status of a conversion job.
+
+    This endpoint is useful for clients that have lost their WebSocket connection
+    and want to poll for job status as a fallback mechanism.
+
+    Args:
+        job_id: The job ID
+
+    Returns:
+        Job status information including:
+        - job_id: The job identifier
+        - status: Current status (queued, running, completed, failed, cancelled)
+        - progress: Current progress percentage (0-100)
+        - message: Latest progress message
+        - created_at: Job creation timestamp
+        - download_url: Download URL (only if status is completed)
+        - filename: Original filename
+        - error: Error message (only if status is failed)
+
+    Raises:
+        HTTPException: If job not found (404)
+
+    Example:
+        GET /api/v1/jobs/abc123/status
+        Response:
+        {
+            "job_id": "abc123",
+            "status": "running",
+            "progress": 45.5,
+            "message": "Processing page 5 of 10",
+            "created_at": "2024-12-12T10:30:00Z",
+            "filename": "document.pdf"
+        }
+
+    """
+    try:
+        job = job_manager.get_job(job_id)
+    except JobNotFoundException:
+        raise HTTPException(status_code=404, detail="Job not found")
+
+    # Build response with current job status
+    response = {
+        "job_id": job_id,
+        "status": job.status,
+        "progress": getattr(job, "progress_percentage", 0.0),
+        "message": getattr(job, "progress_message", ""),
+        "created_at": (
+            job.created_at.isoformat() if hasattr(job, "created_at") else None
+        ),
+        "filename": job.filename,
+    }
+
+    # Add download URL if job is completed
+    if job.status == "completed":
+        response["download_url"] = f"/download/{job_id}"
+        response["filename_output"] = f"{job.filename.rsplit('.', 1)[0]}_pdfa.pdf"
+
+    # Add error message if job failed
+    if job.status == "failed" and hasattr(job, "error_message"):
+        response["error"] = job.error_message
+
+    logger.debug(f"Status query for job {job_id}: {job.status}")
+
+    return response
 
 
 @app.get("/download/{job_id}")
