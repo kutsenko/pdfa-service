@@ -462,6 +462,48 @@ When adding new OCRmyPDF exception handling:
 - Maintain consistency: same error should produce same exit code/HTTP status
 - Document error mappings in code comments
 
+**Handled OCRmyPDF Exceptions:**
+
+1. **`SubprocessOutputError`** (Ghostscript rendering failures)
+   - **Cause**: Ghostscript cannot render the PDF during OCR processing
+   - **Symptoms**: Errors like "/undefined in --runpdf--" or "Ghostscript rasterizing failed"
+   - **Fallback Strategy**: If OCR was enabled, retry conversion without OCR
+   - **Rationale**: Some PDFs contain features Ghostscript can't handle (complex graphics, certain compression types, problematic font embeddings) but can still be converted to PDF/A without OCR
+   - **Tests**: `tests/test_converter_errors.py::test_ghostscript_error_fallback_to_no_ocr`
+
+2. **`EncryptedPdfError`**
+   - **Cause**: PDF has password protection or encryption
+   - **Action**: Fail immediately with clear error message
+   - **Error Message**: "Cannot process encrypted PDF. Please remove encryption first."
+   - **Tests**: `tests/test_converter_errors.py::test_encrypted_pdf_error`
+
+3. **`InputFileError`**
+   - **Cause**: PDF is corrupted or invalid
+   - **Action**: Fail with descriptive error
+   - **Error Message**: "Invalid or corrupted PDF file: {details}"
+   - **Tests**: `tests/test_converter_errors.py::test_invalid_pdf_error`
+
+4. **`PriorOcrFoundError`**
+   - **Cause**: PDF already has an OCR text layer
+   - **Action**: Log and continue (not an error condition)
+   - **Tests**: `tests/test_converter_errors.py::test_prior_ocr_found_is_handled_gracefully`
+
+**Fallback Decision Tree:**
+```
+PDF Conversion Attempt
+├─ Success → Done
+├─ SubprocessOutputError (Ghostscript fails)
+│  ├─ If OCR was enabled
+│  │  ├─ Retry without OCR
+│  │  │  ├─ Success → Done (logged as fallback)
+│  │  │  └─ Failure → Error: "PDF may be corrupted or contain unsupported features"
+│  └─ If OCR was disabled → Error: "Ghostscript could not render the PDF"
+├─ EncryptedPdfError → Error: "Cannot process encrypted PDF"
+├─ InputFileError → Error: "Invalid or corrupted PDF file"
+├─ PriorOcrFoundError → Log and continue
+└─ Other exceptions → Re-raise with logging
+```
+
 ### Configuration
 
 New configuration parameters must be:
