@@ -572,3 +572,75 @@ Dependabot is configured to:
 - Limit open PRs to prevent overwhelming the repository
 
 All Dependabot PRs trigger the full test suite and security scans before merge.
+
+## Troubleshooting
+
+### Ghostscript Rendering Errors
+
+**Symptoms:**
+- Error messages like: `Error: /undefined in --runpdf--`
+- `Ghostscript rasterizing failed`
+- Conversion fails during OCR processing
+
+**Cause:**
+Some PDFs contain features that Ghostscript cannot handle during OCR rasterization (e.g., complex graphics, certain compression types, problematic font embeddings).
+
+**Automatic Fallback:**
+The service automatically retries conversion without OCR when Ghostscript fails:
+
+1. **First attempt**: Convert with OCR enabled (if requested)
+2. **If Ghostscript fails**: Automatically retry without OCR
+3. **Result**: PDF/A file without searchable text layer (but still PDF/A compliant)
+
+**Manual Workaround:**
+If you encounter these errors, you can explicitly disable OCR:
+
+```bash
+# CLI
+pdfa-cli input.pdf output.pdf --no-ocr
+
+# API
+curl -X POST -F "file=@input.pdf" \
+  -F "ocr_enabled=false" \
+  http://localhost:8000/api/v1/convert
+```
+
+### Encrypted PDFs
+
+**Symptoms:**
+- Error: `Cannot process encrypted PDF. Please remove encryption first.`
+
+**Solution:**
+Remove PDF encryption before conversion:
+
+```bash
+# Using qpdf
+qpdf --decrypt --password=yourpassword encrypted.pdf decrypted.pdf
+
+# Then convert
+pdfa-cli decrypted.pdf output.pdf
+```
+
+### Corrupted or Invalid PDFs
+
+**Symptoms:**
+- Error: `Invalid or corrupted PDF file`
+- Conversion fails immediately
+
+**Solutions:**
+1. Try repairing the PDF with Ghostscript:
+   ```bash
+   gs -o repaired.pdf -sDEVICE=pdfwrite -dPDFSETTINGS=/prepress input.pdf
+   pdfa-cli repaired.pdf output.pdf
+   ```
+
+2. Re-export the PDF from its original source (Word, LibreOffice, etc.)
+
+### PDFs Already Have OCR
+
+**Symptoms:**
+- Log message: `PDF already has OCR layer`
+- Conversion completes successfully
+
+**Action:**
+No action needed. The service detects existing OCR and continues conversion. This is not an error.
