@@ -81,15 +81,20 @@ class TestCompressionConfigValidation:
             config = CompressionConfig(optimize=opt)  # type: ignore
             config.validate()  # Should not raise
 
-    def test_validate_jbig2_page_group_size_negative(self):
-        """Test that negative jbig2_page_group_size raises ValueError."""
-        config = CompressionConfig(jbig2_page_group_size=-1)
-        with pytest.raises(ValueError, match="jbig2_page_group_size must be >= 0"):
-            config.validate()
+    def test_validate_jbig2_page_group_size_invalid(self):
+        """Test that invalid jbig2_page_group_size raises ValueError."""
+        # Test values outside valid range (1-10000)
+        for invalid_value in [-1, 0, 10001]:
+            config = CompressionConfig(jbig2_page_group_size=invalid_value)
+            with pytest.raises(
+                ValueError, match="jbig2_page_group_size must be between 1 and 10000"
+            ):
+                config.validate()
 
     def test_validate_jbig2_page_group_size_valid(self):
         """Test that valid jbig2_page_group_size values pass validation."""
-        for size in [0, 10, 50, 100]:
+        # Valid range: 1-10000
+        for size in [1, 10, 50, 100, 10000]:
             config = CompressionConfig(jbig2_page_group_size=size)
             config.validate()  # Should not raise
 
