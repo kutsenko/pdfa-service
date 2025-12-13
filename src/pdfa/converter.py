@@ -8,6 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 import ocrmypdf
+import ocrmypdf.exceptions as ocrmypdf_exceptions
 import ocrmypdf.pluginspec
 import pikepdf
 
@@ -312,6 +313,67 @@ def convert_to_pdfa(
             progress_bar=True,
         )
         logger.info(f"Successfully converted PDF/A file: {output_pdf}")
+    except ocrmypdf_exceptions.SubprocessOutputError as e:
+        # Ghostscript or other subprocess failed (e.g., rendering error)
+        # This often happens with problematic PDFs that Ghostscript can't handle
+        logger.warning(
+            f"Ghostscript rendering failed for {input_pdf}: {e}. "
+            "Attempting fallback conversion without OCR..."
+        )
+
+        # Fallback: Try conversion without OCR if it was enabled
+        if actual_ocr_enabled:
+            logger.info("Retrying conversion without OCR as fallback")
+            try:
+                ocrmypdf.ocr(
+                    str(input_pdf),
+                    str(output_pdf),
+                    language=language,
+                    output_type=output_type,
+                    force_ocr=False,  # Disable OCR for fallback
+                    skip_text=True,  # Skip OCR text operations
+                    # Compression settings
+                    image_dpi=compression_config.image_dpi,
+                    remove_vectors=compression_config.remove_vectors,
+                    optimize=compression_config.optimize,
+                    jpg_quality=compression_config.jpg_quality,
+                    jbig2_lossy=compression_config.jbig2_lossy,
+                    jbig2_page_group_size=compression_config.jbig2_page_group_size,
+                    # Plugin manager for progress tracking
+                    plugin_manager=plugin_manager,
+                    progress_bar=True,
+                )
+                logger.info(
+                    f"Successfully converted PDF/A file without OCR "
+                    f"(fallback): {output_pdf}"
+                )
+            except Exception as fallback_error:
+                logger.error(
+                    f"Fallback conversion also failed: {fallback_error}", exc_info=True
+                )
+                raise RuntimeError(
+                    "PDF conversion failed: Ghostscript could not render the PDF, "
+                    "even without OCR. The PDF may be corrupted or contain "
+                    "unsupported features."
+                ) from e
+        else:
+            # OCR was not enabled, so we can't try without it
+            raise RuntimeError(
+                "PDF conversion failed: Ghostscript could not render the PDF. "
+                "The PDF may be corrupted or contain unsupported features."
+            ) from e
+    except ocrmypdf_exceptions.PriorOcrFoundError:
+        # PDF already has OCR text layer - this is fine, just log it
+        logger.info(f"PDF already has OCR layer: {input_pdf}")
+        # Continue without raising error
+    except ocrmypdf_exceptions.EncryptedPdfError as e:
+        logger.error(f"PDF is encrypted: {input_pdf}")
+        raise RuntimeError(
+            "Cannot process encrypted PDF. Please remove encryption first."
+        ) from e
+    except ocrmypdf_exceptions.InputFileError as e:
+        logger.error(f"Invalid input PDF: {input_pdf}")
+        raise RuntimeError(f"Invalid or corrupted PDF file: {e}") from e
     except Exception as e:
         logger.error(f"OCRmyPDF conversion failed: {e}", exc_info=True)
         raise
