@@ -260,7 +260,7 @@ def test_ghostscript_safe_mode_fallback_succeeds(monkeypatch, tmp_path) -> None:
     assert ocr_kwargs_list[1]["remove_vectors"] is False  # Preserve vectors
     assert ocr_kwargs_list[1]["optimize"] == 0  # No optimization
     assert ocr_kwargs_list[1]["jpg_quality"] == 95  # High quality
-    assert ocr_kwargs_list[1]["jbig2_page_group_size"] == 0  # JBIG2 disabled
+    assert ocr_kwargs_list[1]["jbig2_page_group_size"] == 1  # Minimal JBIG2 grouping
 
     # Output file should exist
     assert output_pdf.exists()

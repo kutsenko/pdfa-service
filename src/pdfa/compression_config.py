@@ -44,7 +44,7 @@ class CompressionConfig:
         jbig2_page_group_size: Pages to group for JBIG2 compression (default: 10).
             - Groups pages to find repeating patterns (better compression)
             - Higher values = better compression but slower processing
-            - Range: 0 (disabled) to 100+
+            - Range: 1-10000 (OCRmyPDF requirement)
 
     """
 
@@ -102,9 +102,10 @@ class CompressionConfig:
         if self.optimize not in (0, 1, 2, 3):
             raise ValueError(f"optimize must be 0, 1, 2, or 3, got {self.optimize}")
 
-        if self.jbig2_page_group_size < 0:
+        if not 1 <= self.jbig2_page_group_size <= 10000:
             raise ValueError(
-                f"jbig2_page_group_size must be >= 0, got {self.jbig2_page_group_size}"
+                f"jbig2_page_group_size must be between 1 and 10000, "
+                f"got {self.jbig2_page_group_size}"
             )
 
 
@@ -156,6 +157,6 @@ PRESETS = {
         optimize=0,  # No optimization to avoid additional processing
         remove_vectors=False,  # Preserve vectors (less GS rasterization work)
         jbig2_lossy=False,  # No lossy compression
-        jbig2_page_group_size=0,  # Disable JBIG2 entirely (can cause GS issues)
+        jbig2_page_group_size=1,  # Minimum grouping (OCRmyPDF requires 1-10000)
     ),
 }
