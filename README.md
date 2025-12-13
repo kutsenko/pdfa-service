@@ -585,12 +585,17 @@ All Dependabot PRs trigger the full test suite and security scans before merge.
 **Cause:**
 Some PDFs contain features that Ghostscript cannot handle during OCR rasterization (e.g., complex graphics, certain compression types, problematic font embeddings).
 
-**Automatic Fallback:**
-The service automatically retries conversion without OCR when Ghostscript fails:
+**Automatic Three-Tier Fallback:**
+The service automatically tries multiple strategies to handle problematic PDFs:
 
-1. **First attempt**: Convert with OCR enabled (if requested)
-2. **If Ghostscript fails**: Automatically retry without OCR
-3. **Result**: PDF/A file without searchable text layer (but still PDF/A compliant)
+1. **Tier 1** - Normal conversion with your requested settings
+2. **Tier 2** - Safe-mode OCR with Ghostscript-friendly parameters:
+   - Lower DPI (100) for easier rendering
+   - Preserved vector graphics
+   - Minimal compression/optimization
+   - Simpler PDF/A level (e.g., PDF/A-2 instead of PDF/A-3)
+3. **Tier 3** - Conversion without OCR as final fallback
+4. **Result**: Best possible PDF/A file, potentially with reduced quality or no searchable text
 
 **Manual Workaround:**
 If you encounter these errors, you can explicitly disable OCR:

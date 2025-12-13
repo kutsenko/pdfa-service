@@ -10,8 +10,12 @@ import pytest
 from pdfa import converter
 
 
-def test_ghostscript_error_fallback_to_no_ocr(monkeypatch, tmp_path) -> None:
-    """Test fallback to no-OCR when Ghostscript fails during OCR."""
+def test_ghostscript_error_fallback_to_no_ocr_legacy(monkeypatch, tmp_path) -> None:
+    """Test that final tier (no-OCR) succeeds when safe-mode also fails.
+
+    This is a compatibility test for the old two-tier fallback behavior,
+    now extended to three tiers: normal → safe-mode → no-OCR.
+    """
     input_pdf = tmp_path / "input.pdf"
     input_pdf.write_bytes(b"%PDF-1.4 test")
     output_pdf = tmp_path / "output.pdf"
@@ -25,19 +29,18 @@ def test_ghostscript_error_fallback_to_no_ocr(monkeypatch, tmp_path) -> None:
         call_count += 1
         ocr_kwargs_list.append(kwargs)
 
-        # First call (with OCR) fails with Ghostscript error
-        if call_count == 1 and kwargs.get("force_ocr"):
+        # First two calls fail (normal + safe-mode)
+        if call_count <= 2:
             raise ocrmypdf_exceptions.SubprocessOutputError(
                 "Ghostscript rasterizing failed"
             )
-        # Second call (without OCR) succeeds
-        elif call_count == 2:
-            # Create output file to simulate success
+        # Third call (no OCR) succeeds
+        elif call_count == 3:
             Path(output_file).write_bytes(b"%PDF-1.4 converted")
 
     monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
 
-    # Should succeed with fallback
+    # Should succeed with final fallback
     converter.convert_to_pdfa(
         input_pdf,
         output_pdf,
@@ -46,16 +49,20 @@ def test_ghostscript_error_fallback_to_no_ocr(monkeypatch, tmp_path) -> None:
         ocr_enabled=True,
     )
 
-    # Verify two calls were made
-    assert call_count == 2
+    # Verify three calls were made (new behavior)
+    assert call_count == 3
 
-    # First call should have OCR enabled
+    # First call should have OCR enabled (normal mode)
     assert ocr_kwargs_list[0]["force_ocr"] is True
     assert ocr_kwargs_list[0]["skip_text"] is False
 
-    # Second call (fallback) should have OCR disabled
-    assert ocr_kwargs_list[1]["force_ocr"] is False
-    assert ocr_kwargs_list[1]["skip_text"] is True
+    # Second call should have OCR enabled (safe mode)
+    assert ocr_kwargs_list[1]["force_ocr"] is True
+    assert ocr_kwargs_list[1]["skip_text"] is False
+
+    # Third call (final fallback) should have OCR disabled
+    assert ocr_kwargs_list[2]["force_ocr"] is False
+    assert ocr_kwargs_list[2]["skip_text"] is True
 
     # Output file should exist
     assert output_pdf.exists()
@@ -87,7 +94,7 @@ def test_ghostscript_error_no_fallback_when_ocr_disabled(monkeypatch, tmp_path) 
 
 
 def test_ghostscript_error_fallback_also_fails(monkeypatch, tmp_path) -> None:
-    """Test error handling when both primary and fallback conversions fail."""
+    """Test error handling when all three fallback tiers fail."""
     input_pdf = tmp_path / "input.pdf"
     input_pdf.write_bytes(b"%PDF-1.4 test")
     output_pdf = tmp_path / "output.pdf"
@@ -100,9 +107,9 @@ def test_ghostscript_error_fallback_also_fails(monkeypatch, tmp_path) -> None:
 
     monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
 
-    # Should raise RuntimeError mentioning both failures
+    # Should raise RuntimeError mentioning all fallback attempts
     with pytest.raises(
-        RuntimeError, match="even without OCR.*may be corrupted or contain unsupported"
+        RuntimeError, match="All fallback strategies exhausted.*severely corrupted"
     ):
         converter.convert_to_pdfa(
             input_pdf,
@@ -203,3 +210,184 @@ def test_generic_exception_is_reraised(monkeypatch, tmp_path) -> None:
             language="eng",
             pdfa_level="2",
         )
+
+
+def test_ghostscript_safe_mode_fallback_succeeds(monkeypatch, tmp_path) -> None:
+    """Test that Tier 2 safe-mode fallback succeeds when normal mode fails."""
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    call_count = 0
+    ocr_kwargs_list = []
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs) -> None:
+        nonlocal call_count
+        call_count += 1
+        ocr_kwargs_list.append(kwargs)
+
+        # First call (normal mode) fails
+        if call_count == 1:
+            raise ocrmypdf_exceptions.SubprocessOutputError(
+                "Ghostscript rasterizing failed"
+            )
+        # Second call (safe mode) succeeds
+        elif call_count == 2:
+            Path(output_file).write_bytes(b"%PDF-1.4 converted")
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    # Should succeed with safe-mode fallback
+    converter.convert_to_pdfa(
+        input_pdf,
+        output_pdf,
+        language="eng",
+        pdfa_level="2",
+        ocr_enabled=True,
+    )
+
+    # Verify two calls were made
+    assert call_count == 2
+
+    # First call: normal mode with OCR
+    assert ocr_kwargs_list[0]["force_ocr"] is True
+    assert ocr_kwargs_list[0]["output_type"] == "pdfa-2"
+
+    # Second call: safe mode with OCR, downgraded PDF/A level
+    assert ocr_kwargs_list[1]["force_ocr"] is True  # Still with OCR
+    assert ocr_kwargs_list[1]["output_type"] == "pdfa-1"  # Downgraded from 2 to 1
+    assert ocr_kwargs_list[1]["image_dpi"] == 100  # Low DPI
+    assert ocr_kwargs_list[1]["remove_vectors"] is False  # Preserve vectors
+    assert ocr_kwargs_list[1]["optimize"] == 0  # No optimization
+    assert ocr_kwargs_list[1]["jpg_quality"] == 95  # High quality
+    assert ocr_kwargs_list[1]["jbig2_page_group_size"] == 0  # JBIG2 disabled
+
+    # Output file should exist
+    assert output_pdf.exists()
+
+
+def test_ghostscript_three_tier_fallback(monkeypatch, tmp_path) -> None:
+    """Test all three fallback tiers: normal → safe-mode → no-OCR."""
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    call_count = 0
+    ocr_kwargs_list = []
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs) -> None:
+        nonlocal call_count
+        call_count += 1
+        ocr_kwargs_list.append(kwargs)
+
+        # First two calls fail (normal mode and safe mode)
+        if call_count <= 2:
+            raise ocrmypdf_exceptions.SubprocessOutputError(
+                "Ghostscript rasterizing failed"
+            )
+        # Third call (no OCR) succeeds
+        elif call_count == 3:
+            Path(output_file).write_bytes(b"%PDF-1.4 converted")
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    # Should succeed with final no-OCR fallback
+    converter.convert_to_pdfa(
+        input_pdf,
+        output_pdf,
+        language="eng",
+        pdfa_level="3",
+        ocr_enabled=True,
+    )
+
+    # Verify three calls were made
+    assert call_count == 3
+
+    # First call: normal mode with OCR, PDF/A-3
+    assert ocr_kwargs_list[0]["force_ocr"] is True
+    assert ocr_kwargs_list[0]["output_type"] == "pdfa-3"
+
+    # Second call: safe mode with OCR, PDF/A-2 (downgraded from 3)
+    assert ocr_kwargs_list[1]["force_ocr"] is True
+    assert ocr_kwargs_list[1]["output_type"] == "pdfa-2"
+    assert ocr_kwargs_list[1]["image_dpi"] == 100
+    assert ocr_kwargs_list[1]["remove_vectors"] is False
+
+    # Third call: no OCR, still using safe mode settings
+    assert ocr_kwargs_list[2]["force_ocr"] is False
+    assert ocr_kwargs_list[2]["skip_text"] is True
+    assert ocr_kwargs_list[2]["output_type"] == "pdfa-2"
+    assert ocr_kwargs_list[2]["image_dpi"] == 100
+
+    # Output file should exist
+    assert output_pdf.exists()
+
+
+def test_ghostscript_all_fallbacks_fail(monkeypatch, tmp_path) -> None:
+    """Test that meaningful error is raised when all three tiers fail."""
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs) -> None:
+        # Always fail
+        raise ocrmypdf_exceptions.SubprocessOutputError(
+            "Ghostscript rasterizing failed"
+        )
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    # Should raise RuntimeError with comprehensive message
+    with pytest.raises(
+        RuntimeError, match="All fallback strategies exhausted.*safe-mode OCR"
+    ):
+        converter.convert_to_pdfa(
+            input_pdf,
+            output_pdf,
+            language="eng",
+            pdfa_level="2",
+            ocr_enabled=True,
+        )
+
+
+def test_ghostscript_pdfa_level_downgrade(monkeypatch, tmp_path) -> None:
+    """Test that PDF/A level is correctly downgraded in safe mode."""
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    test_cases = [
+        ("3", "2"),  # PDF/A-3 → PDF/A-2
+        ("2", "1"),  # PDF/A-2 → PDF/A-1
+        ("1", "1"),  # PDF/A-1 → PDF/A-1 (no downgrade possible)
+    ]
+
+    for original_level, expected_safe_level in test_cases:
+        call_count = 0
+        captured_levels = []
+
+        def fake_ocr(input_file: str, output_file: str, **kwargs) -> None:
+            nonlocal call_count
+            call_count += 1
+            captured_levels.append(kwargs["output_type"])
+
+            # First call fails, second succeeds
+            if call_count == 1:
+                raise ocrmypdf_exceptions.SubprocessOutputError("GS failed")
+            else:
+                Path(output_file).write_bytes(b"%PDF-1.4 converted")
+
+        monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+        # Convert with specific PDF/A level
+        converter.convert_to_pdfa(
+            input_pdf,
+            output_pdf,
+            language="eng",
+            pdfa_level=original_level,
+            ocr_enabled=True,
+        )
+
+        # Verify the downgrade
+        assert captured_levels[0] == f"pdfa-{original_level}"  # First attempt
+        assert captured_levels[1] == f"pdfa-{expected_safe_level}"  # Safe mode
