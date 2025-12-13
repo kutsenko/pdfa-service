@@ -318,46 +318,97 @@ def convert_to_pdfa(
         # This often happens with problematic PDFs that Ghostscript can't handle
         logger.warning(
             f"Ghostscript rendering failed for {input_pdf}: {e}. "
-            "Attempting fallback conversion without OCR..."
+            "Attempting fallback strategies..."
         )
 
-        # Fallback: Try conversion without OCR if it was enabled
+        # Three-tier fallback strategy
         if actual_ocr_enabled:
-            logger.info("Retrying conversion without OCR as fallback")
+            # TIER 2: Try with Ghostscript-safe parameters (still with OCR)
+            # Use conservative settings that are less likely to trigger GS errors
+            logger.info(
+                "Tier 2 fallback: Retrying with Ghostscript-safe parameters "
+                "(low DPI, preserved vectors, minimal compression)"
+            )
+
+            # Use ghostscript_safe preset: low DPI, no vector removal, no JBIG2
+            safe_config = PRESETS["ghostscript_safe"]
+
+            # Try a simpler PDF/A level for better compatibility
+            # PDF/A-1 is most restrictive but most compatible
+            safe_pdfa_level = pdfa_level
+            if pdfa_level == "3":
+                safe_pdfa_level = "2"  # PDF/A-3 → PDF/A-2
+                logger.debug("Downgrading PDF/A-3 to PDF/A-2 for better compatibility")
+            elif pdfa_level == "2":
+                safe_pdfa_level = "1"  # PDF/A-2 → PDF/A-1
+                logger.debug("Downgrading PDF/A-2 to PDF/A-1 for better compatibility")
+
             try:
                 ocrmypdf.ocr(
                     str(input_pdf),
                     str(output_pdf),
                     language=language,
-                    output_type=output_type,
-                    force_ocr=False,  # Disable OCR for fallback
-                    skip_text=True,  # Skip OCR text operations
-                    # Compression settings
-                    image_dpi=compression_config.image_dpi,
-                    remove_vectors=compression_config.remove_vectors,
-                    optimize=compression_config.optimize,
-                    jpg_quality=compression_config.jpg_quality,
-                    jbig2_lossy=compression_config.jbig2_lossy,
-                    jbig2_page_group_size=compression_config.jbig2_page_group_size,
+                    output_type=f"pdfa-{safe_pdfa_level}",
+                    force_ocr=True,  # Still perform OCR
+                    skip_text=False,
+                    # Ghostscript-safe compression settings
+                    image_dpi=safe_config.image_dpi,  # 100 DPI (low)
+                    remove_vectors=safe_config.remove_vectors,  # False (preserve)
+                    optimize=safe_config.optimize,  # 0 (no optimization)
+                    jpg_quality=safe_config.jpg_quality,  # 95 (high quality)
+                    jbig2_lossy=safe_config.jbig2_lossy,  # False
+                    # 0 (disabled)
+                    jbig2_page_group_size=safe_config.jbig2_page_group_size,
                     # Plugin manager for progress tracking
                     plugin_manager=plugin_manager,
                     progress_bar=True,
                 )
                 logger.info(
-                    f"Successfully converted PDF/A file without OCR "
-                    f"(fallback): {output_pdf}"
+                    f"Successfully converted PDF/A-{safe_pdfa_level} with "
+                    f"safe-mode parameters: {output_pdf}"
                 )
-            except Exception as fallback_error:
-                logger.error(
-                    f"Fallback conversion also failed: {fallback_error}", exc_info=True
+            except ocrmypdf_exceptions.SubprocessOutputError as safe_mode_error:
+                # TIER 3: Safe mode also failed, try without OCR as last resort
+                logger.warning(
+                    f"Safe-mode conversion also failed: {safe_mode_error}. "
+                    "Tier 3 fallback: Attempting conversion without OCR..."
                 )
-                raise RuntimeError(
-                    "PDF conversion failed: Ghostscript could not render the PDF, "
-                    "even without OCR. The PDF may be corrupted or contain "
-                    "unsupported features."
-                ) from e
+                try:
+                    ocrmypdf.ocr(
+                        str(input_pdf),
+                        str(output_pdf),
+                        language=language,
+                        output_type=f"pdfa-{safe_pdfa_level}",
+                        force_ocr=False,  # Disable OCR
+                        skip_text=True,
+                        # Keep safe compression settings
+                        image_dpi=safe_config.image_dpi,
+                        remove_vectors=safe_config.remove_vectors,
+                        optimize=safe_config.optimize,
+                        jpg_quality=safe_config.jpg_quality,
+                        jbig2_lossy=safe_config.jbig2_lossy,
+                        jbig2_page_group_size=safe_config.jbig2_page_group_size,
+                        # Plugin manager for progress tracking
+                        plugin_manager=plugin_manager,
+                        progress_bar=True,
+                    )
+                    logger.info(
+                        f"Successfully converted PDF/A-{safe_pdfa_level} without OCR "
+                        f"(final fallback): {output_pdf}"
+                    )
+                except Exception as no_ocr_error:
+                    logger.error(
+                        f"All fallback attempts failed: {no_ocr_error}", exc_info=True
+                    )
+                    raise RuntimeError(
+                        "PDF conversion failed: All fallback strategies exhausted. "
+                        "Tried: (1) normal OCR, (2) safe-mode OCR with low DPI and "
+                        "preserved vectors, (3) no OCR. Ghostscript could not render "
+                        "this PDF. The file may be severely corrupted or contain "
+                        "unsupported features."
+                    ) from e
         else:
-            # OCR was not enabled, so we can't try without it
+            # OCR was not enabled, so we can't try OCR-based fallbacks
             raise RuntimeError(
                 "PDF conversion failed: Ghostscript could not render the PDF. "
                 "The PDF may be corrupted or contain unsupported features."

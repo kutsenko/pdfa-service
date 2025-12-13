@@ -467,9 +467,21 @@ When adding new OCRmyPDF exception handling:
 1. **`SubprocessOutputError`** (Ghostscript rendering failures)
    - **Cause**: Ghostscript cannot render the PDF during OCR processing
    - **Symptoms**: Errors like "/undefined in --runpdf--" or "Ghostscript rasterizing failed"
-   - **Fallback Strategy**: If OCR was enabled, retry conversion without OCR
-   - **Rationale**: Some PDFs contain features Ghostscript can't handle (complex graphics, certain compression types, problematic font embeddings) but can still be converted to PDF/A without OCR
-   - **Tests**: `tests/test_converter_errors.py::test_ghostscript_error_fallback_to_no_ocr`
+   - **Three-Tier Fallback Strategy**:
+     1. **Tier 1**: Normal conversion with user-specified settings
+     2. **Tier 2**: Safe-mode OCR with Ghostscript-friendly parameters:
+        - Low DPI (100 instead of 150+)
+        - Preserve vectors (no rasterization)
+        - High JPEG quality (95)
+        - No optimization (avoid extra processing)
+        - Disable JBIG2 compression
+        - Downgrade PDF/A level (3→2, 2→1) for better compatibility
+     3. **Tier 3**: Conversion without OCR as last resort
+   - **Rationale**: Some PDFs contain features that Ghostscript struggles with (complex graphics, certain compression types, problematic font embeddings, memory-intensive rendering). Using conservative parameters makes Ghostscript more likely to succeed while still preserving OCR capability.
+   - **Tests**:
+     - `tests/test_converter_errors.py::test_ghostscript_safe_mode_fallback_succeeds`
+     - `tests/test_converter_errors.py::test_ghostscript_three_tier_fallback`
+     - `tests/test_converter_errors.py::test_ghostscript_pdfa_level_downgrade`
 
 2. **`EncryptedPdfError`**
    - **Cause**: PDF has password protection or encryption
@@ -490,13 +502,18 @@ When adding new OCRmyPDF exception handling:
 
 **Fallback Decision Tree:**
 ```
-PDF Conversion Attempt
+PDF Conversion Attempt (Tier 1: Normal settings)
 ├─ Success → Done
 ├─ SubprocessOutputError (Ghostscript fails)
 │  ├─ If OCR was enabled
-│  │  ├─ Retry without OCR
-│  │  │  ├─ Success → Done (logged as fallback)
-│  │  │  └─ Failure → Error: "PDF may be corrupted or contain unsupported features"
+│  │  ├─ TIER 2: Retry with safe-mode OCR
+│  │  │  ├─ Parameters: Low DPI (100), preserve vectors, no optimization
+│  │  │  ├─ PDF/A level: Downgrade if possible (3→2, 2→1)
+│  │  │  ├─ Success → Done (logged as safe-mode fallback)
+│  │  │  └─ SubprocessOutputError (safe-mode fails)
+│  │  │     ├─ TIER 3: Retry without OCR (keep safe-mode compression)
+│  │  │     │  ├─ Success → Done (logged as final fallback)
+│  │  │     │  └─ Failure → Error: "All fallback strategies exhausted"
 │  └─ If OCR was disabled → Error: "Ghostscript could not render the PDF"
 ├─ EncryptedPdfError → Error: "Cannot process encrypted PDF"
 ├─ InputFileError → Error: "Invalid or corrupted PDF file"

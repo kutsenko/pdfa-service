@@ -150,4 +150,12 @@ PRESETS = {
         jbig2_lossy=False,
         jbig2_page_group_size=1,  # Minimum valid value
     ),
+    "ghostscript_safe": CompressionConfig(
+        image_dpi=100,  # Low DPI reduces Ghostscript memory and complexity
+        jpg_quality=95,  # High quality to avoid compression artifacts
+        optimize=0,  # No optimization to avoid additional processing
+        remove_vectors=False,  # Preserve vectors (less GS rasterization work)
+        jbig2_lossy=False,  # No lossy compression
+        jbig2_page_group_size=0,  # Disable JBIG2 entirely (can cause GS issues)
+    ),
 }
