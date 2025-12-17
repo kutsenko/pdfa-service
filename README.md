@@ -147,11 +147,40 @@ pdfa-cli spreadsheet.ods output.pdf
 pdfa-cli photo.jpg output.pdf --language eng
 pdfa-cli scan.png output.pdf
 pdfa-cli document.tiff output.pdf
+
+# NEW: Convert Office documents to plain PDF (fast pass-through, no PDF/A)
+pdfa-cli document.docx output.pdf --pdfa-level pdf
+pdfa-cli presentation.pptx output.pdf --pdfa-level pdf
+pdfa-cli spreadsheet.xlsx output.pdf --pdfa-level pdf
 ```
+
+#### Plain PDF Output (NEW)
+
+For Office documents that already have structure tags and don't require PDF/A compliance, you can use the `--pdfa-level pdf` option for faster conversion:
+
+```bash
+# Convert Office document to plain PDF (preserves accessibility tags)
+pdfa-cli document.docx output.pdf --pdfa-level pdf --language eng
+
+# Faster conversion, skips OCRmyPDF entirely for Office documents
+pdfa-cli presentation.pptx output.pdf --pdfa-level pdf
+```
+
+**When to use `--pdfa-level pdf`:**
+- When PDF/A compliance is not required
+- For Office documents that already have proper formatting and accessibility
+- When you need faster conversion (5-15x faster than PDF/A)
+- To preserve vector graphics and fonts from Office documents
+
+**Behavior:**
+- LibreOffice converts the document to PDF
+- OCRmyPDF is skipped entirely to preserve formatting and accessibility
+- Structure tags are preserved if present in the Office document
+- Significantly faster than PDF/A conversion
 
 **Options**:
 - `-l, --language`: Tesseract language codes for OCR (default: `deu+eng`)
-- `--pdfa-level`: PDF/A compliance level (1, 2, or 3; default: `2`)
+- `--pdfa-level`: PDF/A compliance level (1, 2, or 3) or 'pdf' for plain PDF output (default: `2`)
 - `--no-ocr`: Disable OCR and convert without text recognition
 - `--force-ocr-on-tagged-pdfs`: Force OCR on PDFs with structure tags. By default, OCR is skipped for tagged PDFs to preserve accessibility information
 - `-v, --verbose`: Enable verbose (debug) logging
@@ -221,6 +250,17 @@ curl -X POST "http://localhost:8000/convert" \
 
 curl -X POST "http://localhost:8000/convert" \
   -F "file=@scan.png;type=image/png" \
+  --output output.pdf
+
+# NEW: Convert Office documents to plain PDF (fast pass-through, no PDF/A)
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@document.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document" \
+  -F "pdfa_level=pdf" \
+  --output output.pdf
+
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@presentation.pptx;type=application/vnd.openxmlformats-officedocument.presentationml.presentation" \
+  -F "pdfa_level=pdf" \
   --output output.pdf
 
 curl -X POST "http://localhost:8000/convert" \

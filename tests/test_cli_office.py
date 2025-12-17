@@ -134,3 +134,71 @@ class TestCliOfficeConversion:
         assert "Successfully created PDF/A file" in captured.out
         # Should not mention Office conversion for PDF files
         assert "Office document detected" not in captured.out
+
+    # ========================================================================
+    # PDF Pass-Through Tests (TDD - Phase 1: RED)
+    # ========================================================================
+
+    def test_cli_office_pdf_passthrough(self, monkeypatch, tmp_path, capsys) -> None:
+        """CLI with --pdfa-level pdf should skip OCRmyPDF for Office docs."""
+
+        def mock_convert_office(input_file, output_file, **kwargs):
+            output_file.write_bytes(b"%PDF-1.4 converted")
+
+        ocr_called = {"called": False}
+
+        def mock_convert_to_pdfa(input_pdf, output_pdf, **kwargs):
+            ocr_called["called"] = True
+            # Real implementation would copy file
+            output_pdf.write_bytes(input_pdf.read_bytes())
+
+        monkeypatch.setattr(cli, "convert_office_to_pdf", mock_convert_office)
+        monkeypatch.setattr(cli, "convert_to_pdfa", mock_convert_to_pdfa)
+
+        input_file = tmp_path / "document.docx"
+        input_file.write_bytes(b"PK\x03\x04dummy")
+        output_pdf = tmp_path / "output.pdf"
+
+        exit_code = cli.main(
+            [
+                str(input_file),
+                str(output_pdf),
+                "--pdfa-level",
+                "pdf",
+                "--language",
+                "eng",
+            ]
+        )
+
+        captured = capsys.readouterr()
+        assert exit_code == 0
+        assert "Successfully created PDF file" in captured.out
+        assert output_pdf.exists()
+
+    def test_cli_office_pdfa2_still_converts(
+        self, monkeypatch, tmp_path, capsys
+    ) -> None:
+        """CLI with --pdfa-level 2 should still use OCRmyPDF for Office docs."""
+
+        def mock_convert_office(input_file, output_file, **kwargs):
+            output_file.write_bytes(b"%PDF-1.4 converted")
+
+        ocr_called = {"called": False}
+
+        def mock_convert_to_pdfa(input_pdf, output_pdf, **kwargs):
+            ocr_called["called"] = True
+            output_pdf.write_bytes(b"%PDF-1.4 pdfa-2")
+
+        monkeypatch.setattr(cli, "convert_office_to_pdf", mock_convert_office)
+        monkeypatch.setattr(cli, "convert_to_pdfa", mock_convert_to_pdfa)
+
+        input_file = tmp_path / "document.docx"
+        input_file.write_bytes(b"PK\x03\x04dummy")
+        output_pdf = tmp_path / "output.pdf"
+
+        exit_code = cli.main([str(input_file), str(output_pdf), "--pdfa-level", "2"])
+
+        assert exit_code == 0
+        assert ocr_called["called"], "OCRmyPDF should be called for PDF/A conversion"
+        captured = capsys.readouterr()
+        assert "Successfully created PDF/A file" in captured.out

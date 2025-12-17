@@ -531,3 +531,150 @@ def test_convert_to_pdfa_tagged_pdf_takes_priority(monkeypatch, tmp_path) -> Non
     # OCR should be disabled
     assert calls["kwargs"]["force_ocr"] is False
     assert calls["kwargs"]["skip_text"] is True
+
+
+# ============================================================================
+# PDF Pass-Through Tests (TDD - Phase 1: RED)
+# ============================================================================
+
+
+def test_convert_to_pdfa_pdf_passthrough_office_with_tags(
+    monkeypatch, tmp_path
+) -> None:
+    """PDF pass-through mode: Office document with tags skips OCRmyPDF."""
+    # Mock has_pdf_tags to return True
+    monkeypatch.setattr(converter, "has_pdf_tags", Mock(return_value=True))
+
+    # OCRmyPDF should NOT be called
+    ocr_called = {"called": False}
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
+        ocr_called["called"] = True
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test with tags")
+    output_pdf = tmp_path / "output.pdf"
+
+    converter.convert_to_pdfa(
+        input_pdf,
+        output_pdf,
+        language="eng",
+        pdfa_level="pdf",
+        is_office_source=True,
+    )
+
+    assert output_pdf.exists()
+    assert output_pdf.read_bytes() == b"%PDF-1.4 test with tags"
+    assert not ocr_called[
+        "called"
+    ], "OCRmyPDF should not be called in pass-through mode"
+
+
+def test_convert_to_pdfa_pdf_passthrough_office_without_tags(
+    monkeypatch, tmp_path
+) -> None:
+    """PDF pass-through mode: Office document without tags still skips OCRmyPDF."""
+    # Mock has_pdf_tags to return False
+    monkeypatch.setattr(converter, "has_pdf_tags", Mock(return_value=False))
+
+    # OCRmyPDF should NOT be called
+    ocr_called = {"called": False}
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
+        ocr_called["called"] = True
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test no tags")
+    output_pdf = tmp_path / "output.pdf"
+
+    converter.convert_to_pdfa(
+        input_pdf,
+        output_pdf,
+        language="eng",
+        pdfa_level="pdf",
+        is_office_source=True,
+    )
+
+    assert output_pdf.exists()
+    assert output_pdf.read_bytes() == b"%PDF-1.4 test no tags"
+    assert not ocr_called["called"]
+
+
+def test_convert_to_pdfa_pdf_level_without_office_source(monkeypatch, tmp_path) -> None:
+    """pdfa_level='pdf' for regular PDF should raise ValueError."""
+    calls: dict[str, Any] = {}
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
+        calls["input"] = input_file
+        calls["kwargs"] = kwargs
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 regular")
+    output_pdf = tmp_path / "output.pdf"
+
+    # Should raise ValueError for non-Office documents with pdfa_level='pdf'
+    try:
+        converter.convert_to_pdfa(
+            input_pdf,
+            output_pdf,
+            language="eng",
+            pdfa_level="pdf",
+            is_office_source=False,  # Not from Office
+        )
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert "Invalid pdfa_level" in str(e)
+
+
+def test_convert_to_pdfa_pdfa2_office_source(monkeypatch, tmp_path) -> None:
+    """pdfa_level='2' for Office document should still use OCRmyPDF."""
+    calls: dict[str, Any] = {}
+
+    def fake_ocr(input_file: str, output_file: str, **kwargs: Any) -> None:
+        calls["kwargs"] = kwargs
+
+    monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
+    # Mock has_pdf_tags to avoid tag detection logic
+    monkeypatch.setattr(converter, "has_pdf_tags", Mock(return_value=False))
+    # Mock needs_ocr to avoid text detection logic
+    monkeypatch.setattr(converter, "needs_ocr", Mock(return_value=(True, "Needs OCR")))
+
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 office")
+    output_pdf = tmp_path / "output.pdf"
+
+    converter.convert_to_pdfa(
+        input_pdf,
+        output_pdf,
+        language="eng",
+        pdfa_level="2",
+        is_office_source=True,
+    )
+
+    assert "kwargs" in calls
+    assert calls["kwargs"]["output_type"] == "pdfa-2"
+
+
+def test_convert_to_pdfa_invalid_pdfa_level(tmp_path) -> None:
+    """Invalid pdfa_level should raise ValueError."""
+    input_pdf = tmp_path / "input.pdf"
+    input_pdf.write_bytes(b"%PDF-1.4 test")
+    output_pdf = tmp_path / "output.pdf"
+
+    try:
+        converter.convert_to_pdfa(
+            input_pdf,
+            output_pdf,
+            language="eng",
+            pdfa_level="invalid",
+            is_office_source=False,
+        )
+        assert False, "Should have raised ValueError"
+    except ValueError as e:
+        assert "Invalid pdfa_level" in str(e)

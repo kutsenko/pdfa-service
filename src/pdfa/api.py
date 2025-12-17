@@ -43,7 +43,7 @@ from pdfa.websocket_protocol import (
     parse_client_message,
 )
 
-PdfaLevel = Literal["1", "2", "3"]
+PdfaLevel = Literal["pdf", "1", "2", "3"]
 CompressionProfile = Literal["balanced", "quality", "aggressive", "minimal"]
 
 logger = get_logger(__name__)
@@ -172,7 +172,7 @@ async def convert_endpoint(
     ocr_enabled: bool = Form(True),
     skip_ocr_on_tagged_pdfs: bool = Form(True),
 ) -> Response:
-    """Convert the uploaded PDF, Office, ODF, or image file into PDF/A.
+    """Convert the uploaded PDF, Office, ODF, or image file into PDF/A or plain PDF.
 
     Supports PDF, DOCX, PPTX, XLSX (MS Office), ODT, ODS, ODP (OpenDocument),
     and image files (JPG, PNG, TIFF, BMP, GIF). Office, ODF, and image files
@@ -181,7 +181,9 @@ async def convert_endpoint(
     Args:
         file: PDF, Office, ODF, or image file to convert.
         language: Tesseract language codes for OCR (default: 'deu+eng').
-        pdfa_level: PDF/A compliance level (default: '2').
+        pdfa_level: PDF/A compliance level ('1', '2', '3') or 'pdf' for plain PDF
+                   (default: '2'). When 'pdf' is selected with Office documents,
+                   OCRmyPDF is skipped to preserve accessibility.
         compression_profile: Compression profile to use (default: 'balanced').
         ocr_enabled: Whether to perform OCR (default: True).
         skip_ocr_on_tagged_pdfs: Skip OCR for tagged PDFs (default: True).
@@ -282,7 +284,7 @@ async def convert_endpoint(
                 # Run blocking operation in thread pool to avoid blocking event loop
                 await asyncio.to_thread(convert_image_to_pdf, input_path, pdf_path)
 
-            # Convert to PDF/A
+            # Convert to PDF/A or plain PDF
             output_path = tmp_path / "output.pdf"
             # Select compression configuration from profile
             selected_compression = PRESETS.get(compression_profile, compression_config)
@@ -295,6 +297,7 @@ async def convert_endpoint(
                 pdfa_level=pdfa_level,
                 ocr_enabled=ocr_enabled,
                 skip_ocr_on_tagged_pdfs=skip_ocr_on_tagged_pdfs,
+                is_office_source=is_office,
                 compression_config=selected_compression,
             )
 
@@ -448,9 +451,11 @@ async def process_conversion_job(job_id: str) -> None:
         # Determine file type and convert
         config = job.config
         pdf_path = job.input_path
+        is_office = False  # Track if this is an Office document
 
         # Convert office/image to PDF if needed
         if is_office_document(job.filename):
+            is_office = True
             logger.info(f"Converting Office document for job {job_id}")
             pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
             await asyncio.to_thread(
@@ -479,6 +484,7 @@ async def process_conversion_job(job_id: str) -> None:
             pdfa_level=config.get("pdfa_level", "2"),
             ocr_enabled=config.get("ocr_enabled", True),
             skip_ocr_on_tagged_pdfs=config.get("skip_ocr_on_tagged_pdfs", True),
+            is_office_source=is_office,
             compression_config=selected_compression,
             progress_callback=progress_callback,
             cancel_event=job.cancel_event,

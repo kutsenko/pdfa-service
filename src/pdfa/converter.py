@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import shutil
 from collections.abc import Callable
 from pathlib import Path
 
@@ -181,19 +182,25 @@ def convert_to_pdfa(
     pdfa_level: str,
     ocr_enabled: bool = True,
     skip_ocr_on_tagged_pdfs: bool = True,
+    is_office_source: bool = False,
     compression_config: CompressionConfig | None = None,
     progress_callback: Callable[[ProgressInfo], None] | None = None,
     cancel_event: asyncio.Event | None = None,
 ) -> None:
-    """Convert a PDF to PDF/A using OCRmyPDF.
+    """Convert a PDF to PDF/A using OCRmyPDF, or pass through for plain PDF output.
 
     Args:
         input_pdf: Path to the input PDF file.
         output_pdf: Path for the output PDF/A file.
         language: Tesseract language codes for OCR (e.g., 'eng', 'deu+eng').
-        pdfa_level: PDF/A compliance level ('1', '2', or '3').
+        pdfa_level: PDF/A compliance level ('1', '2', '3') or 'pdf' for
+                    plain PDF output.
         ocr_enabled: Whether to perform OCR on the PDF (default: True).
-        skip_ocr_on_tagged_pdfs: Skip OCR for PDFs with structure tags (default: True).
+        skip_ocr_on_tagged_pdfs: Skip OCR for PDFs with structure tags
+                                 (default: True).
+        is_office_source: Whether the PDF originated from an Office document
+                          (default: False). When True with pdfa_level='pdf',
+                          enables pass-through mode.
         compression_config: Compression settings (default: None, uses defaults).
         progress_callback: Optional callback for progress updates.
         cancel_event: Optional event to check for cancellation requests.
@@ -202,6 +209,32 @@ def convert_to_pdfa(
     if not input_pdf.exists():
         logger.error(f"Input file does not exist: {input_pdf}")
         raise FileNotFoundError(f"Input file does not exist: {input_pdf}")
+
+    # PDF pass-through mode for Office documents
+    if pdfa_level == "pdf" and is_office_source:
+        logger.info(
+            f"PDF pass-through mode: Office document, output_format='pdf', "
+            f"skipping OCRmyPDF: {input_pdf}"
+        )
+
+        # Check for tags (informational only)
+        if has_pdf_tags(input_pdf):
+            logger.info(f"Office PDF has structure tags (preserved): {input_pdf}")
+        else:
+            logger.debug(f"Office PDF has no structure tags: {input_pdf}")
+
+        # Copy directly to output
+        output_pdf.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(input_pdf, output_pdf)
+        logger.info(f"Successfully created PDF file (pass-through): {output_pdf}")
+        return
+
+    # Validate pdfa_level for PDF/A mode
+    if pdfa_level not in ["1", "2", "3"]:
+        raise ValueError(
+            f"Invalid pdfa_level for PDF/A conversion: '{pdfa_level}'. "
+            f"Expected '1', '2', or '3'."
+        )
 
     # Use provided compression config or load defaults
     if compression_config is None:
