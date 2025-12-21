@@ -166,7 +166,6 @@ def main(argv: Sequence[str] | None = None) -> int:
                 pdfa_level=args.pdfa_level,
                 ocr_enabled=not args.no_ocr,
                 skip_ocr_on_tagged_pdfs=not args.force_ocr_on_tagged_pdfs,
-                is_office_source=is_office,
                 compression_config=compression_config,
             )
         finally:

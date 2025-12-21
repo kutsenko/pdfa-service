@@ -148,35 +148,44 @@ pdfa-cli photo.jpg output.pdf --language eng
 pdfa-cli scan.png output.pdf
 pdfa-cli document.tiff output.pdf
 
-# NEW: Convert Office documents to plain PDF (fast pass-through, no PDF/A)
+# NEW: Convert to plain PDF instead of PDF/A (works with ANY input)
 pdfa-cli document.docx output.pdf --pdfa-level pdf
-pdfa-cli presentation.pptx output.pdf --pdfa-level pdf
-pdfa-cli spreadsheet.xlsx output.pdf --pdfa-level pdf
+pdfa-cli photo.jpg output.pdf --pdfa-level pdf
+pdfa-cli existing.pdf output.pdf --pdfa-level pdf --no-ocr
 ```
 
-#### Plain PDF Output (NEW)
+#### Plain PDF Output (NEW - Universal)
 
-For Office documents that already have structure tags and don't require PDF/A compliance, you can use the `--pdfa-level pdf` option for faster conversion:
+**All input types** (PDFs, Office documents, images) can now output plain PDF instead of PDF/A using `--pdfa-level pdf`:
 
 ```bash
-# Convert Office document to plain PDF (preserves accessibility tags)
-pdfa-cli document.docx output.pdf --pdfa-level pdf --language eng
+# Office document → PDF (fast, preserves accessibility)
+pdfa-cli document.docx output.pdf --pdfa-level pdf
 
-# Faster conversion, skips OCRmyPDF entirely for Office documents
-pdfa-cli presentation.pptx output.pdf --pdfa-level pdf
+# Image → PDF with OCR
+pdfa-cli photo.jpg output.pdf --pdfa-level pdf
+
+# Image → PDF without OCR
+pdfa-cli photo.jpg output.pdf --pdfa-level pdf --no-ocr
+
+# Existing PDF → Copy (no processing)
+pdfa-cli input.pdf output.pdf --pdfa-level pdf --no-ocr
+
+# Existing PDF → Add OCR if needed
+pdfa-cli input.pdf output.pdf --pdfa-level pdf
 ```
 
 **When to use `--pdfa-level pdf`:**
 - When PDF/A compliance is not required
-- For Office documents that already have proper formatting and accessibility
-- When you need faster conversion (5-15x faster than PDF/A)
-- To preserve vector graphics and fonts from Office documents
+- For faster conversion (especially with `--no-ocr`)
+- To preserve original formatting and fonts
+- When you just need a standard PDF output
 
 **Behavior:**
-- LibreOffice converts the document to PDF
-- OCRmyPDF is skipped entirely to preserve formatting and accessibility
-- Structure tags are preserved if present in the Office document
-- Significantly faster than PDF/A conversion
+- **With `--no-ocr`**: Direct copy/conversion without OCR processing (fastest)
+- **With OCR enabled** (default): OCR only runs if needed (auto-skipped for PDFs with text/tags)
+- Structure tags and formatting are preserved when present
+- Works with all input types: PDF, Office (DOCX/PPTX/XLSX), ODF (ODT/ODS/ODP), Images (JPG/PNG/TIFF)
 
 **Options**:
 - `-l, --language`: Tesseract language codes for OCR (default: `deu+eng`)
@@ -252,19 +261,38 @@ curl -X POST "http://localhost:8000/convert" \
   -F "file=@scan.png;type=image/png" \
   --output output.pdf
 
-# NEW: Convert Office documents to plain PDF (fast pass-through, no PDF/A)
+# NEW: Universal plain PDF output (works with ANY input type)
+
+# Office document → PDF (fast, preserves accessibility)
 curl -X POST "http://localhost:8000/convert" \
   -F "file=@document.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document" \
   -F "pdfa_level=pdf" \
   --output output.pdf
 
+# Image → PDF with OCR
 curl -X POST "http://localhost:8000/convert" \
-  -F "file=@presentation.pptx;type=application/vnd.openxmlformats-officedocument.presentationml.presentation" \
+  -F "file=@photo.jpg;type=image/jpeg" \
   -F "pdfa_level=pdf" \
   --output output.pdf
 
+# Image → PDF without OCR (fast)
 curl -X POST "http://localhost:8000/convert" \
-  -F "file=@document.tiff;type=image/tiff" \
+  -F "file=@photo.jpg;type=image/jpeg" \
+  -F "pdfa_level=pdf" \
+  -F "ocr_enabled=false" \
+  --output output.pdf
+
+# Existing PDF → Copy (no processing, fastest)
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@input.pdf;type=application/pdf" \
+  -F "pdfa_level=pdf" \
+  -F "ocr_enabled=false" \
+  --output output.pdf
+
+# Existing PDF → Add OCR if needed
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@input.pdf;type=application/pdf" \
+  -F "pdfa_level=pdf" \
   --output output.pdf
 ```
 
@@ -274,7 +302,7 @@ The service validates the upload, converts Office, OpenDocument, and image files
 
 - `file` (required): PDF, MS Office (DOCX, PPTX, XLSX), OpenDocument (ODT, ODS, ODP), or image (JPG, PNG, TIFF, BMP, GIF) file to convert
 - `language` (optional): Tesseract language codes for OCR (default: `deu+eng`)
-- `pdfa_level` (optional): PDF/A compliance level: `1`, `2`, or `3` (default: `2`)
+- `pdfa_level` (optional): PDF/A compliance level (`1`, `2`, `3`) or `pdf` for plain PDF output (default: `2`)
 - `ocr_enabled` (optional): Whether to perform OCR (default: `true`). Set to `false` to skip OCR.
 
 Example without OCR:

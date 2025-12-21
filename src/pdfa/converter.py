@@ -210,18 +210,15 @@ def convert_to_pdfa(
         logger.error(f"Input file does not exist: {input_pdf}")
         raise FileNotFoundError(f"Input file does not exist: {input_pdf}")
 
-    # PDF pass-through mode for Office documents
-    if pdfa_level == "pdf" and is_office_source:
-        logger.info(
-            f"PDF pass-through mode: Office document, output_format='pdf', "
-            f"skipping OCRmyPDF: {input_pdf}"
-        )
+    # Universal PDF pass-through mode (for all input types)
+    if pdfa_level == "pdf" and not ocr_enabled:
+        logger.info(f"PDF output mode: No OCR, copying file: {input_pdf}")
 
         # Check for tags (informational only)
         if has_pdf_tags(input_pdf):
-            logger.info(f"Office PDF has structure tags (preserved): {input_pdf}")
+            logger.info(f"PDF has structure tags (preserved): {input_pdf}")
         else:
-            logger.debug(f"Office PDF has no structure tags: {input_pdf}")
+            logger.debug(f"PDF has no structure tags: {input_pdf}")
 
         # Copy directly to output
         output_pdf.parent.mkdir(parents=True, exist_ok=True)
@@ -229,11 +226,14 @@ def convert_to_pdfa(
         logger.info(f"Successfully created PDF file (pass-through): {output_pdf}")
         return
 
-    # Validate pdfa_level for PDF/A mode
-    if pdfa_level not in ["1", "2", "3"]:
+    # Determine output type based on pdfa_level
+    if pdfa_level == "pdf":
+        output_type = "pdf"
+    elif pdfa_level in ["1", "2", "3"]:
+        output_type = f"pdfa-{pdfa_level}"
+    else:
         raise ValueError(
-            f"Invalid pdfa_level for PDF/A conversion: '{pdfa_level}'. "
-            f"Expected '1', '2', or '3'."
+            f"Invalid pdfa_level: '{pdfa_level}'. " f"Expected 'pdf', '1', '2', or '3'."
         )
 
     # Use provided compression config or load defaults
@@ -289,7 +289,7 @@ def convert_to_pdfa(
     )
 
     output_pdf.parent.mkdir(parents=True, exist_ok=True)
-    output_type = f"pdfa-{pdfa_level}"
+    # Note: output_type is already set above based on pdfa_level
 
     # Set up progress tracking via OCRmyPDF plugin system
     plugin_manager = None

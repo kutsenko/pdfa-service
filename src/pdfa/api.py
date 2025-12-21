@@ -297,7 +297,6 @@ async def convert_endpoint(
                 pdfa_level=pdfa_level,
                 ocr_enabled=ocr_enabled,
                 skip_ocr_on_tagged_pdfs=skip_ocr_on_tagged_pdfs,
-                is_office_source=is_office,
                 compression_config=selected_compression,
             )
 
@@ -451,11 +450,9 @@ async def process_conversion_job(job_id: str) -> None:
         # Determine file type and convert
         config = job.config
         pdf_path = job.input_path
-        is_office = False  # Track if this is an Office document
 
         # Convert office/image to PDF if needed
         if is_office_document(job.filename):
-            is_office = True
             logger.info(f"Converting Office document for job {job_id}")
             pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
             await asyncio.to_thread(
@@ -484,7 +481,6 @@ async def process_conversion_job(job_id: str) -> None:
             pdfa_level=config.get("pdfa_level", "2"),
             ocr_enabled=config.get("ocr_enabled", True),
             skip_ocr_on_tagged_pdfs=config.get("skip_ocr_on_tagged_pdfs", True),
-            is_office_source=is_office,
             compression_config=selected_compression,
             progress_callback=progress_callback,
             cancel_event=job.cancel_event,
