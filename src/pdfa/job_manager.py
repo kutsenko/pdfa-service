@@ -35,6 +35,7 @@ class Job:
         input_path: Path to input file
         output_path: Path to output file (when completed)
         config: Conversion configuration
+        user_id: User who created the job (None if auth disabled)
         created_at: Job creation timestamp
         started_at: Processing start timestamp
         completed_at: Completion timestamp
@@ -51,6 +52,7 @@ class Job:
     filename: str
     input_path: Path
     config: dict[str, Any]
+    user_id: str | None = None
     created_at: datetime = field(default_factory=datetime.now)
     started_at: datetime | None = None
     completed_at: datetime | None = None
@@ -133,7 +135,11 @@ class JobManager:
         self.keepalive_task: asyncio.Task | None = None
 
     def create_job(
-        self, filename: str, file_data: bytes, config: dict[str, Any]
+        self,
+        filename: str,
+        file_data: bytes,
+        config: dict[str, Any],
+        user_id: str | None = None,
     ) -> Job:
         """Create a new conversion job.
 
@@ -141,6 +147,7 @@ class JobManager:
             filename: Original filename
             file_data: File content as bytes
             config: Conversion configuration
+            user_id: User identifier (None if auth disabled)
 
         Returns:
             The created job
@@ -164,13 +171,17 @@ class JobManager:
             filename=filename,
             input_path=input_path,
             config=config,
+            user_id=user_id,
             temp_dir=temp_dir,
         )
 
         # Store job
         self.jobs[job_id] = job
 
-        logger.info(f"Created job {job_id} for file {filename}")
+        log_msg = f"Created job {job_id} for file {filename}"
+        if user_id:
+            log_msg += f" (user: {user_id})"
+        logger.info(log_msg)
         return job
 
     def get_job(self, job_id: str) -> Job:
