@@ -67,7 +67,11 @@ jobs:
           # Ignore GHSA-f83h-ghpp-7wcc: pdfminer.six pickle deserialization
           # Reason: Transitive dependency from ocrmypdf, not exploitable in our use case
           # We don't use CMap functionality and CMAP_PATH is not user-controllable
-          pip-audit --desc on --ignore-vuln GHSA-f83h-ghpp-7wcc
+          #
+          # Ignore CVE-2024-23342: ecdsa timing attack on P-256 curve
+          # Reason: Transitive dependency from python-jose, not exploitable in our use case
+          # We only use HMAC (HS256/HS384/HS512) for JWT signing, not ECDSA
+          pip-audit --desc on --ignore-vuln GHSA-f83h-ghpp-7wcc --ignore-vuln CVE-2024-23342
 
   build-and-push:
     needs: [test, security]

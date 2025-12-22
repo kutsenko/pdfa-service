@@ -10,10 +10,27 @@ from tempfile import TemporaryDirectory
 from typing import Literal
 from urllib.parse import quote
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile, WebSocket
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    WebSocket,
+)
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
+import pdfa.auth
+from pdfa.auth import (
+    GoogleOAuthClient,
+    WebSocketAuthenticator,
+    get_current_user,
+    get_current_user_optional,
+)
+from pdfa.auth_config import AuthConfig
 from pdfa.compression_config import PRESETS, CompressionConfig
 from pdfa.converter import convert_to_pdfa
 from pdfa.exceptions import (
@@ -31,6 +48,7 @@ from pdfa.image_converter import convert_image_to_pdf
 from pdfa.job_manager import get_job_manager
 from pdfa.logging_config import configure_logging, get_logger
 from pdfa.progress_tracker import ProgressInfo
+from pdfa.user_models import User
 from pdfa.websocket_protocol import (
     CancelJobMessage,
     CancelledMessage,
@@ -43,7 +61,7 @@ from pdfa.websocket_protocol import (
     parse_client_message,
 )
 
-PdfaLevel = Literal["1", "2", "3"]
+PdfaLevel = Literal["pdf", "1", "2", "3"]
 CompressionProfile = Literal["balanced", "quality", "aggressive", "minimal"]
 
 logger = get_logger(__name__)
@@ -62,6 +80,21 @@ logger.info(
 # many concurrent clients or slow network conditions.
 PROGRESS_BROADCAST_TIMEOUT = int(os.getenv("PROGRESS_BROADCAST_TIMEOUT", "10"))
 logger.info(f"Progress broadcast timeout: {PROGRESS_BROADCAST_TIMEOUT} seconds")
+
+# Load authentication configuration from environment variables
+auth_config_instance = AuthConfig.from_env()
+if auth_config_instance.enabled:
+    try:
+        auth_config_instance.validate()
+        logger.info("Authentication ENABLED - Google OAuth + JWT")
+    except ValueError as e:
+        logger.error(f"Invalid auth configuration: {e}")
+        raise
+else:
+    logger.info("Authentication DISABLED (PDFA_ENABLE_AUTH=false)")
+
+# Set global auth config in auth module
+pdfa.auth.auth_config = auth_config_instance
 
 app = FastAPI(
     title="PDF/A Conversion Service",
@@ -156,6 +189,88 @@ async def web_ui_lang(lang: str) -> str:
         """
 
 
+# Authentication endpoints
+
+
+@app.get("/health")
+async def health_check() -> dict[str, str]:
+    """Health check endpoint (always public, no auth required)."""
+    return {"status": "healthy"}
+
+
+@app.get("/auth/login")
+async def login(request: Request):
+    """Initiate Google OAuth login flow.
+
+    Returns:
+        RedirectResponse to Google OAuth consent page
+
+    Raises:
+        HTTPException: If authentication is disabled (404)
+
+    """
+    if not auth_config_instance.enabled:
+        raise HTTPException(status_code=404, detail="Authentication is disabled")
+
+    oauth_client = GoogleOAuthClient(auth_config_instance)
+    return await oauth_client.initiate_login(request)
+
+
+@app.get("/auth/callback")
+async def oauth_callback(request: Request):
+    """Handle Google OAuth callback and issue JWT token.
+
+    Args:
+        request: Request with 'code' and 'state' query parameters
+
+    Returns:
+        JSON with access_token and user info
+
+    Raises:
+        HTTPException: If authentication is disabled or callback fails
+
+    """
+    if not auth_config_instance.enabled:
+        raise HTTPException(status_code=404, detail="Authentication is disabled")
+
+    oauth_client = GoogleOAuthClient(auth_config_instance)
+    user, token = await oauth_client.handle_callback(request)
+
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "email": user.email,
+            "name": user.name,
+            "picture": user.picture,
+        },
+    }
+
+
+@app.get("/auth/user")
+async def get_user_info(current_user: User = Depends(get_current_user)):
+    """Get current authenticated user information.
+
+    Returns:
+        User information (email, name, picture)
+
+    Raises:
+        HTTPException: If not authenticated (401) or auth disabled (404)
+
+    """
+    if not auth_config_instance.enabled:
+        raise HTTPException(status_code=404, detail="Authentication is disabled")
+
+    return {
+        "email": current_user.email,
+        "name": current_user.name,
+        "picture": current_user.picture,
+    }
+
+
+# Conversion endpoints
+
+
 @app.post(
     "/convert",
     responses={
@@ -171,8 +286,9 @@ async def convert_endpoint(
     compression_profile: CompressionProfile = Form("balanced"),
     ocr_enabled: bool = Form(True),
     skip_ocr_on_tagged_pdfs: bool = Form(True),
+    current_user: User | None = Depends(get_current_user_optional),
 ) -> Response:
-    """Convert the uploaded PDF, Office, ODF, or image file into PDF/A.
+    """Convert the uploaded PDF, Office, ODF, or image file into PDF/A or plain PDF.
 
     Supports PDF, DOCX, PPTX, XLSX (MS Office), ODT, ODS, ODP (OpenDocument),
     and image files (JPG, PNG, TIFF, BMP, GIF). Office, ODF, and image files
@@ -181,10 +297,13 @@ async def convert_endpoint(
     Args:
         file: PDF, Office, ODF, or image file to convert.
         language: Tesseract language codes for OCR (default: 'deu+eng').
-        pdfa_level: PDF/A compliance level (default: '2').
+        pdfa_level: PDF/A compliance level ('1', '2', '3') or 'pdf' for plain PDF
+                   (default: '2'). When 'pdf' is selected with Office documents,
+                   OCRmyPDF is skipped to preserve accessibility.
         compression_profile: Compression profile to use (default: 'balanced').
         ocr_enabled: Whether to perform OCR (default: True).
         skip_ocr_on_tagged_pdfs: Skip OCR for tagged PDFs (default: True).
+        current_user: Authenticated user (optional, injected by FastAPI).
 
     """
     logger.info(
@@ -282,7 +401,7 @@ async def convert_endpoint(
                 # Run blocking operation in thread pool to avoid blocking event loop
                 await asyncio.to_thread(convert_image_to_pdf, input_path, pdf_path)
 
-            # Convert to PDF/A
+            # Convert to PDF/A or plain PDF
             output_path = tmp_path / "output.pdf"
             # Select compression configuration from profile
             selected_compression = PRESETS.get(compression_profile, compression_config)
@@ -554,6 +673,18 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     logger.info("WebSocket connection established")
 
+    # Authenticate WebSocket if auth is enabled
+    current_user: User | None = None
+    if auth_config_instance.enabled:
+        try:
+            authenticator = WebSocketAuthenticator(auth_config_instance)
+            current_user = await authenticator.authenticate_websocket(websocket)
+            logger.info(f"WebSocket authenticated for user: {current_user.email}")
+        except HTTPException as e:
+            logger.warning(f"WebSocket authentication failed: {e.detail}")
+            await websocket.close(code=1008, reason=e.detail)
+            return
+
     current_job_id: str | None = None
 
     try:
@@ -569,6 +700,7 @@ async def websocket_endpoint(websocket: WebSocket):
                         filename=message.filename,
                         file_data=file_data,
                         config=message.config or {},
+                        user_id=current_user.user_id if current_user else None,
                     )
                     current_job_id = job.job_id
 
@@ -621,7 +753,10 @@ async def websocket_endpoint(websocket: WebSocket):
 
 
 @app.get("/api/v1/jobs/{job_id}/status")
-async def get_job_status(job_id: str):
+async def get_job_status(
+    job_id: str,
+    current_user: User | None = Depends(get_current_user_optional),
+):
     """Get the current status of a conversion job.
 
     This endpoint is useful for clients that have lost their WebSocket connection
@@ -629,6 +764,7 @@ async def get_job_status(job_id: str):
 
     Args:
         job_id: The job ID
+        current_user: Authenticated user (if auth enabled)
 
     Returns:
         Job status information including:
@@ -642,7 +778,7 @@ async def get_job_status(job_id: str):
         - error: Error message (only if status is failed)
 
     Raises:
-        HTTPException: If job not found (404)
+        HTTPException: If job not found (404) or access denied (403)
 
     Example:
         GET /api/v1/jobs/abc123/status
@@ -661,6 +797,15 @@ async def get_job_status(job_id: str):
         job = job_manager.get_job(job_id)
     except JobNotFoundException:
         raise HTTPException(status_code=404, detail="Job not found")
+
+    # Check job ownership if auth is enabled
+    if auth_config_instance.enabled and current_user:
+        if job.user_id != current_user.user_id:
+            logger.warning(
+                f"User {current_user.email} attempted to access job {job_id} "
+                f"owned by {job.user_id}"
+            )
+            raise HTTPException(status_code=403, detail="Access denied to this job")
 
     # Build response with current job status
     response = {
@@ -689,23 +834,36 @@ async def get_job_status(job_id: str):
 
 
 @app.get("/download/{job_id}")
-async def download_result(job_id: str):
+async def download_result(
+    job_id: str,
+    current_user: User | None = Depends(get_current_user_optional),
+):
     """Download the converted PDF for a completed job.
 
     Args:
         job_id: The job ID
+        current_user: Authenticated user (if auth enabled)
 
     Returns:
         The converted PDF file
 
     Raises:
-        HTTPException: If job not found or not completed
+        HTTPException: If job not found, not completed, or access denied
 
     """
     try:
         job = job_manager.get_job(job_id)
     except JobNotFoundException:
         raise HTTPException(status_code=404, detail="Job not found")
+
+    # Check job ownership if auth is enabled
+    if auth_config_instance.enabled and current_user:
+        if job.user_id != current_user.user_id:
+            logger.warning(
+                f"User {current_user.email} attempted to download job {job_id} "
+                f"owned by {job.user_id}"
+            )
+            raise HTTPException(status_code=403, detail="Access denied to this job")
 
     if job.status != "completed":
         raise HTTPException(

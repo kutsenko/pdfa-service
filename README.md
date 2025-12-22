@@ -147,11 +147,49 @@ pdfa-cli spreadsheet.ods output.pdf
 pdfa-cli photo.jpg output.pdf --language eng
 pdfa-cli scan.png output.pdf
 pdfa-cli document.tiff output.pdf
+
+# NEW: Convert to plain PDF instead of PDF/A (works with ANY input)
+pdfa-cli document.docx output.pdf --pdfa-level pdf
+pdfa-cli photo.jpg output.pdf --pdfa-level pdf
+pdfa-cli existing.pdf output.pdf --pdfa-level pdf --no-ocr
 ```
+
+#### Plain PDF Output (NEW - Universal)
+
+**All input types** (PDFs, Office documents, images) can now output plain PDF instead of PDF/A using `--pdfa-level pdf`:
+
+```bash
+# Office document → PDF (fast, preserves accessibility)
+pdfa-cli document.docx output.pdf --pdfa-level pdf
+
+# Image → PDF with OCR
+pdfa-cli photo.jpg output.pdf --pdfa-level pdf
+
+# Image → PDF without OCR
+pdfa-cli photo.jpg output.pdf --pdfa-level pdf --no-ocr
+
+# Existing PDF → Copy (no processing)
+pdfa-cli input.pdf output.pdf --pdfa-level pdf --no-ocr
+
+# Existing PDF → Add OCR if needed
+pdfa-cli input.pdf output.pdf --pdfa-level pdf
+```
+
+**When to use `--pdfa-level pdf`:**
+- When PDF/A compliance is not required
+- For faster conversion (especially with `--no-ocr`)
+- To preserve original formatting and fonts
+- When you just need a standard PDF output
+
+**Behavior:**
+- **With `--no-ocr`**: Direct copy/conversion without OCR processing (fastest)
+- **With OCR enabled** (default): OCR only runs if needed (auto-skipped for PDFs with text/tags)
+- Structure tags and formatting are preserved when present
+- Works with all input types: PDF, Office (DOCX/PPTX/XLSX), ODF (ODT/ODS/ODP), Images (JPG/PNG/TIFF)
 
 **Options**:
 - `-l, --language`: Tesseract language codes for OCR (default: `deu+eng`)
-- `--pdfa-level`: PDF/A compliance level (1, 2, or 3; default: `2`)
+- `--pdfa-level`: PDF/A compliance level (1, 2, or 3) or 'pdf' for plain PDF output (default: `2`)
 - `--no-ocr`: Disable OCR and convert without text recognition
 - `--force-ocr-on-tagged-pdfs`: Force OCR on PDFs with structure tags. By default, OCR is skipped for tagged PDFs to preserve accessibility information
 - `-v, --verbose`: Enable verbose (debug) logging
@@ -223,8 +261,38 @@ curl -X POST "http://localhost:8000/convert" \
   -F "file=@scan.png;type=image/png" \
   --output output.pdf
 
+# NEW: Universal plain PDF output (works with ANY input type)
+
+# Office document → PDF (fast, preserves accessibility)
 curl -X POST "http://localhost:8000/convert" \
-  -F "file=@document.tiff;type=image/tiff" \
+  -F "file=@document.docx;type=application/vnd.openxmlformats-officedocument.wordprocessingml.document" \
+  -F "pdfa_level=pdf" \
+  --output output.pdf
+
+# Image → PDF with OCR
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@photo.jpg;type=image/jpeg" \
+  -F "pdfa_level=pdf" \
+  --output output.pdf
+
+# Image → PDF without OCR (fast)
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@photo.jpg;type=image/jpeg" \
+  -F "pdfa_level=pdf" \
+  -F "ocr_enabled=false" \
+  --output output.pdf
+
+# Existing PDF → Copy (no processing, fastest)
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@input.pdf;type=application/pdf" \
+  -F "pdfa_level=pdf" \
+  -F "ocr_enabled=false" \
+  --output output.pdf
+
+# Existing PDF → Add OCR if needed
+curl -X POST "http://localhost:8000/convert" \
+  -F "file=@input.pdf;type=application/pdf" \
+  -F "pdfa_level=pdf" \
   --output output.pdf
 ```
 
@@ -234,7 +302,7 @@ The service validates the upload, converts Office, OpenDocument, and image files
 
 - `file` (required): PDF, MS Office (DOCX, PPTX, XLSX), OpenDocument (ODT, ODS, ODP), or image (JPG, PNG, TIFF, BMP, GIF) file to convert
 - `language` (optional): Tesseract language codes for OCR (default: `deu+eng`)
-- `pdfa_level` (optional): PDF/A compliance level: `1`, `2`, or `3` (default: `2`)
+- `pdfa_level` (optional): PDF/A compliance level (`1`, `2`, `3`) or `pdf` for plain PDF output (default: `2`)
 - `ocr_enabled` (optional): Whether to perform OCR (default: `true`). Set to `false` to skip OCR.
 
 Example without OCR:
@@ -245,6 +313,95 @@ curl -X POST "http://localhost:8000/convert" \
   -F "ocr_enabled=false" \
   --output output.pdf
 ```
+
+## Authentication (Optional)
+
+The service supports optional Google OAuth 2.0 authentication to restrict access to authorized users. When enabled, users must sign in with their Google account to use the web interface and API.
+
+### Enabling Authentication
+
+Authentication is **disabled by default**. To enable it, configure the following environment variables:
+
+```bash
+# Enable authentication
+export PDFA_ENABLE_AUTH=true
+
+# Google OAuth credentials (from Google Cloud Console)
+export GOOGLE_CLIENT_ID="your-client-id.apps.googleusercontent.com"
+export GOOGLE_CLIENT_SECRET="your-client-secret"
+
+# JWT secret key (generate with: openssl rand -hex 32)
+export JWT_SECRET_KEY="your-secret-key-min-32-chars"
+
+# Optional: Customize JWT expiry (default: 24 hours)
+export JWT_EXPIRY_HOURS=24
+
+# Optional: OAuth callback URL (default: http://localhost:8000/auth/callback)
+export OAUTH_REDIRECT_URI="http://localhost:8000/auth/callback"
+```
+
+### Google Cloud Console Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Navigate to **APIs & Services** → **Credentials**
+4. Click **Create Credentials** → **OAuth client ID**
+5. Select **Web application** as application type
+6. Add authorized redirect URIs:
+   - For local development: `http://localhost:8000/auth/callback`
+   - For production: `https://your-domain.com/auth/callback`
+7. Copy the **Client ID** and **Client Secret**
+8. Set them as environment variables
+
+### Using the API with Authentication
+
+When authentication is enabled, API requests require a JWT bearer token:
+
+```bash
+# Step 1: Obtain a token (use the web interface to login, then extract from browser)
+# Or implement the OAuth flow in your client application
+
+# Step 2: Make authenticated API requests
+curl -X POST "http://localhost:8000/convert" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -F "file=@document.pdf;type=application/pdf" \
+  --output output.pdf
+```
+
+### Web Interface with Authentication
+
+When authentication is enabled:
+1. Users are presented with a "Sign in with Google" button
+2. After successful login, the user's profile is displayed in the top bar
+3. All API calls from the web interface include the JWT token automatically
+4. Users can sign out using the "Sign Out" button
+
+### Authentication Features
+
+- **User-scoped jobs**: Each user can only access their own conversion jobs
+- **Secure token storage**: JWT tokens stored in browser localStorage
+- **Automatic auth detection**: Web interface auto-detects if auth is enabled
+- **24-hour token expiry**: Users must re-login daily (configurable)
+- **WebSocket authentication**: Real-time progress updates are also authenticated
+
+### Public Endpoints (Always Accessible)
+
+Even with authentication enabled, these endpoints remain public:
+- `GET /health` - Health check for monitoring
+- `GET /auth/login` - Initiates OAuth login flow
+- `GET /auth/callback` - Handles OAuth callback
+- `GET /docs` - API documentation (Swagger UI)
+
+### Disabling Authentication
+
+To disable authentication, simply remove or set to `false`:
+
+```bash
+export PDFA_ENABLE_AUTH=false
+# or remove the variable entirely
+```
+
+When disabled, all endpoints are publicly accessible without authentication (default behavior).
 
 ## Advanced Usage
 

@@ -59,9 +59,13 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--pdfa-level",
-        choices=["1", "2", "3"],
+        choices=["pdf", "1", "2", "3"],
         default="2",
-        help="PDF/A compliance level to target. Defaults to '2'.",
+        help=(
+            "PDF/A compliance level (1, 2, 3) or 'pdf' for plain PDF output. "
+            "When 'pdf' is selected with Office documents, OCRmyPDF is skipped "
+            "to preserve accessibility. Defaults to '2'."
+        ),
     )
     parser.add_argument(
         "--no-ocr",
@@ -154,7 +158,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 convert_image_to_pdf(temp_input_file, pdf_file)
 
         try:
-            # Convert to PDF/A
+            # Convert to PDF/A or plain PDF
             convert_to_pdfa(
                 pdf_file,
                 args.output_pdf,
@@ -191,8 +195,12 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(f"Error: {error}", file=sys.stderr)
         return 1
 
-    logger.info(f"Successfully created PDF/A file at {args.output_pdf}")
-    print(f"Successfully created PDF/A file at {args.output_pdf}")
+    if args.pdfa_level == "pdf":
+        logger.info(f"Successfully created PDF file at {args.output_pdf}")
+        print(f"Successfully created PDF file at {args.output_pdf}")
+    else:
+        logger.info(f"Successfully created PDF/A file at {args.output_pdf}")
+        print(f"Successfully created PDF/A file at {args.output_pdf}")
     return 0
 
 

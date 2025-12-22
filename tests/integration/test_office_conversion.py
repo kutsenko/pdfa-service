@@ -499,7 +499,9 @@ class TestOfficeConversion:
         from pdfa.cli import main
 
         output_pdf = tmp_path / "output.pdf"
-        exit_code = main([str(test_files["docx"]), str(output_pdf)])
+        exit_code = main(
+            [str(test_files["docx"]), str(output_pdf), "--language", "eng"]
+        )
 
         assert exit_code == 0
         assert output_pdf.exists()
@@ -697,7 +699,7 @@ class TestSpecialFilenames:
         create_test_docx(docx_file)
 
         output_pdf = tmp_path / "output.pdf"
-        exit_code = main([str(docx_file), str(output_pdf)])
+        exit_code = main([str(docx_file), str(output_pdf), "--language", "eng"])
 
         assert exit_code == 0
         assert output_pdf.exists()
@@ -717,7 +719,7 @@ class TestSpecialFilenames:
         create_test_docx(docx_file)
 
         output_pdf = tmp_path / "output.pdf"
-        exit_code = main([str(docx_file), str(output_pdf)])
+        exit_code = main([str(docx_file), str(output_pdf), "--language", "eng"])
 
         assert exit_code == 0
         assert output_pdf.exists()

@@ -239,22 +239,40 @@ Both interfaces must translate low-level errors consistently:
 
 ## Testing Architecture - Test-Driven Development (TDD) Required
 
-### TDD Principle
+### TDD Principle - STRICTLY ENFORCED
 
-**All development must follow Test-Driven Development (TDD):**
+**MANDATORY: All development MUST follow Test-Driven Development (TDD).**
 
-1. **Write tests first** for the feature or fix you plan to implement
-2. **Write minimal production code** to make tests pass
-3. **Refactor code** while keeping tests green
-4. **Repeat** for each new feature or behavior
+This is not optional. The TDD workflow is:
 
-This ensures:
+1. **FIRST: Write failing tests** for the feature or fix you plan to implement
+   - Write unit tests that define the expected behavior
+   - Run tests and verify they FAIL (red phase)
+   - This proves the tests are actually testing something
+
+2. **SECOND: Write minimal production code** to make tests pass
+   - Implement only what's needed to pass the tests
+   - Run tests and verify they PASS (green phase)
+   - Do not add extra functionality not covered by tests
+
+3. **THIRD: Refactor code** while keeping tests green
+   - Clean up, optimize, improve code quality
+   - Run tests continuously to ensure nothing breaks
+   - All tests must remain green (passing)
+
+4. **REPEAT** for each new feature, bug fix, or behavior change
+
+**ABSOLUTE RULE**:
+- **NO production code may be written before tests exist for it**
+- **NO pull requests will be accepted with untested code**
+- **NO commits should contain implementation without corresponding tests**
+
+This strict TDD approach ensures:
 - Better code design (writing tests first forces you to think about interfaces)
-- Comprehensive test coverage (all functionality is tested)
+- Comprehensive test coverage (all functionality is tested by definition)
 - Confidence in changes (tests prevent regressions)
-- Documentation through tests (tests show how code should be used)
-
-**Rule**: No production code changes are accepted without corresponding tests written first.
+- Documentation through tests (tests show exactly how code should be used)
+- Faster debugging (issues are caught immediately during development)
 
 ### Test Pyramid
 
