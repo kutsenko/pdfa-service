@@ -14,6 +14,7 @@ class User:
         email: User email address
         name: User display name
         picture: Profile picture URL (optional)
+
     """
 
     user_id: str
@@ -26,6 +27,7 @@ class User:
 
         Returns:
             Dictionary with user data.
+
         """
         return {
             "user_id": self.user_id,
@@ -51,6 +53,7 @@ class User:
                 "name": "John Doe",
                 "picture": "https://lh3.googleusercontent.com/..."
             }
+
         """
         return cls(
             user_id=userinfo["sub"],

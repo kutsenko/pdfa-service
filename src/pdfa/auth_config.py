@@ -18,6 +18,7 @@ class AuthConfig:
         jwt_algorithm: Algorithm for JWT signing (default: HS256)
         jwt_expiry_hours: JWT token expiry in hours (default: 24)
         redirect_uri: OAuth callback URL
+
     """
 
     enabled: bool
@@ -43,6 +44,7 @@ class AuthConfig:
             JWT_ALGORITHM: JWT signing algorithm (default: HS256)
             JWT_EXPIRY_HOURS: JWT expiry in hours (default: 24)
             OAUTH_REDIRECT_URI: OAuth callback URL
+
         """
         enabled_val = os.getenv("PDFA_ENABLE_AUTH", "false").lower()
         enabled = enabled_val in ("true", "1", "yes")
@@ -64,6 +66,7 @@ class AuthConfig:
 
         Raises:
             ValueError: If required configuration is missing when auth is enabled.
+
         """
         if not self.enabled:
             return

@@ -85,7 +85,6 @@ def valid_jwt_token(auth_config_enabled, test_user):
 @pytest.fixture
 def expired_jwt_token(auth_config_enabled, test_user):
     """Generate an expired JWT token for testing."""
-    from pdfa.auth import create_jwt_token
     from datetime import datetime, timedelta
 
     # Create token with past expiry
@@ -101,7 +100,9 @@ def expired_jwt_token(auth_config_enabled, test_user):
     }
 
     return jose.jwt.encode(
-        payload, auth_config_enabled.jwt_secret_key, algorithm=auth_config_enabled.jwt_algorithm
+        payload,
+        auth_config_enabled.jwt_secret_key,
+        algorithm=auth_config_enabled.jwt_algorithm,
     )
 
 

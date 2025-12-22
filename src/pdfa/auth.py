@@ -29,6 +29,7 @@ def create_jwt_token(user: User, config: AuthConfig) -> str:
 
     Returns:
         Signed JWT token string
+
     """
     now = datetime.utcnow()
     expires_at = now + timedelta(hours=config.jwt_expiry_hours)
@@ -58,6 +59,7 @@ def decode_jwt_token(token: str, config: AuthConfig) -> User:
 
     Raises:
         HTTPException: If token is invalid or expired (401)
+
     """
     try:
         payload = jwt.decode(
@@ -92,13 +94,12 @@ async def get_current_user(request: Request) -> User:
 
     Raises:
         HTTPException: If authentication fails (401)
+
     """
     global auth_config
 
     if auth_config is None:
-        raise HTTPException(
-            status_code=500, detail="Authentication not configured"
-        )
+        raise HTTPException(status_code=500, detail="Authentication not configured")
 
     # Extract token from Authorization header
     auth_header = request.headers.get("Authorization")
@@ -137,6 +138,7 @@ async def get_current_user_optional(request: Request) -> User | None:
 
     Returns:
         Authenticated user or None if auth is disabled
+
     """
     global auth_config
 
@@ -156,6 +158,7 @@ class GoogleOAuthClient:
 
         Args:
             config: Auth configuration
+
         """
         self.config = config
         self.oauth = OAuth()
@@ -178,6 +181,7 @@ class GoogleOAuthClient:
 
         Returns:
             Google OAuth authorization URL
+
         """
         # Generate CSRF state token
         state = secrets.token_urlsafe(32)
@@ -204,6 +208,7 @@ class GoogleOAuthClient:
 
         Returns:
             RedirectResponse to Google OAuth
+
         """
         from fastapi.responses import RedirectResponse
 
@@ -220,6 +225,7 @@ class GoogleOAuthClient:
 
         Returns:
             Token response dict with access_token
+
         """
         import httpx
 
@@ -246,6 +252,7 @@ class GoogleOAuthClient:
 
         Returns:
             User info dict (sub, email, name, picture)
+
         """
         import httpx
 
@@ -269,15 +276,14 @@ class GoogleOAuthClient:
 
         Raises:
             HTTPException: If callback validation fails
+
         """
         # Extract code and state from query params
         code = request.query_params.get("code")
         state = request.query_params.get("state")
 
         if not code:
-            raise HTTPException(
-                status_code=400, detail="Missing authorization code"
-            )
+            raise HTTPException(status_code=400, detail="Missing authorization code")
 
         if not state:
             raise HTTPException(status_code=400, detail="Missing state parameter")
@@ -309,9 +315,7 @@ class GoogleOAuthClient:
 
         except Exception as e:
             logger.error(f"OAuth callback error: {e}")
-            raise HTTPException(
-                status_code=500, detail="Authentication failed"
-            )
+            raise HTTPException(status_code=500, detail="Authentication failed")
 
 
 class WebSocketAuthenticator:
@@ -322,6 +326,7 @@ class WebSocketAuthenticator:
 
         Args:
             config: Auth configuration
+
         """
         self.config = config
 
@@ -336,6 +341,7 @@ class WebSocketAuthenticator:
 
         Raises:
             HTTPException: If authentication fails (401)
+
         """
         # Extract token from query params (WebSocket doesn't support headers in browser)
         token = websocket.query_params.get("token")

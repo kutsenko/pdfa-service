@@ -10,10 +10,20 @@ from tempfile import TemporaryDirectory
 from typing import Literal
 from urllib.parse import quote
 
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, WebSocket
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    WebSocket,
+)
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
+import pdfa.auth
 from pdfa.auth import (
     GoogleOAuthClient,
     WebSocketAuthenticator,
@@ -22,7 +32,6 @@ from pdfa.auth import (
 )
 from pdfa.auth_config import AuthConfig
 from pdfa.compression_config import PRESETS, CompressionConfig
-from pdfa.user_models import User
 from pdfa.converter import convert_to_pdfa
 from pdfa.exceptions import (
     JobCancelledException,
@@ -39,6 +48,7 @@ from pdfa.image_converter import convert_image_to_pdf
 from pdfa.job_manager import get_job_manager
 from pdfa.logging_config import configure_logging, get_logger
 from pdfa.progress_tracker import ProgressInfo
+from pdfa.user_models import User
 from pdfa.websocket_protocol import (
     CancelJobMessage,
     CancelledMessage,
@@ -84,7 +94,6 @@ else:
     logger.info("Authentication DISABLED (PDFA_ENABLE_AUTH=false)")
 
 # Set global auth config in auth module
-import pdfa.auth
 pdfa.auth.auth_config = auth_config_instance
 
 app = FastAPI(
@@ -198,6 +207,7 @@ async def login(request: Request):
 
     Raises:
         HTTPException: If authentication is disabled (404)
+
     """
     if not auth_config_instance.enabled:
         raise HTTPException(status_code=404, detail="Authentication is disabled")
@@ -218,6 +228,7 @@ async def oauth_callback(request: Request):
 
     Raises:
         HTTPException: If authentication is disabled or callback fails
+
     """
     if not auth_config_instance.enabled:
         raise HTTPException(status_code=404, detail="Authentication is disabled")
@@ -245,6 +256,7 @@ async def get_user_info(current_user: User = Depends(get_current_user)):
 
     Raises:
         HTTPException: If not authenticated (401) or auth disabled (404)
+
     """
     if not auth_config_instance.enabled:
         raise HTTPException(status_code=404, detail="Authentication is disabled")
@@ -291,6 +303,7 @@ async def convert_endpoint(
         compression_profile: Compression profile to use (default: 'balanced').
         ocr_enabled: Whether to perform OCR (default: True).
         skip_ocr_on_tagged_pdfs: Skip OCR for tagged PDFs (default: True).
+        current_user: Authenticated user (optional, injected by FastAPI).
 
     """
     logger.info(

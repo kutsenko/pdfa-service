@@ -66,7 +66,7 @@ def test_pdf_with_spaces_in_filename(tmp_path) -> None:
     output_pdf = tmp_path / "output.pdf"
     create_sample_pdf(str(input_pdf), text="PDF with spaces")
 
-    exit_code = cli.main([str(input_pdf), str(output_pdf)])
+    exit_code = cli.main([str(input_pdf), str(output_pdf), "--language", "eng"])
 
     assert exit_code == 0
     assert output_pdf.exists()
@@ -81,7 +81,7 @@ def test_pdf_with_multiple_spaces(tmp_path) -> None:
     output_pdf = tmp_path / "output.pdf"
     create_sample_pdf(str(input_pdf), text="Multiple spaces")
 
-    exit_code = cli.main([str(input_pdf), str(output_pdf)])
+    exit_code = cli.main([str(input_pdf), str(output_pdf), "--language", "eng"])
 
     assert exit_code == 0
     assert output_pdf.exists()
@@ -96,7 +96,7 @@ def test_pdf_with_special_characters(tmp_path) -> None:
     output_pdf = tmp_path / "output.pdf"
     create_sample_pdf(str(input_pdf), text="Special chars")
 
-    exit_code = cli.main([str(input_pdf), str(output_pdf)])
+    exit_code = cli.main([str(input_pdf), str(output_pdf), "--language", "eng"])
 
     assert exit_code == 0
     assert output_pdf.exists()
@@ -111,7 +111,7 @@ def test_pdf_with_underscores(tmp_path) -> None:
     output_pdf = tmp_path / "output.pdf"
     create_sample_pdf(str(input_pdf), text="Underscores")
 
-    exit_code = cli.main([str(input_pdf), str(output_pdf)])
+    exit_code = cli.main([str(input_pdf), str(output_pdf), "--language", "eng"])
 
     assert exit_code == 0
     assert output_pdf.exists()
@@ -130,7 +130,7 @@ def test_pdf_with_long_filename(tmp_path) -> None:
     output_pdf = tmp_path / "output.pdf"
     create_sample_pdf(str(input_pdf), text="Long name")
 
-    exit_code = cli.main([str(input_pdf), str(output_pdf)])
+    exit_code = cli.main([str(input_pdf), str(output_pdf), "--language", "eng"])
 
     assert exit_code == 0
     assert output_pdf.exists()
@@ -145,7 +145,7 @@ def test_pdf_with_german_umlauts(tmp_path) -> None:
     output_pdf = tmp_path / "output.pdf"
     create_sample_pdf(str(input_pdf), text="German umlauts")
 
-    exit_code = cli.main([str(input_pdf), str(output_pdf)])
+    exit_code = cli.main([str(input_pdf), str(output_pdf), "--language", "eng"])
 
     assert exit_code == 0
     assert output_pdf.exists()
@@ -160,7 +160,7 @@ def test_pdf_with_dashes_and_dots(tmp_path) -> None:
     output_pdf = tmp_path / "output.pdf"
     create_sample_pdf(str(input_pdf), text="Dashes and dots")
 
-    exit_code = cli.main([str(input_pdf), str(output_pdf)])
+    exit_code = cli.main([str(input_pdf), str(output_pdf), "--language", "eng"])
 
     assert exit_code == 0
     assert output_pdf.exists()

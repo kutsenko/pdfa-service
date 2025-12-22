@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import HTTPException
 
 from pdfa.auth_config import AuthConfig
-from pdfa.user_models import User
-
 
 # AuthConfig Tests
 
@@ -96,8 +94,9 @@ def test_auth_config_validation_unsupported_algorithm():
 
 def test_create_jwt_token(auth_config_enabled, test_user):
     """JWT token is created with correct payload."""
-    from pdfa.auth import create_jwt_token
     import jose.jwt
+
+    from pdfa.auth import create_jwt_token
 
     token = create_jwt_token(test_user, auth_config_enabled)
 
@@ -171,9 +170,9 @@ def test_decode_jwt_token_malformed(auth_config_enabled):
 
 def test_jwt_token_expiry_time(auth_config_enabled, test_user):
     """JWT token expires at correct time."""
-    from pdfa.auth import create_jwt_token
     import jose.jwt
-    from datetime import datetime
+
+    from pdfa.auth import create_jwt_token
 
     token = create_jwt_token(test_user, auth_config_enabled)
 
@@ -197,10 +196,13 @@ def test_jwt_token_expiry_time(auth_config_enabled, test_user):
 
 
 @pytest.mark.asyncio
-async def test_get_current_user_with_valid_token(auth_config_enabled, valid_jwt_token, test_user):
+async def test_get_current_user_with_valid_token(
+    auth_config_enabled, valid_jwt_token, test_user
+):
     """get_current_user returns user with valid token."""
-    from pdfa.auth import get_current_user
     from fastapi import Request
+
+    from pdfa.auth import get_current_user
 
     # Mock request with Authorization header
     request = MagicMock(spec=Request)
@@ -217,8 +219,9 @@ async def test_get_current_user_with_valid_token(auth_config_enabled, valid_jwt_
 @pytest.mark.asyncio
 async def test_get_current_user_missing_token(auth_config_enabled):
     """get_current_user raises 401 when token is missing."""
-    from pdfa.auth import get_current_user
     from fastapi import Request
+
+    from pdfa.auth import get_current_user
 
     request = MagicMock(spec=Request)
     request.headers = {}
@@ -233,8 +236,9 @@ async def test_get_current_user_missing_token(auth_config_enabled):
 @pytest.mark.asyncio
 async def test_get_current_user_invalid_token_format(auth_config_enabled):
     """get_current_user raises 401 with invalid token format."""
-    from pdfa.auth import get_current_user
     from fastapi import Request
+
+    from pdfa.auth import get_current_user
 
     request = MagicMock(spec=Request)
     request.headers = {"Authorization": "InvalidFormat token"}
@@ -249,8 +253,9 @@ async def test_get_current_user_invalid_token_format(auth_config_enabled):
 @pytest.mark.asyncio
 async def test_get_current_user_optional_with_auth_disabled(auth_config_disabled):
     """get_current_user_optional returns None when auth disabled."""
-    from pdfa.auth import get_current_user_optional
     from fastapi import Request
+
+    from pdfa.auth import get_current_user_optional
 
     request = MagicMock(spec=Request)
     request.headers = {}
@@ -262,10 +267,13 @@ async def test_get_current_user_optional_with_auth_disabled(auth_config_disabled
 
 
 @pytest.mark.asyncio
-async def test_get_current_user_optional_with_auth_enabled(auth_config_enabled, valid_jwt_token, test_user):
+async def test_get_current_user_optional_with_auth_enabled(
+    auth_config_enabled, valid_jwt_token, test_user
+):
     """get_current_user_optional returns user when auth enabled and token valid."""
-    from pdfa.auth import get_current_user_optional
     from fastapi import Request
+
+    from pdfa.auth import get_current_user_optional
 
     request = MagicMock(spec=Request)
     request.headers = {"Authorization": f"Bearer {valid_jwt_token}"}
@@ -283,14 +291,19 @@ async def test_get_current_user_optional_with_auth_enabled(auth_config_enabled, 
 @pytest.mark.asyncio
 async def test_google_oauth_initiate_login(auth_config_enabled):
     """GoogleOAuthClient initiates login redirect."""
-    from pdfa.auth import GoogleOAuthClient
     from fastapi import Request
     from fastapi.responses import RedirectResponse
+
+    from pdfa.auth import GoogleOAuthClient
 
     request = MagicMock(spec=Request)
     client = GoogleOAuthClient(auth_config_enabled)
 
-    with patch.object(client, "_get_authorization_url", return_value="https://accounts.google.com/o/oauth2/auth?..."):
+    with patch.object(
+        client,
+        "_get_authorization_url",
+        return_value="https://accounts.google.com/o/oauth2/auth?...",
+    ):
         response = await client.initiate_login(request)
 
     assert isinstance(response, RedirectResponse)
@@ -300,13 +313,18 @@ async def test_google_oauth_initiate_login(auth_config_enabled):
 @pytest.mark.asyncio
 async def test_google_oauth_callback_success(auth_config_enabled, test_user):
     """GoogleOAuthClient handles callback and returns user + token."""
-    from pdfa.auth import GoogleOAuthClient
     from fastapi import Request
+
+    from pdfa.auth import GoogleOAuthClient
 
     request = MagicMock(spec=Request)
     request.query_params = {"code": "auth_code_123", "state": "state_123"}
 
     client = GoogleOAuthClient(auth_config_enabled)
+
+    # Add state to storage (simulating initiate_login was called)
+
+    client._state_storage["state_123"] = datetime.utcnow().isoformat()
 
     # Mock OAuth token exchange
     mock_token_response = {"access_token": "access_token_123"}
@@ -317,8 +335,12 @@ async def test_google_oauth_callback_success(auth_config_enabled, test_user):
         "picture": test_user.picture,
     }
 
-    with patch.object(client, "_exchange_code_for_token", return_value=mock_token_response), \
-         patch.object(client, "_get_user_info", return_value=mock_userinfo):
+    with (
+        patch.object(
+            client, "_exchange_code_for_token", return_value=mock_token_response
+        ),
+        patch.object(client, "_get_user_info", return_value=mock_userinfo),
+    ):
         user, token = await client.handle_callback(request)
 
     assert user.user_id == test_user.user_id
@@ -330,8 +352,9 @@ async def test_google_oauth_callback_success(auth_config_enabled, test_user):
 @pytest.mark.asyncio
 async def test_google_oauth_callback_missing_code(auth_config_enabled):
     """GoogleOAuthClient raises error when code is missing."""
-    from pdfa.auth import GoogleOAuthClient
     from fastapi import Request
+
+    from pdfa.auth import GoogleOAuthClient
 
     request = MagicMock(spec=Request)
     request.query_params = {}
@@ -348,10 +371,13 @@ async def test_google_oauth_callback_missing_code(auth_config_enabled):
 
 
 @pytest.mark.asyncio
-async def test_websocket_authenticator_valid_token(auth_config_enabled, valid_jwt_token, test_user):
+async def test_websocket_authenticator_valid_token(
+    auth_config_enabled, valid_jwt_token, test_user
+):
     """WebSocketAuthenticator validates token from query params."""
-    from pdfa.auth import WebSocketAuthenticator
     from fastapi import WebSocket
+
+    from pdfa.auth import WebSocketAuthenticator
 
     websocket = MagicMock(spec=WebSocket)
     websocket.query_params = {"token": valid_jwt_token}
@@ -366,8 +392,9 @@ async def test_websocket_authenticator_valid_token(auth_config_enabled, valid_jw
 @pytest.mark.asyncio
 async def test_websocket_authenticator_missing_token(auth_config_enabled):
     """WebSocketAuthenticator raises 401 when token is missing."""
-    from pdfa.auth import WebSocketAuthenticator
     from fastapi import WebSocket
+
+    from pdfa.auth import WebSocketAuthenticator
 
     websocket = MagicMock(spec=WebSocket)
     websocket.query_params = {}
@@ -384,8 +411,9 @@ async def test_websocket_authenticator_missing_token(auth_config_enabled):
 @pytest.mark.asyncio
 async def test_websocket_authenticator_invalid_token(auth_config_enabled):
     """WebSocketAuthenticator raises 401 with invalid token."""
-    from pdfa.auth import WebSocketAuthenticator
     from fastapi import WebSocket
+
+    from pdfa.auth import WebSocketAuthenticator
 
     websocket = MagicMock(spec=WebSocket)
     websocket.query_params = {"token": "invalid.token.here"}
