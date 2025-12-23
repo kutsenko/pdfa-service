@@ -19,6 +19,11 @@ logger = get_logger(__name__)
 # Global auth config (loaded at startup)
 auth_config: AuthConfig | None = None
 
+# Module-level OAuth state storage for CSRF protection
+# Shared across all GoogleOAuthClient instances
+# In production, use Redis or a database for distributed deployments
+_oauth_state_storage: dict[str, str] = {}
+
 
 def create_jwt_token(user: User, config: AuthConfig) -> str:
     """Create a JWT token for authenticated user.
@@ -170,9 +175,6 @@ class GoogleOAuthClient:
             client_kwargs={"scope": "openid email profile"},
         )
 
-        # State storage for CSRF protection (in-memory, use Redis in production)
-        self._state_storage: dict[str, str] = {}
-
     def _get_authorization_url(self, request: Request) -> str:
         """Generate OAuth authorization URL with state parameter.
 
@@ -185,7 +187,7 @@ class GoogleOAuthClient:
         """
         # Generate CSRF state token
         state = secrets.token_urlsafe(32)
-        self._state_storage[state] = datetime.utcnow().isoformat()
+        _oauth_state_storage[state] = datetime.utcnow().isoformat()
 
         # Build authorization URL
         redirect_uri = self.config.redirect_uri
@@ -289,11 +291,11 @@ class GoogleOAuthClient:
             raise HTTPException(status_code=400, detail="Missing state parameter")
 
         # Validate state (CSRF protection)
-        if state not in self._state_storage:
+        if state not in _oauth_state_storage:
             raise HTTPException(status_code=400, detail="Invalid state parameter")
 
         # Remove used state
-        del self._state_storage[state]
+        del _oauth_state_storage[state]
 
         try:
             # Exchange code for token
