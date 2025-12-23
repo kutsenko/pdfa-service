@@ -12,4 +12,10 @@ services:
       - PDFA_REMOVE_VECTORS=true    # Remove vector graphics (true/false, default: true)
       - PDFA_JBIG2_LOSSY=false      # Use lossy JBIG2 compression (true/false, default: false)
       - PDFA_JBIG2_PAGE_GROUP_SIZE=10  # JBIG2 page grouping (0-100+, default: 10)
+      - PDFA_ENABLE_AUTH=${PDFA_ENABLE_AUTH-false}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID-none}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET-none}
+      - JWT_SECRET_KEY="${JWT_SECRET_KEY-none}
+      - JWT_EXPIRY_HOURS=${JWT_EXPIRY_HOURS-24}
+      - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI-http://localhost:8000/auth/callback}
     restart: unless-stopped
