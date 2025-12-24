@@ -935,7 +935,12 @@
                 if (code && window.location.pathname === '/auth/callback') {
                     console.log('[Auth] Handling OAuth callback...');
                     // Let the backend handle the callback
-                    fetch('/auth/callback' + window.location.search)
+                    // IMPORTANT: Set Accept header to get JSON instead of HTML
+                    fetch('/auth/callback' + window.location.search, {
+                        headers: {
+                            'Accept': 'application/json'
+                        }
+                    })
                         .then(res => res.json())
                         .then(data => {
                             if (data.access_token) {
