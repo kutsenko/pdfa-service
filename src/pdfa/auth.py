@@ -251,8 +251,10 @@ class GoogleOAuthClient:
                 return response.json()
         except httpx.HTTPStatusError as e:
             error_body = e.response.text
+            status_code = e.response.status_code
             logger.error(
-                f"Google token exchange failed (HTTP {e.response.status_code}): {error_body}"
+                f"Google token exchange failed "
+                f"(HTTP {status_code}): {error_body}"
             )
             raise HTTPException(
                 status_code=500,
@@ -288,8 +290,10 @@ class GoogleOAuthClient:
                 return userinfo
         except httpx.HTTPStatusError as e:
             error_body = e.response.text
+            status_code = e.response.status_code
             logger.error(
-                f"Google userinfo request failed (HTTP {e.response.status_code}): {error_body}"
+                f"Google userinfo request failed "
+                f"(HTTP {status_code}): {error_body}"
             )
             raise HTTPException(
                 status_code=500,
