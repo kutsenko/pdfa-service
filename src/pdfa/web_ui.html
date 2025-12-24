@@ -2223,7 +2223,8 @@
         }
 
         // Initialize WebSocket client if supported
-        if (supportsWebSocket()) {
+        // Skip WebSocket initialization during OAuth callback handling
+        if (supportsWebSocket() && window.location.pathname !== '/auth/callback') {
             window.conversionClient = new ConversionClient();
             window.conversionClient.connect();
 
