@@ -123,9 +123,21 @@ async def shutdown_event():
     await job_manager.stop_background_tasks()
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.api_route("/health", methods=["GET", "HEAD"])
+async def health_check() -> dict[str, str]:
+    """Health check endpoint (always public, no auth required).
+
+    Supports both GET and HEAD methods for monitoring and load balancer checks.
+    """
+    return {"status": "healthy"}
+
+
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def web_ui() -> str:
-    """Serve the web-based conversion interface with browser language detection."""
+    """Serve the web-based conversion interface with browser language detection.
+
+    Supports both GET and HEAD methods for health checks and monitoring.
+    """
     ui_path = Path(__file__).parent / "web_ui.html"
     try:
         html_content = ui_path.read_text(encoding="utf-8")
@@ -139,9 +151,11 @@ async def web_ui() -> str:
         return await web_ui_lang("en")
 
 
-@app.get("/{lang}", response_class=HTMLResponse)
+@app.api_route("/{lang}", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def web_ui_lang(lang: str) -> str:
     """Serve the web-based conversion interface in specified language.
+
+    Supports both GET and HEAD methods for health checks and monitoring.
 
     Args:
         lang: Language code (en, de, es, fr)
@@ -190,12 +204,6 @@ async def web_ui_lang(lang: str) -> str:
 
 
 # Authentication endpoints
-
-
-@app.get("/health")
-async def health_check() -> dict[str, str]:
-    """Health check endpoint (always public, no auth required)."""
-    return {"status": "healthy"}
 
 
 @app.get("/auth/login")

@@ -643,3 +643,30 @@ def test_download_endpoint_not_completed(client: TestClient) -> None:
     finally:
         if job_id in job_manager.jobs:
             del job_manager.jobs[job_id]
+
+
+def test_head_request_root_endpoint(client: TestClient) -> None:
+    """HEAD request to root endpoint should return 200 with appropriate headers."""
+    response = client.head("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/html; charset=utf-8"
+    # HEAD should not return a body
+    assert response.content == b""
+
+
+def test_head_request_health_endpoint(client: TestClient) -> None:
+    """HEAD request to health endpoint should return 200 with appropriate headers."""
+    response = client.head("/health")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/json"
+    # HEAD should not return a body
+    assert response.content == b""
+
+
+def test_head_request_language_endpoint(client: TestClient) -> None:
+    """HEAD request to language endpoint should return 200 with appropriate headers."""
+    response = client.head("/en")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "text/html; charset=utf-8"
+    # HEAD should not return a body
+    assert response.content == b""
