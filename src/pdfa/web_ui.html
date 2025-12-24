@@ -2361,8 +2361,15 @@
                 console.log('[Auth] Authentication initialized');
 
                 // Initialize WebSocket AFTER auth check
-                // This ensures the token is loaded if the user is authenticated
-                initializeWebSocket();
+                // Only connect if:
+                // - Auth is disabled (no token needed), OR
+                // - Auth is enabled AND user is logged in (token available)
+                if (!authManager.authEnabled || (authManager.authEnabled && authManager.user)) {
+                    console.log('[Auth] WebSocket connection allowed');
+                    initializeWebSocket();
+                } else {
+                    console.log('[Auth] WebSocket connection skipped - user not authenticated');
+                }
 
                 // Bind login button
                 const loginBtn = document.getElementById('googleLoginBtn');
