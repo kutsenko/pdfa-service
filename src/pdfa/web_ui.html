@@ -1802,19 +1802,49 @@
                 const downloadUrl = message.download_url;
                 const filename = message.filename;
 
-                // Create download link
-                const link = document.createElement('a');
-                link.href = downloadUrl;
-                link.download = filename;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Use fetch with auth token if available
+                const headers = {};
+                if (authManager.token) {
+                    headers['Authorization'] = `Bearer ${authManager.token}`;
+                }
+
+                fetch(downloadUrl, { headers })
+                    .then(response => response.blob())
+                    .then(blob => {
+                        // Create download link from blob
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = filename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(link.href);
+                    })
+                    .catch(error => {
+                        console.error('[Download] Failed:', error);
+                        alert('Download failed. Please try again.');
+                    });
 
                 // Show success message
                 showStatus(t('status.success'), 'success', {
                     label: t('status.viewPdf'),
                     onClick: () => {
-                        window.open(downloadUrl, '_blank');
+                        // Fetch PDF with auth and open in new tab
+                        const headers = {};
+                        if (authManager.token) {
+                            headers['Authorization'] = `Bearer ${authManager.token}`;
+                        }
+
+                        fetch(downloadUrl, { headers })
+                            .then(response => response.blob())
+                            .then(blob => {
+                                const blobUrl = URL.createObjectURL(blob);
+                                window.open(blobUrl, '_blank');
+                            })
+                            .catch(error => {
+                                console.error('[View PDF] Failed:', error);
+                                alert('Failed to open PDF. Please try again.');
+                            });
                     }
                 });
 
@@ -2121,7 +2151,27 @@
                 if (downloadBtn) {
                     downloadBtn.style.display = 'inline-block';
                     downloadBtn.onclick = () => {
-                        window.location.href = data.download_url;
+                        // Use fetch with auth token if available
+                        const headers = {};
+                        if (authManager.token) {
+                            headers['Authorization'] = `Bearer ${authManager.token}`;
+                        }
+
+                        fetch(data.download_url, { headers })
+                            .then(response => response.blob())
+                            .then(blob => {
+                                const link = document.createElement('a');
+                                link.href = URL.createObjectURL(blob);
+                                link.download = data.filename || 'converted.pdf';
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                URL.revokeObjectURL(link.href);
+                            })
+                            .catch(error => {
+                                console.error('[Download] Failed:', error);
+                                alert('Download failed. Please try again.');
+                            });
                     };
                 }
 
