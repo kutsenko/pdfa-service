@@ -220,11 +220,18 @@ async def login(request: Request):
 async def oauth_callback(request: Request):
     """Handle Google OAuth callback and issue JWT token.
 
+    When called directly from browser (OAuth redirect from Google):
+    - Returns the web UI HTML page
+    - JavaScript in the page will detect callback and fetch this endpoint again
+
+    When called via fetch/AJAX (from web UI JavaScript):
+    - Returns JSON with access_token and user info
+
     Args:
         request: Request with 'code' and 'state' query parameters
 
     Returns:
-        JSON with access_token and user info
+        HTML page or JSON with access_token depending on request type
 
     Raises:
         HTTPException: If authentication is disabled or callback fails
@@ -233,6 +240,18 @@ async def oauth_callback(request: Request):
     if not auth_config_instance.enabled:
         raise HTTPException(status_code=404, detail="Authentication is disabled")
 
+    # Check if this is a fetch/AJAX request or direct browser navigation
+    accept_header = request.headers.get("accept", "")
+    is_json_request = "application/json" in accept_header
+
+    # If it's a direct browser request (from Google OAuth redirect),
+    # serve the web UI HTML so JavaScript can handle the callback
+    if not is_json_request:
+        ui_path = Path(__file__).parent / "web_ui.html"
+        html_content = ui_path.read_text(encoding="utf-8")
+        return HTMLResponse(content=html_content)
+
+    # Otherwise, handle the OAuth callback and return JSON
     oauth_client = GoogleOAuthClient(auth_config_instance)
     user, token = await oauth_client.handle_callback(request)
 
