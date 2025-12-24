@@ -789,6 +789,7 @@
                 this.token = localStorage.getItem('auth_token');
                 this.user = null;
                 this.authEnabled = null;
+                console.log('[Auth] AuthManager initialized, token:', this.token ? 'present' : 'missing');
             }
 
             async init() {
@@ -1592,6 +1593,8 @@
                 if (authManager.token) {
                     wsUrl += `?token=${authManager.token}`;
                     console.log('[WebSocket] Connecting with authentication token');
+                } else {
+                    console.warn('[WebSocket] No authentication token available');
                 }
 
                 this.updateWSStatus('connecting');
@@ -2222,12 +2225,17 @@
             return 'WebSocket' in window && window.WebSocket !== null;
         }
 
-        // Initialize WebSocket client if supported
-        // Skip WebSocket initialization during OAuth callback handling
-        if (supportsWebSocket() && window.location.pathname !== '/auth/callback') {
-            window.conversionClient = new ConversionClient();
-            window.conversionClient.connect();
+        // Function to initialize WebSocket after auth check
+        function initializeWebSocket() {
+            if (supportsWebSocket()) {
+                window.conversionClient = new ConversionClient();
+                window.conversionClient.connect();
+                console.log('[WebSocket] Initialized after auth check');
+            }
+        }
 
+        // WebSocket form submission handler
+        if (supportsWebSocket()) {
             // Modify form submission to use WebSocket
             const originalFormHandler = form.onsubmit;
             form.addEventListener('submit', async (e) => {
@@ -2351,6 +2359,10 @@
             // Normal page load - initialize auth
             authManager.init().then(() => {
                 console.log('[Auth] Authentication initialized');
+
+                // Initialize WebSocket AFTER auth check
+                // This ensures the token is loaded if the user is authenticated
+                initializeWebSocket();
 
                 // Bind login button
                 const loginBtn = document.getElementById('googleLoginBtn');
