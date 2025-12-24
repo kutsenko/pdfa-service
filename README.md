@@ -318,6 +318,22 @@ curl -X POST "http://localhost:8000/convert" \
 
 The service supports optional Google OAuth 2.0 authentication to restrict access to authorized users. When enabled, users must sign in with their Google account to use the web interface and API.
 
+📚 **Detailed Setup Guide:** See [docs/ENVIRONMENT_SETUP.md](docs/ENVIRONMENT_SETUP.md) ([Deutsch](docs/ENVIRONMENT_SETUP.de.md)) for complete setup instructions, troubleshooting, and best practices.
+
+### Quick Setup
+
+1. **Copy example environment file:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` and configure authentication** (see detailed guide above)
+
+3. **Start service:**
+   ```bash
+   uvicorn pdfa.api:app --env-file .env
+   ```
+
 ### Enabling Authentication
 
 Authentication is **disabled by default**. To enable it, configure the following environment variables:

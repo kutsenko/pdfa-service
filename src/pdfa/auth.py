@@ -19,6 +19,11 @@ logger = get_logger(__name__)
 # Global auth config (loaded at startup)
 auth_config: AuthConfig | None = None
 
+# Module-level OAuth state storage for CSRF protection
+# Shared across all GoogleOAuthClient instances
+# In production, use Redis or a database for distributed deployments
+_oauth_state_storage: dict[str, str] = {}
+
 
 def create_jwt_token(user: User, config: AuthConfig) -> str:
     """Create a JWT token for authenticated user.
@@ -170,9 +175,6 @@ class GoogleOAuthClient:
             client_kwargs={"scope": "openid email profile"},
         )
 
-        # State storage for CSRF protection (in-memory, use Redis in production)
-        self._state_storage: dict[str, str] = {}
-
     def _get_authorization_url(self, request: Request) -> str:
         """Generate OAuth authorization URL with state parameter.
 
@@ -185,7 +187,7 @@ class GoogleOAuthClient:
         """
         # Generate CSRF state token
         state = secrets.token_urlsafe(32)
-        self._state_storage[state] = datetime.utcnow().isoformat()
+        _oauth_state_storage[state] = datetime.utcnow().isoformat()
 
         # Build authorization URL
         redirect_uri = self.config.redirect_uri
@@ -226,6 +228,9 @@ class GoogleOAuthClient:
         Returns:
             Token response dict with access_token
 
+        Raises:
+            HTTPException: If token exchange fails
+
         """
         import httpx
 
@@ -239,10 +244,21 @@ class GoogleOAuthClient:
             "grant_type": "authorization_code",
         }
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(token_url, data=data)
-            response.raise_for_status()
-            return response.json()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(token_url, data=data)
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPStatusError as e:
+            error_body = e.response.text
+            status_code = e.response.status_code
+            logger.error(
+                f"Google token exchange failed " f"(HTTP {status_code}): {error_body}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"OAuth token exchange failed: {error_body}",
+            )
 
     async def _get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user info from Google using access token.
@@ -253,17 +269,34 @@ class GoogleOAuthClient:
         Returns:
             User info dict (sub, email, name, picture)
 
+        Raises:
+            HTTPException: If user info retrieval fails
+
         """
         import httpx
 
-        userinfo_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+        # Use v3 endpoint for OpenID Connect which guarantees 'sub' field
+        userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
 
         headers = {"Authorization": f"Bearer {access_token}"}
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(userinfo_url, headers=headers)
-            response.raise_for_status()
-            return response.json()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(userinfo_url, headers=headers)
+                response.raise_for_status()
+                userinfo = response.json()
+                logger.debug(f"Google userinfo response: {userinfo}")
+                return userinfo
+        except httpx.HTTPStatusError as e:
+            error_body = e.response.text
+            status_code = e.response.status_code
+            logger.error(
+                f"Google userinfo request failed " f"(HTTP {status_code}): {error_body}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to get user info: {error_body}",
+            )
 
     async def handle_callback(self, request: Request) -> tuple[User, str]:
         """Handle OAuth callback and issue JWT token.
@@ -289,11 +322,11 @@ class GoogleOAuthClient:
             raise HTTPException(status_code=400, detail="Missing state parameter")
 
         # Validate state (CSRF protection)
-        if state not in self._state_storage:
+        if state not in _oauth_state_storage:
             raise HTTPException(status_code=400, detail="Invalid state parameter")
 
         # Remove used state
-        del self._state_storage[state]
+        del _oauth_state_storage[state]
 
         try:
             # Exchange code for token
@@ -313,9 +346,25 @@ class GoogleOAuthClient:
 
             return user, jwt_token
 
+        except HTTPException:
+            # Re-raise HTTPExceptions (like validation errors)
+            raise
+        except KeyError as e:
+            logger.error(f"Missing field in OAuth response: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Invalid OAuth response: missing {e}",
+            )
         except Exception as e:
-            logger.error(f"OAuth callback error: {e}")
-            raise HTTPException(status_code=500, detail="Authentication failed")
+            logger.error(
+                f"OAuth callback error: {type(e).__name__}: {e}", exc_info=True
+            )
+            # Provide more specific error message if it's an HTTP error
+            error_detail = "Authentication failed"
+            if hasattr(e, "response") and hasattr(e.response, "text"):
+                logger.error(f"Google OAuth error response: {e.response.text}")
+                error_detail = f"Authentication failed: {str(e)}"
+            raise HTTPException(status_code=500, detail=error_detail)
 
 
 class WebSocketAuthenticator:

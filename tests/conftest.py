@@ -110,3 +110,13 @@ def expired_jwt_token(auth_config_enabled, test_user):
 def auth_headers(valid_jwt_token):
     """Generate authorization headers for testing."""
     return {"Authorization": f"Bearer {valid_jwt_token}"}
+
+
+@pytest.fixture(autouse=True)
+def clear_oauth_state():
+    """Clear OAuth state storage after each test."""
+    yield
+    # Cleanup after test
+    from pdfa.auth import _oauth_state_storage
+
+    _oauth_state_storage.clear()
