@@ -55,8 +55,12 @@ class User:
             }
 
         """
+        # Try to get user_id from 'sub' (OpenID Connect standard)
+        # Fall back to 'id' (legacy Google+ API) or email if not available
+        user_id = userinfo.get("sub") or userinfo.get("id") or userinfo["email"]
+
         return cls(
-            user_id=userinfo["sub"],
+            user_id=user_id,
             email=userinfo["email"],
             name=userinfo.get("name", userinfo["email"]),
             picture=userinfo.get("picture"),

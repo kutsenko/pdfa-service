@@ -274,7 +274,8 @@ class GoogleOAuthClient:
         """
         import httpx
 
-        userinfo_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+        # Use v3 endpoint for OpenID Connect which guarantees 'sub' field
+        userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
 
         headers = {"Authorization": f"Bearer {access_token}"}
 
@@ -282,7 +283,9 @@ class GoogleOAuthClient:
             async with httpx.AsyncClient() as client:
                 response = await client.get(userinfo_url, headers=headers)
                 response.raise_for_status()
-                return response.json()
+                userinfo = response.json()
+                logger.debug(f"Google userinfo response: {userinfo}")
+                return userinfo
         except httpx.HTTPStatusError as e:
             error_body = e.response.text
             logger.error(
