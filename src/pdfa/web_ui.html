@@ -606,8 +606,8 @@
 
     <!-- Login Screen (shown when not authenticated and auth is enabled) -->
     <div id="loginScreen" class="login-screen">
-        <h2>Sign in to continue</h2>
-        <p>Authentication is required to use the PDF/A converter</p>
+        <h2 data-i18n="auth.signInTitle">Sign in to continue</h2>
+        <p data-i18n="auth.signInMessage">Authentication is required to use the PDF/A converter</p>
         <button id="googleLoginBtn" class="btn-google-login">
             <svg class="google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -615,7 +615,7 @@
                 <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
                 <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            Sign in with Google
+            <span data-i18n="auth.signInWithGoogle">Sign in with Google</span>
         </button>
     </div>
 
@@ -949,13 +949,13 @@
                                 window.location.href = '/';
                             } else {
                                 console.error('[Auth] No access token in callback response');
-                                alert('Authentication failed. Please try again.');
+                                alert(t('auth.loginFailed'));
                                 window.location.href = '/';
                             }
                         })
                         .catch(error => {
                             console.error('[Auth] OAuth callback error:', error);
-                            alert('Authentication failed. Please try again.');
+                            alert(t('auth.loginFailed'));
                             window.location.href = '/';
                         });
                     return true;
@@ -1033,7 +1033,14 @@
                 'status.cancelled': 'Conversion cancelled',
                 'error.job_timeout': 'Conversion timeout exceeded',
                 'error.job_cancelled': 'Job was cancelled',
-                'error.ws_connection': 'WebSocket connection failed'
+                'error.ws_connection': 'WebSocket connection failed',
+                // Authentication
+                'auth.signInTitle': 'Sign in to continue',
+                'auth.signInMessage': 'Authentication is required to use the PDF/A converter',
+                'auth.signInWithGoogle': 'Sign in with Google',
+                'auth.loginFailed': 'Authentication failed. Please try again.',
+                'auth.downloadFailed': 'Download failed. Please try again.',
+                'auth.viewPdfFailed': 'Failed to open PDF. Please try again.'
             },
             de: {
                 'page.title': 'PDF/A Konverter - Testoberfläche',
@@ -1097,7 +1104,14 @@
                 'status.cancelled': 'Konvertierung abgebrochen',
                 'error.job_timeout': 'Konvertierungs-Timeout überschritten',
                 'error.job_cancelled': 'Job wurde abgebrochen',
-                'error.ws_connection': 'WebSocket-Verbindung fehlgeschlagen'
+                'error.ws_connection': 'WebSocket-Verbindung fehlgeschlagen',
+                // Authentifizierung
+                'auth.signInTitle': 'Anmelden um fortzufahren',
+                'auth.signInMessage': 'Authentifizierung ist erforderlich, um den PDF/A-Konverter zu verwenden',
+                'auth.signInWithGoogle': 'Mit Google anmelden',
+                'auth.loginFailed': 'Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.',
+                'auth.downloadFailed': 'Download fehlgeschlagen. Bitte versuchen Sie es erneut.',
+                'auth.viewPdfFailed': 'PDF konnte nicht geöffnet werden. Bitte versuchen Sie es erneut.'
             },
             es: {
                 'page.title': 'Convertidor PDF/A - Interfaz de Prueba',
@@ -1161,7 +1175,14 @@
                 'status.cancelled': 'Conversión cancelada',
                 'error.job_timeout': 'Tiempo de conversión excedido',
                 'error.job_cancelled': 'El trabajo fue cancelado',
-                'error.ws_connection': 'Falló la conexión WebSocket'
+                'error.ws_connection': 'Falló la conexión WebSocket',
+                // Auth-related translations
+                'auth.signInTitle': 'Iniciar sesión para continuar',
+                'auth.signInMessage': 'Se requiere autenticación para usar el convertidor PDF/A',
+                'auth.signInWithGoogle': 'Iniciar sesión con Google',
+                'auth.loginFailed': 'Error de autenticación. Por favor, inténtelo de nuevo.',
+                'auth.downloadFailed': 'Error en la descarga. Por favor, inténtelo de nuevo.',
+                'auth.viewPdfFailed': 'No se pudo abrir el PDF. Por favor, inténtelo de nuevo.'
             },
             fr: {
                 'page.title': 'Convertisseur PDF/A - Interface de Test',
@@ -1225,7 +1246,14 @@
                 'status.cancelled': 'Conversion annulée',
                 'error.job_timeout': 'Délai de conversion dépassé',
                 'error.job_cancelled': 'Le travail a été annulé',
-                'error.ws_connection': 'Échec de la connexion WebSocket'
+                'error.ws_connection': 'Échec de la connexion WebSocket',
+                // Auth-related translations
+                'auth.signInTitle': 'Connectez-vous pour continuer',
+                'auth.signInMessage': 'L\'authentification est requise pour utiliser le convertisseur PDF/A',
+                'auth.signInWithGoogle': 'Se connecter avec Google',
+                'auth.loginFailed': 'Échec de l\'authentification. Veuillez réessayer.',
+                'auth.downloadFailed': 'Échec du téléchargement. Veuillez réessayer.',
+                'auth.viewPdfFailed': 'Impossible d\'ouvrir le PDF. Veuillez réessayer.'
             }
         };
 
@@ -1822,7 +1850,7 @@
                     })
                     .catch(error => {
                         console.error('[Download] Failed:', error);
-                        alert('Download failed. Please try again.');
+                        alert(t('auth.downloadFailed'));
                     });
 
                 // Show success message
@@ -1843,7 +1871,7 @@
                             })
                             .catch(error => {
                                 console.error('[View PDF] Failed:', error);
-                                alert('Failed to open PDF. Please try again.');
+                                alert(t('auth.viewPdfFailed'));
                             });
                     }
                 });
