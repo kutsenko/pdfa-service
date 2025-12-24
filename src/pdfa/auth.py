@@ -228,6 +228,9 @@ class GoogleOAuthClient:
         Returns:
             Token response dict with access_token
 
+        Raises:
+            HTTPException: If token exchange fails
+
         """
         import httpx
 
@@ -241,10 +244,20 @@ class GoogleOAuthClient:
             "grant_type": "authorization_code",
         }
 
-        async with httpx.AsyncClient() as client:
-            response = await client.post(token_url, data=data)
-            response.raise_for_status()
-            return response.json()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(token_url, data=data)
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPStatusError as e:
+            error_body = e.response.text
+            logger.error(
+                f"Google token exchange failed (HTTP {e.response.status_code}): {error_body}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"OAuth token exchange failed: {error_body}",
+            )
 
     async def _get_user_info(self, access_token: str) -> dict[str, Any]:
         """Get user info from Google using access token.
@@ -255,6 +268,9 @@ class GoogleOAuthClient:
         Returns:
             User info dict (sub, email, name, picture)
 
+        Raises:
+            HTTPException: If user info retrieval fails
+
         """
         import httpx
 
@@ -262,10 +278,20 @@ class GoogleOAuthClient:
 
         headers = {"Authorization": f"Bearer {access_token}"}
 
-        async with httpx.AsyncClient() as client:
-            response = await client.get(userinfo_url, headers=headers)
-            response.raise_for_status()
-            return response.json()
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(userinfo_url, headers=headers)
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPStatusError as e:
+            error_body = e.response.text
+            logger.error(
+                f"Google userinfo request failed (HTTP {e.response.status_code}): {error_body}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to get user info: {error_body}",
+            )
 
     async def handle_callback(self, request: Request) -> tuple[User, str]:
         """Handle OAuth callback and issue JWT token.
@@ -315,9 +341,25 @@ class GoogleOAuthClient:
 
             return user, jwt_token
 
+        except HTTPException:
+            # Re-raise HTTPExceptions (like validation errors)
+            raise
+        except KeyError as e:
+            logger.error(f"Missing field in OAuth response: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Invalid OAuth response: missing {e}",
+            )
         except Exception as e:
-            logger.error(f"OAuth callback error: {e}")
-            raise HTTPException(status_code=500, detail="Authentication failed")
+            logger.error(
+                f"OAuth callback error: {type(e).__name__}: {e}", exc_info=True
+            )
+            # Provide more specific error message if it's an HTTP error
+            error_detail = "Authentication failed"
+            if hasattr(e, "response") and hasattr(e.response, "text"):
+                logger.error(f"Google OAuth error response: {e.response.text}")
+                error_detail = f"Authentication failed: {str(e)}"
+            raise HTTPException(status_code=500, detail=error_detail)
 
 
 class WebSocketAuthenticator:
