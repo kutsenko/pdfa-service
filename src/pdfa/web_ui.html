@@ -425,6 +425,237 @@
             }
         }
 
+        /* Event List Styles */
+        .event-list-container {
+            margin-top: 1rem;
+            border: 1px solid #e0e7ff;
+            border-radius: 8px;
+            background: #f9fafb;
+            overflow: hidden;
+        }
+
+        .event-list-header {
+            border-bottom: 1px solid #e0e7ff;
+        }
+
+        .event-list-toggle {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: left;
+            transition: background-color 0.2s;
+        }
+
+        .event-list-toggle:hover {
+            background: #f3f4f6;
+        }
+
+        .event-list-toggle:focus {
+            outline: 2px solid #667eea;
+            outline-offset: -2px;
+        }
+
+        .toggle-icon {
+            display: inline-block;
+            transition: transform 0.2s;
+            font-size: 0.8em;
+        }
+
+        .event-list-toggle[aria-expanded="true"] .toggle-icon {
+            transform: rotate(90deg);
+        }
+
+        .toggle-text {
+            flex: 1;
+        }
+
+        .event-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 1.5rem;
+            height: 1.5rem;
+            padding: 0 0.5rem;
+            background: #667eea;
+            color: white;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .event-list {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .event-item {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: white;
+            border-left: 3px solid var(--event-color, #9ca3af);
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .event-icon {
+            font-size: 1.5rem;
+            line-height: 1;
+            flex-shrink: 0;
+        }
+
+        .event-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .event-message {
+            font-weight: 500;
+            color: #1f2937;
+        }
+
+        .event-timestamp {
+            font-size: 0.85rem;
+            color: #6b7280;
+            white-space: nowrap;
+        }
+
+        .event-details {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            background: #f9fafb;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        .event-details summary {
+            cursor: pointer;
+            font-weight: 500;
+            color: #667eea;
+            user-select: none;
+        }
+
+        .event-details summary:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+        .event-details pre {
+            margin: 0.5rem 0 0;
+            padding: 0.5rem;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Event Type Color Coding */
+        .event-format_conversion {
+            --event-color: #3b82f6; /* Blue */
+        }
+
+        .event-ocr_decision {
+            --event-color: #9333ea; /* Purple */
+        }
+
+        .event-compression_selected {
+            --event-color: #10b981; /* Green */
+        }
+
+        .event-passthrough_mode {
+            --event-color: #f59e0b; /* Amber */
+        }
+
+        .event-fallback_applied {
+            --event-color: #ef4444; /* Red */
+        }
+
+        .event-job_timeout {
+            --event-color: #ef4444; /* Red */
+        }
+
+        .event-job_cleanup {
+            --event-color: #64748b; /* Gray */
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .event-list-container {
+                background: #1f2937;
+                border-color: #374151;
+            }
+
+            .event-list-toggle:hover {
+                background: #374151;
+            }
+
+            .event-item {
+                background: #111827;
+                color: #e5e7eb;
+            }
+
+            .event-message {
+                color: #e5e7eb;
+            }
+
+            .event-timestamp {
+                color: #9ca3af;
+            }
+
+            .event-details {
+                background: #0f172a;
+            }
+        }
+
+        @media (prefers-contrast: high) {
+            .event-list-toggle:focus {
+                outline-width: 3px;
+            }
+
+            .event-item {
+                border-left-width: 4px;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .event-item {
+                animation: none;
+            }
+
+            .toggle-icon {
+                transition: none;
+            }
+        }
+
         @media (max-width: 600px) {
             .container {
                 padding: 25px;
@@ -776,6 +1007,30 @@
                               data-i18n="ws.connecting">Connecting...</span>
                     </span>
                 </div>
+
+                <!-- Event List Container (initially hidden) -->
+                <div id="eventListContainer" class="event-list-container" style="display: none;">
+                    <div class="event-list-header">
+                        <button id="eventListToggle"
+                                class="event-list-toggle"
+                                aria-expanded="false"
+                                aria-controls="eventList"
+                                aria-label="Toggle conversion events list">
+                            <span class="toggle-icon" aria-hidden="true">▶</span>
+                            <span class="toggle-text" data-i18n="events.title">Conversion Events</span>
+                            <span id="eventCount" class="event-count" aria-live="polite">0</span>
+                        </button>
+                    </div>
+
+                    <div id="eventList"
+                         class="event-list"
+                         role="log"
+                         aria-live="polite"
+                         aria-atomic="false"
+                         hidden>
+                        <!-- Events dynamically inserted here -->
+                    </div>
+                </div>
             </div>
         </form>
     </div>
@@ -1040,7 +1295,84 @@
                 'auth.signInWithGoogle': 'Sign in with Google',
                 'auth.loginFailed': 'Authentication failed. Please try again.',
                 'auth.downloadFailed': 'Download failed. Please try again.',
-                'auth.viewPdfFailed': 'Failed to open PDF. Please try again.'
+                'auth.viewPdfFailed': 'Failed to open PDF. Please try again.',
+                // Event list translations (flat keys for HTML)
+                'events.title': 'Conversion Events',
+                'events.details': 'Details',
+                // Event messages (nested structure for JavaScript)
+                events: {
+                    messages: {
+                        format_conversion: {
+                            docx: {
+                                success: 'DOCX converted to PDF ({pages} pages)'
+                            },
+                            xlsx: {
+                                success: 'XLSX converted to PDF ({pages} pages)'
+                            },
+                            pptx: {
+                                success: 'PPTX converted to PDF ({pages} slides)'
+                            },
+                            odt: {
+                                success: 'ODT converted to PDF ({pages} pages)'
+                            },
+                            generic: {
+                                success: '{format} converted to PDF'
+                            }
+                        },
+                        ocr_decision: {
+                            skip: {
+                                tagged_pdf: 'OCR skipped: PDF already tagged',
+                                text_detected: 'OCR skipped: searchable text detected',
+                                user_request: 'OCR skipped: disabled by user'
+                            },
+                            apply: {
+                                scanned_pdf: 'OCR applied: scanned document detected',
+                                low_text_content: 'OCR applied: low text content',
+                                user_request: 'OCR applied: forced by user'
+                            }
+                        },
+                        compression_selected: {
+                            high: {
+                                large_file: 'High compression: file size {size_mb} MB',
+                                user_request: 'High compression: requested by user'
+                            },
+                            balanced: {
+                                default: 'Balanced compression: optimal quality/size trade-off'
+                            },
+                            low: {
+                                small_file: 'Low compression: file size {size_mb} MB',
+                                user_request: 'Low compression: quality priority'
+                            }
+                        },
+                        passthrough_mode: {
+                            valid_pdfa: {
+                                pdfa_2b: 'Passthrough: already PDF/A-2b compliant',
+                                pdfa_3b: 'Passthrough: already PDF/A-3b compliant'
+                            }
+                        },
+                        fallback_applied: {
+                            ocr_failed: {
+                                skip_ocr: 'Fallback: OCR failed, proceeding without OCR'
+                            },
+                            compression_failed: {
+                                skip_compression: 'Fallback: compression failed, using original'
+                            },
+                            conversion_error: {
+                                retry_simple: 'Fallback: conversion error, retrying with simplified settings'
+                            }
+                        },
+                        job_timeout: {
+                            exceeded: {
+                                max_duration: 'Timeout: exceeded maximum duration ({timeout_sec}s)'
+                            }
+                        },
+                        job_cleanup: {
+                            success: {
+                                temp_files: 'Cleanup: temporary files removed'
+                            }
+                        }
+                    }
+                }
             },
             de: {
                 'page.title': 'PDF/A Konverter - Testoberfläche',
@@ -1111,7 +1443,84 @@
                 'auth.signInWithGoogle': 'Mit Google anmelden',
                 'auth.loginFailed': 'Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.',
                 'auth.downloadFailed': 'Download fehlgeschlagen. Bitte versuchen Sie es erneut.',
-                'auth.viewPdfFailed': 'PDF konnte nicht geöffnet werden. Bitte versuchen Sie es erneut.'
+                'auth.viewPdfFailed': 'PDF konnte nicht geöffnet werden. Bitte versuchen Sie es erneut.',
+                // Event-Listen-Übersetzungen (flache Schlüssel für HTML)
+                'events.title': 'Konvertierungsereignisse',
+                'events.details': 'Details',
+                // Event-Nachrichten (verschachtelte Struktur für JavaScript)
+                events: {
+                    messages: {
+                        format_conversion: {
+                            docx: {
+                                success: 'DOCX in PDF konvertiert ({pages} Seiten)'
+                            },
+                            xlsx: {
+                                success: 'XLSX in PDF konvertiert ({pages} Seiten)'
+                            },
+                            pptx: {
+                                success: 'PPTX in PDF konvertiert ({pages} Folien)'
+                            },
+                            odt: {
+                                success: 'ODT in PDF konvertiert ({pages} Seiten)'
+                            },
+                            generic: {
+                                success: '{format} in PDF konvertiert'
+                            }
+                        },
+                        ocr_decision: {
+                            skip: {
+                                tagged_pdf: 'OCR übersprungen: PDF bereits getaggt',
+                                text_detected: 'OCR übersprungen: durchsuchbarer Text erkannt',
+                                user_request: 'OCR übersprungen: vom Benutzer deaktiviert'
+                            },
+                            apply: {
+                                scanned_pdf: 'OCR angewandt: gescanntes Dokument erkannt',
+                                low_text_content: 'OCR angewandt: wenig Textinhalt',
+                                user_request: 'OCR angewandt: vom Benutzer erzwungen'
+                            }
+                        },
+                        compression_selected: {
+                            high: {
+                                large_file: 'Hohe Komprimierung: Dateigröße {size_mb} MB',
+                                user_request: 'Hohe Komprimierung: vom Benutzer angefordert'
+                            },
+                            balanced: {
+                                default: 'Ausgewogene Komprimierung: optimaler Qualität/Größe-Kompromiss'
+                            },
+                            low: {
+                                small_file: 'Niedrige Komprimierung: Dateigröße {size_mb} MB',
+                                user_request: 'Niedrige Komprimierung: Qualität priorisiert'
+                            }
+                        },
+                        passthrough_mode: {
+                            valid_pdfa: {
+                                pdfa_2b: 'Passthrough: bereits PDF/A-2b-konform',
+                                pdfa_3b: 'Passthrough: bereits PDF/A-3b-konform'
+                            }
+                        },
+                        fallback_applied: {
+                            ocr_failed: {
+                                skip_ocr: 'Fallback: OCR fehlgeschlagen, fortfahren ohne OCR'
+                            },
+                            compression_failed: {
+                                skip_compression: 'Fallback: Komprimierung fehlgeschlagen, Original verwenden'
+                            },
+                            conversion_error: {
+                                retry_simple: 'Fallback: Konvertierungsfehler, Wiederholung mit vereinfachten Einstellungen'
+                            }
+                        },
+                        job_timeout: {
+                            exceeded: {
+                                max_duration: 'Timeout: maximale Dauer überschritten ({timeout_sec}s)'
+                            }
+                        },
+                        job_cleanup: {
+                            success: {
+                                temp_files: 'Aufräumen: temporäre Dateien entfernt'
+                            }
+                        }
+                    }
+                }
             },
             es: {
                 'page.title': 'Convertidor PDF/A - Interfaz de Prueba',
@@ -1182,7 +1591,84 @@
                 'auth.signInWithGoogle': 'Iniciar sesión con Google',
                 'auth.loginFailed': 'Error de autenticación. Por favor, inténtelo de nuevo.',
                 'auth.downloadFailed': 'Error en la descarga. Por favor, inténtelo de nuevo.',
-                'auth.viewPdfFailed': 'No se pudo abrir el PDF. Por favor, inténtelo de nuevo.'
+                'auth.viewPdfFailed': 'No se pudo abrir el PDF. Por favor, inténtelo de nuevo.',
+                // Traducciones de lista de eventos (claves planas para HTML)
+                'events.title': 'Eventos de Conversión',
+                'events.details': 'Detalles',
+                // Mensajes de eventos (estructura anidada para JavaScript)
+                events: {
+                    messages: {
+                        format_conversion: {
+                            docx: {
+                                success: 'DOCX convertido a PDF ({pages} páginas)'
+                            },
+                            xlsx: {
+                                success: 'XLSX convertido a PDF ({pages} páginas)'
+                            },
+                            pptx: {
+                                success: 'PPTX convertido a PDF ({pages} diapositivas)'
+                            },
+                            odt: {
+                                success: 'ODT convertido a PDF ({pages} páginas)'
+                            },
+                            generic: {
+                                success: '{format} convertido a PDF'
+                            }
+                        },
+                        ocr_decision: {
+                            skip: {
+                                tagged_pdf: 'OCR omitido: PDF ya etiquetado',
+                                text_detected: 'OCR omitido: texto buscable detectado',
+                                user_request: 'OCR omitido: deshabilitado por el usuario'
+                            },
+                            apply: {
+                                scanned_pdf: 'OCR aplicado: documento escaneado detectado',
+                                low_text_content: 'OCR aplicado: bajo contenido de texto',
+                                user_request: 'OCR aplicado: forzado por el usuario'
+                            }
+                        },
+                        compression_selected: {
+                            high: {
+                                large_file: 'Compresión alta: tamaño de archivo {size_mb} MB',
+                                user_request: 'Compresión alta: solicitada por el usuario'
+                            },
+                            balanced: {
+                                default: 'Compresión equilibrada: compensación óptima calidad/tamaño'
+                            },
+                            low: {
+                                small_file: 'Compresión baja: tamaño de archivo {size_mb} MB',
+                                user_request: 'Compresión baja: prioridad de calidad'
+                            }
+                        },
+                        passthrough_mode: {
+                            valid_pdfa: {
+                                pdfa_2b: 'Passthrough: ya cumple con PDF/A-2b',
+                                pdfa_3b: 'Passthrough: ya cumple con PDF/A-3b'
+                            }
+                        },
+                        fallback_applied: {
+                            ocr_failed: {
+                                skip_ocr: 'Fallback: OCR falló, continuando sin OCR'
+                            },
+                            compression_failed: {
+                                skip_compression: 'Fallback: compresión falló, usando original'
+                            },
+                            conversion_error: {
+                                retry_simple: 'Fallback: error de conversión, reintentando con configuración simplificada'
+                            }
+                        },
+                        job_timeout: {
+                            exceeded: {
+                                max_duration: 'Tiempo de espera: duración máxima excedida ({timeout_sec}s)'
+                            }
+                        },
+                        job_cleanup: {
+                            success: {
+                                temp_files: 'Limpieza: archivos temporales eliminados'
+                            }
+                        }
+                    }
+                }
             },
             fr: {
                 'page.title': 'Convertisseur PDF/A - Interface de Test',
@@ -1253,7 +1739,84 @@
                 'auth.signInWithGoogle': 'Se connecter avec Google',
                 'auth.loginFailed': 'Échec de l\'authentification. Veuillez réessayer.',
                 'auth.downloadFailed': 'Échec du téléchargement. Veuillez réessayer.',
-                'auth.viewPdfFailed': 'Impossible d\'ouvrir le PDF. Veuillez réessayer.'
+                'auth.viewPdfFailed': 'Impossible d\'ouvrir le PDF. Veuillez réessayer.',
+                // Traductions de la liste d'événements (clés plates pour HTML)
+                'events.title': 'Événements de Conversion',
+                'events.details': 'Détails',
+                // Messages d'événements (structure imbriquée pour JavaScript)
+                events: {
+                    messages: {
+                        format_conversion: {
+                            docx: {
+                                success: 'DOCX converti en PDF ({pages} pages)'
+                            },
+                            xlsx: {
+                                success: 'XLSX converti en PDF ({pages} pages)'
+                            },
+                            pptx: {
+                                success: 'PPTX converti en PDF ({pages} diapositives)'
+                            },
+                            odt: {
+                                success: 'ODT converti en PDF ({pages} pages)'
+                            },
+                            generic: {
+                                success: '{format} converti en PDF'
+                            }
+                        },
+                        ocr_decision: {
+                            skip: {
+                                tagged_pdf: 'OCR ignoré: PDF déjà balisé',
+                                text_detected: 'OCR ignoré: texte consultable détecté',
+                                user_request: 'OCR ignoré: désactivé par l\'utilisateur'
+                            },
+                            apply: {
+                                scanned_pdf: 'OCR appliqué: document numérisé détecté',
+                                low_text_content: 'OCR appliqué: faible contenu textuel',
+                                user_request: 'OCR appliqué: forcé par l\'utilisateur'
+                            }
+                        },
+                        compression_selected: {
+                            high: {
+                                large_file: 'Compression élevée: taille du fichier {size_mb} MB',
+                                user_request: 'Compression élevée: demandée par l\'utilisateur'
+                            },
+                            balanced: {
+                                default: 'Compression équilibrée: compromis optimal qualité/taille'
+                            },
+                            low: {
+                                small_file: 'Compression faible: taille du fichier {size_mb} MB',
+                                user_request: 'Compression faible: priorité à la qualité'
+                            }
+                        },
+                        passthrough_mode: {
+                            valid_pdfa: {
+                                pdfa_2b: 'Passthrough: déjà conforme PDF/A-2b',
+                                pdfa_3b: 'Passthrough: déjà conforme PDF/A-3b'
+                            }
+                        },
+                        fallback_applied: {
+                            ocr_failed: {
+                                skip_ocr: 'Fallback: OCR échoué, continuation sans OCR'
+                            },
+                            compression_failed: {
+                                skip_compression: 'Fallback: compression échouée, utilisation de l\'original'
+                            },
+                            conversion_error: {
+                                retry_simple: 'Fallback: erreur de conversion, nouvelle tentative avec paramètres simplifiés'
+                            }
+                        },
+                        job_timeout: {
+                            exceeded: {
+                                max_duration: 'Expiration: durée maximale dépassée ({timeout_sec}s)'
+                            }
+                        },
+                        job_cleanup: {
+                            success: {
+                                temp_files: 'Nettoyage: fichiers temporaires supprimés'
+                            }
+                        }
+                    }
+                }
             }
         };
 
@@ -1612,6 +2175,9 @@
                 this.announcementThrottle = 5000; // Announce max every 5 seconds
                 this.lastAnnouncedPercentage = -1; // Track last announced percentage
                 this.percentageMilestones = [0, 25, 50, 75, 100]; // Always announce these
+                // Event tracking for live event display
+                this.events = []; // Store events for current job
+                this.eventListVisible = false; // Track visibility state
             }
 
             connect() {
@@ -1695,6 +2261,9 @@
                             break;
                         case 'pong':
                             // Keepalive response
+                            break;
+                        case 'job_event':
+                            this.handleJobEvent(message);
                             break;
                         default:
                             console.warn('Unknown message type:', message.type);
@@ -1806,6 +2375,10 @@
 
             handleJobAccepted(message) {
                 this.currentJobId = message.job_id;
+
+                // Clear previous events for new job
+                this.clearEvents();
+
                 this.updateProgress({
                     step: t('status.queued'),
                     percentage: 0,
@@ -2262,6 +2835,259 @@
                 }
             }
 
+            /**
+             * Handle incoming job event from WebSocket
+             */
+            handleJobEvent(message) {
+                console.log('Job event received:', message);
+
+                // Store event
+                this.events.push(message);
+
+                // Update UI
+                this.addEventToList(message);
+                this.updateEventCount();
+
+                // Show container if first event
+                if (this.events.length === 1) {
+                    this.showEventListContainer();
+                }
+
+                // Announce to screen reader (selective)
+                this.announceEventToScreenReader(message);
+            }
+
+            /**
+             * Add event to visual list (newest first)
+             */
+            addEventToList(event) {
+                const eventList = document.getElementById('eventList');
+                if (!eventList) return;
+
+                const eventItem = document.createElement('div');
+                eventItem.className = `event-item event-${event.event_type}`;
+                eventItem.setAttribute('role', 'article');
+
+                // Icon
+                const icon = this.getEventIcon(event.event_type);
+
+                // Timestamp formatting
+                const timestamp = new Date(event.timestamp);
+                const timeStr = timestamp.toLocaleTimeString(currentLang);
+
+                // Translate message (with fallback to English)
+                const localizedMessage = this.translateEventMessage(event);
+
+                // Build HTML
+                let html = `
+                    <span class="event-icon" aria-hidden="true">${icon}</span>
+                    <div class="event-content">
+                        <div class="event-header">
+                            <span class="event-message">${this.escapeHtml(localizedMessage)}</span>
+                            <time class="event-timestamp" datetime="${event.timestamp}">
+                                ${timeStr}
+                            </time>
+                        </div>
+                `;
+
+                // Add details if present (filter out i18n internal keys)
+                const displayDetails = this.filterDetailsForDisplay(event.details);
+                if (displayDetails && Object.keys(displayDetails).length > 0) {
+                    html += `
+                        <details class="event-details">
+                            <summary>${t('events.details')}</summary>
+                            <pre>${this.escapeHtml(JSON.stringify(displayDetails, null, 2))}</pre>
+                        </details>
+                    `;
+                }
+
+                html += `</div>`;
+                eventItem.innerHTML = html;
+
+                // Insert at top (newest first)
+                eventList.insertBefore(eventItem, eventList.firstChild);
+            }
+
+            /**
+             * Translate event message using i18n key or fallback to English
+             */
+            translateEventMessage(event) {
+                // Try to get translation from i18n key
+                if (event.details && event.details._i18n_key) {
+                    const key = event.details._i18n_key;
+                    const params = event.details._i18n_params || {};
+
+                    // Navigate nested key (e.g., "ocr_decision.skip.tagged_pdf")
+                    const keys = key.split('.');
+                    let translation = translations[currentLang]?.events?.messages;
+
+                    for (const k of keys) {
+                        if (translation && translation[k]) {
+                            translation = translation[k];
+                        } else {
+                            translation = null;
+                            break;
+                        }
+                    }
+
+                    // If translation found, substitute parameters
+                    if (translation && typeof translation === 'string') {
+                        return this.substituteParams(translation, params);
+                    }
+                }
+
+                // Fallback to English message from backend
+                return event.message;
+            }
+
+            /**
+             * Substitute parameters in translation template
+             * Example: "OCR {decision}: {reason}" + {decision: "skip", reason: "tagged PDF"}
+             *         -> "OCR skip: tagged PDF"
+             */
+            substituteParams(template, params) {
+                let result = template;
+                for (const [key, value] of Object.entries(params)) {
+                    result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+                }
+                return result;
+            }
+
+            /**
+             * Filter out internal i18n keys from details object for display
+             */
+            filterDetailsForDisplay(details) {
+                if (!details) return null;
+
+                const filtered = {};
+                for (const [key, value] of Object.entries(details)) {
+                    // Skip internal i18n keys (prefixed with _i18n_)
+                    if (!key.startsWith('_i18n_')) {
+                        filtered[key] = value;
+                    }
+                }
+                return filtered;
+            }
+
+            /**
+             * Get emoji icon for event type
+             */
+            getEventIcon(eventType) {
+                const icons = {
+                    'format_conversion': '🔄',
+                    'ocr_decision': '🔍',
+                    'compression_selected': '📦',
+                    'passthrough_mode': '⚡',
+                    'fallback_applied': '⚠️',
+                    'job_timeout': '⏱️',
+                    'job_cleanup': '🧹'
+                };
+                return icons[eventType] || '📌';
+            }
+
+            /**
+             * Update event count badge
+             */
+            updateEventCount() {
+                const countBadge = document.getElementById('eventCount');
+                if (countBadge) {
+                    countBadge.textContent = this.events.length;
+                }
+            }
+
+            /**
+             * Show event list container
+             */
+            showEventListContainer() {
+                const container = document.getElementById('eventListContainer');
+                if (container) {
+                    container.style.display = 'block';
+                }
+            }
+
+            /**
+             * Hide event list container
+             */
+            hideEventListContainer() {
+                const container = document.getElementById('eventListContainer');
+                if (container) {
+                    container.style.display = 'none';
+                }
+            }
+
+            /**
+             * Toggle event list visibility
+             */
+            toggleEventList() {
+                const toggle = document.getElementById('eventListToggle');
+                const list = document.getElementById('eventList');
+
+                if (!toggle || !list) return;
+
+                this.eventListVisible = !this.eventListVisible;
+
+                toggle.setAttribute('aria-expanded', this.eventListVisible.toString());
+                list.hidden = !this.eventListVisible;
+            }
+
+            /**
+             * Announce event to screen reader (selective)
+             * Only high-priority events: ocr_decision, fallback_applied, job_timeout
+             */
+            announceEventToScreenReader(event) {
+                const highPriorityEvents = [
+                    'ocr_decision',
+                    'fallback_applied',
+                    'job_timeout'
+                ];
+
+                if (highPriorityEvents.includes(event.event_type)) {
+                    // Translate message before announcing (in user's language)
+                    const localizedMessage = this.translateEventMessage(event);
+                    this.announceToScreenReader(localizedMessage);
+                }
+            }
+
+            /**
+             * Clear events (on new job or reset)
+             */
+            clearEvents() {
+                this.events = [];
+
+                const eventList = document.getElementById('eventList');
+                if (eventList) {
+                    eventList.innerHTML = '';
+                }
+
+                this.updateEventCount();
+                this.hideEventListContainer();
+
+                // Reset toggle state
+                const toggle = document.getElementById('eventListToggle');
+                if (toggle) {
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+
+                const list = document.getElementById('eventList');
+                if (list) {
+                    list.hidden = true;
+                }
+
+                this.eventListVisible = false;
+            }
+
+            /**
+             * HTML escape utility
+             */
+            escapeHtml(unsafe) {
+                return unsafe
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#039;");
+            }
+
             announceToScreenReader(message, percentage = null) {
                 const now = Date.now();
 
@@ -2365,6 +3191,16 @@
                     convertBtn.disabled = false;
                 }
             });
+
+            // Event listener for event list toggle button
+            const eventListToggle = document.getElementById('eventListToggle');
+            if (eventListToggle) {
+                eventListToggle.addEventListener('click', () => {
+                    if (window.conversionClient) {
+                        window.conversionClient.toggleEventList();
+                    }
+                });
+            }
         }
 
         // Fallback fetch implementation (original code)

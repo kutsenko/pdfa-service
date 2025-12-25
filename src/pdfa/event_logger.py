@@ -10,7 +10,9 @@ the main conversion flow.
 
 from __future__ import annotations
 
+import asyncio
 import logging
+from datetime import datetime
 from typing import Any
 
 from pdfa.models import JobEvent
@@ -77,6 +79,38 @@ async def log_format_conversion_event(
     repo = JobRepository()
     await repo.add_job_event(job_id, event)
 
+    # Broadcast event to WebSocket clients
+    try:
+        from pdfa.job_manager import get_job_manager
+        from pdfa.websocket_protocol import JobEventMessage
+
+        job_manager = get_job_manager()
+        ws_message = JobEventMessage(
+            job_id=job_id,
+            event_type=event.event_type,
+            timestamp=event.timestamp.isoformat(),
+            message=event.message,
+            details={
+                **event.details,
+                "_i18n_key": f"{event.event_type}.{source_format}.success"
+                if conversion_required
+                else f"{event.event_type}.none",
+                "_i18n_params": {
+                    "source_format": source_format,
+                    "target_format": target_format,
+                },
+            },
+        )
+
+        await asyncio.wait_for(
+            job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
+            timeout=5.0,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"Event broadcast timeout for job {job_id}")
+    except Exception as e:
+        logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
+
 
 async def log_ocr_decision_event(
     job_id: str,
@@ -131,6 +165,35 @@ async def log_ocr_decision_event(
 
     repo = JobRepository()
     await repo.add_job_event(job_id, event)
+
+    # Broadcast event to WebSocket clients
+    try:
+        from pdfa.job_manager import get_job_manager
+        from pdfa.websocket_protocol import JobEventMessage
+
+        job_manager = get_job_manager()
+        ws_message = JobEventMessage(
+            job_id=job_id,
+            event_type=event.event_type,
+            timestamp=event.timestamp.isoformat(),
+            message=event.message,
+            details={
+                **event.details,
+                "_i18n_key": f"{event.event_type}.{decision}.{reason}",
+                "_i18n_params": {"decision": decision, "reason": reason},
+            },
+        )
+
+        # Best-effort async broadcast (non-blocking)
+        await asyncio.wait_for(
+            job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
+            timeout=5.0,  # Prevent blocking on slow connections
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"Event broadcast timeout for job {job_id}")
+    except Exception as e:
+        logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
+        # Continue - MongoDB persistence is more important
 
 
 async def log_compression_selected_event(
@@ -188,6 +251,33 @@ async def log_compression_selected_event(
 
     repo = JobRepository()
     await repo.add_job_event(job_id, event)
+
+    # Broadcast event to WebSocket clients
+    try:
+        from pdfa.job_manager import get_job_manager
+        from pdfa.websocket_protocol import JobEventMessage
+
+        job_manager = get_job_manager()
+        ws_message = JobEventMessage(
+            job_id=job_id,
+            event_type=event.event_type,
+            timestamp=event.timestamp.isoformat(),
+            message=event.message,
+            details={
+                **event.details,
+                "_i18n_key": f"{event.event_type}.{profile}.{reason}",
+                "_i18n_params": {"profile": profile, "reason": reason},
+            },
+        )
+
+        await asyncio.wait_for(
+            job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
+            timeout=5.0,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"Event broadcast timeout for job {job_id}")
+    except Exception as e:
+        logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
 
 
 async def log_passthrough_mode_event(
@@ -252,6 +342,33 @@ async def log_passthrough_mode_event(
 
     repo = JobRepository()
     await repo.add_job_event(job_id, event)
+
+    # Broadcast event to WebSocket clients
+    try:
+        from pdfa.job_manager import get_job_manager
+        from pdfa.websocket_protocol import JobEventMessage
+
+        job_manager = get_job_manager()
+        ws_message = JobEventMessage(
+            job_id=job_id,
+            event_type=event.event_type,
+            timestamp=event.timestamp.isoformat(),
+            message=event.message,
+            details={
+                **event.details,
+                "_i18n_key": f"{event.event_type}.{reason}.{pdfa_level}",
+                "_i18n_params": {"reason": reason, "pdfa_level": pdfa_level},
+            },
+        )
+
+        await asyncio.wait_for(
+            job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
+            timeout=5.0,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"Event broadcast timeout for job {job_id}")
+    except Exception as e:
+        logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
 
 
 async def log_fallback_applied_event(
@@ -325,6 +442,33 @@ async def log_fallback_applied_event(
     repo = JobRepository()
     await repo.add_job_event(job_id, event)
 
+    # Broadcast event to WebSocket clients
+    try:
+        from pdfa.job_manager import get_job_manager
+        from pdfa.websocket_protocol import JobEventMessage
+
+        job_manager = get_job_manager()
+        ws_message = JobEventMessage(
+            job_id=job_id,
+            event_type=event.event_type,
+            timestamp=event.timestamp.isoformat(),
+            message=event.message,
+            details={
+                **event.details,
+                "_i18n_key": f"{event.event_type}.tier{tier}.{reason}",
+                "_i18n_params": {"tier": tier, "reason": reason},
+            },
+        )
+
+        await asyncio.wait_for(
+            job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
+            timeout=5.0,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"Event broadcast timeout for job {job_id}")
+    except Exception as e:
+        logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
+
 
 async def log_job_timeout_event(
     job_id: str,
@@ -363,6 +507,33 @@ async def log_job_timeout_event(
 
     repo = JobRepository()
     await repo.add_job_event(job_id, event)
+
+    # Broadcast event to WebSocket clients
+    try:
+        from pdfa.job_manager import get_job_manager
+        from pdfa.websocket_protocol import JobEventMessage
+
+        job_manager = get_job_manager()
+        ws_message = JobEventMessage(
+            job_id=job_id,
+            event_type=event.event_type,
+            timestamp=event.timestamp.isoformat(),
+            message=event.message,
+            details={
+                **event.details,
+                "_i18n_key": f"{event.event_type}.exceeded.max_duration",
+                "_i18n_params": {"timeout_sec": timeout_seconds},
+            },
+        )
+
+        await asyncio.wait_for(
+            job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
+            timeout=5.0,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"Event broadcast timeout for job {job_id}")
+    except Exception as e:
+        logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
 
 
 async def log_job_cleanup_event(
@@ -427,3 +598,30 @@ async def log_job_cleanup_event(
 
     repo = JobRepository()
     await repo.add_job_event(job_id, event)
+
+    # Broadcast event to WebSocket clients
+    try:
+        from pdfa.job_manager import get_job_manager
+        from pdfa.websocket_protocol import JobEventMessage
+
+        job_manager = get_job_manager()
+        ws_message = JobEventMessage(
+            job_id=job_id,
+            event_type=event.event_type,
+            timestamp=event.timestamp.isoformat(),
+            message=event.message,
+            details={
+                **event.details,
+                "_i18n_key": f"{event.event_type}.{trigger}.success",
+                "_i18n_params": {"trigger": trigger},
+            },
+        )
+
+        await asyncio.wait_for(
+            job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
+            timeout=5.0,
+        )
+    except asyncio.TimeoutError:
+        logger.warning(f"Event broadcast timeout for job {job_id}")
+    except Exception as e:
+        logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
