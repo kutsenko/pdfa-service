@@ -1012,6 +1012,7 @@
                 <div id="eventListContainer" class="event-list-container" style="display: none;">
                     <div class="event-list-header">
                         <button id="eventListToggle"
+                                type="button"
                                 class="event-list-toggle"
                                 aria-expanded="false"
                                 aria-controls="eventList"
@@ -2374,9 +2375,11 @@
             }
 
             handleJobAccepted(message) {
+                console.log('[handleJobAccepted] Job accepted:', message.job_id);
                 this.currentJobId = message.job_id;
 
                 // Clear previous events for new job
+                console.log('[handleJobAccepted] Clearing previous events');
                 this.clearEvents();
 
                 this.updateProgress({
@@ -2397,11 +2400,13 @@
             }
 
             handleCompleted(message) {
+                console.log('[handleCompleted] Called with message:', message);
                 this.hideProgress();
 
                 // Download the file
                 const downloadUrl = message.download_url;
                 const filename = message.filename;
+                console.log('[handleCompleted] Download URL:', downloadUrl, 'Filename:', filename);
 
                 // Use fetch with auth token if available
                 const headers = {};
@@ -2839,7 +2844,8 @@
              * Handle incoming job event from WebSocket
              */
             handleJobEvent(message) {
-                console.log('Job event received:', message);
+                console.log('[handleJobEvent] Job event received:', message);
+                console.log('[handleJobEvent] Current events count:', this.events.length);
 
                 // Store event
                 this.events.push(message);
