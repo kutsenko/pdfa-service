@@ -12,6 +12,8 @@ from jose import JWTError, jwt
 
 from pdfa.auth_config import AuthConfig
 from pdfa.logging_config import get_logger
+from pdfa.models import AuditLogDocument, OAuthStateDocument, UserDocument
+from pdfa.repositories import AuditLogRepository, OAuthStateRepository, UserRepository
 from pdfa.user_models import User
 
 logger = get_logger(__name__)
@@ -19,10 +21,8 @@ logger = get_logger(__name__)
 # Global auth config (loaded at startup)
 auth_config: AuthConfig | None = None
 
-# Module-level OAuth state storage for CSRF protection
-# Shared across all GoogleOAuthClient instances
-# In production, use Redis or a database for distributed deployments
-_oauth_state_storage: dict[str, str] = {}
+# OAuth state tokens are now stored in MongoDB for CSRF protection
+# This enables distributed deployments with multiple service instances
 
 
 def create_jwt_token(user: User, config: AuthConfig) -> str:
@@ -175,8 +175,10 @@ class GoogleOAuthClient:
             client_kwargs={"scope": "openid email profile"},
         )
 
-    def _get_authorization_url(self, request: Request) -> str:
+    async def _get_authorization_url(self, request: Request) -> str:
         """Generate OAuth authorization URL with state parameter.
+
+        Stores state token in MongoDB for CSRF protection across distributed instances.
 
         Args:
             request: FastAPI request
@@ -187,7 +189,16 @@ class GoogleOAuthClient:
         """
         # Generate CSRF state token
         state = secrets.token_urlsafe(32)
-        _oauth_state_storage[state] = datetime.utcnow().isoformat()
+
+        # Store state in MongoDB for validation during callback
+        oauth_repo = OAuthStateRepository()
+        state_doc = OAuthStateDocument(
+            state=state,
+            created_at=datetime.utcnow(),
+            ip_address=request.client.host if request.client else "unknown",
+            user_agent=request.headers.get("user-agent"),
+        )
+        await oauth_repo.create_state(state_doc)
 
         # Build authorization URL
         redirect_uri = self.config.redirect_uri
@@ -214,7 +225,7 @@ class GoogleOAuthClient:
         """
         from fastapi.responses import RedirectResponse
 
-        authorize_url = self._get_authorization_url(request)
+        authorize_url = await self._get_authorization_url(request)
         logger.info("Initiating Google OAuth login")
 
         return RedirectResponse(url=authorize_url, status_code=302)
@@ -321,12 +332,24 @@ class GoogleOAuthClient:
         if not state:
             raise HTTPException(status_code=400, detail="Missing state parameter")
 
-        # Validate state (CSRF protection)
-        if state not in _oauth_state_storage:
-            raise HTTPException(status_code=400, detail="Invalid state parameter")
+        # Validate state (CSRF protection) and delete from MongoDB
+        oauth_repo = OAuthStateRepository()
+        state_valid = await oauth_repo.validate_and_delete_state(state)
 
-        # Remove used state
-        del _oauth_state_storage[state]
+        if not state_valid:
+            # Log failed authentication attempt
+            audit_repo = AuditLogRepository()
+            await audit_repo.log_event(
+                AuditLogDocument(
+                    event_type="auth_failure",
+                    user_id=None,
+                    timestamp=datetime.utcnow(),
+                    ip_address=request.client.host if request.client else "unknown",
+                    user_agent=request.headers.get("user-agent"),
+                    details={"reason": "invalid_state", "state": state[:16] + "..."},
+                )
+            )
+            raise HTTPException(status_code=400, detail="Invalid state parameter")
 
         try:
             # Exchange code for token
@@ -339,8 +362,34 @@ class GoogleOAuthClient:
             # Create User object
             user = User.from_google_userinfo(userinfo)
 
+            # Persist user profile to MongoDB (upsert)
+            user_repo = UserRepository()
+            user_doc = UserDocument(
+                user_id=user.user_id,
+                email=user.email,
+                name=user.name,
+                picture=user.picture,
+                created_at=datetime.utcnow(),
+                last_login_at=datetime.utcnow(),
+                login_count=1,  # Will be incremented by repository
+            )
+            await user_repo.create_or_update_user(user_doc)
+
             # Create JWT token for our application
             jwt_token = create_jwt_token(user, self.config)
+
+            # Log successful authentication
+            audit_repo = AuditLogRepository()
+            await audit_repo.log_event(
+                AuditLogDocument(
+                    event_type="user_login",
+                    user_id=user.user_id,
+                    timestamp=datetime.utcnow(),
+                    ip_address=request.client.host if request.client else "unknown",
+                    user_agent=request.headers.get("user-agent"),
+                    details={"email": user.email, "method": "google_oauth"},
+                )
+            )
 
             logger.info(f"User authenticated: {user.email}")
 
