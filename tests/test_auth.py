@@ -311,19 +311,27 @@ async def test_google_oauth_initiate_login(auth_config_enabled):
 
 
 @pytest.mark.asyncio
-async def test_google_oauth_callback_success(auth_config_enabled, test_user):
+async def test_google_oauth_callback_success(
+    auth_config_enabled, test_user, mock_mongodb, monkeypatch
+):
     """GoogleOAuthClient handles callback and returns user + token."""
     from fastapi import Request
+    from unittest.mock import AsyncMock
 
-    from pdfa.auth import GoogleOAuthClient, _oauth_state_storage
+    from pdfa.auth import GoogleOAuthClient
 
     request = MagicMock(spec=Request)
     request.query_params = {"code": "auth_code_123", "state": "state_123"}
+    request.client = MagicMock()
+    request.client.host = "127.0.0.1"
+    request.headers = {"user-agent": "test"}
 
     client = GoogleOAuthClient(auth_config_enabled)
 
-    # Add state to storage (simulating initiate_login was called)
-    _oauth_state_storage["state_123"] = datetime.utcnow().isoformat()
+    # Mock OAuth state validation (simulating state was created during initiate_login)
+    mock_mongodb.oauth_states.find_one_and_delete = AsyncMock(
+        return_value={"state": "state_123", "created_at": datetime.utcnow()}
+    )
 
     # Mock OAuth token exchange
     mock_token_response = {"access_token": "access_token_123"}

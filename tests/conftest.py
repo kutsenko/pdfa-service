@@ -113,12 +113,15 @@ def auth_headers(valid_jwt_token):
 
 
 @pytest.fixture(autouse=True)
-def mock_mongodb(monkeypatch):
+def mock_mongodb(monkeypatch, auth_config_disabled, auth_config_enabled, request):
     """Auto-mock MongoDB for all unit tests.
 
     This fixture automatically mocks MongoDB database operations so unit tests
     can run without a real MongoDB instance. It provides AsyncMock objects for
     all collection operations.
+
+    By default, authentication is DISABLED for tests. Tests that need authentication
+    should use the auth_headers fixture and mark themselves with @pytest.mark.enable_auth.
 
     The mock is applied globally and automatically to all tests unless explicitly
     disabled with the marker: @pytest.mark.no_mongo_mock
@@ -135,7 +138,12 @@ def mock_mongodb(monkeypatch):
     mock_db.audit_logs = MagicMock()
 
     # Mock common collection methods
-    for collection in [mock_db.users, mock_db.jobs, mock_db.oauth_states, mock_db.audit_logs]:
+    for collection in [
+        mock_db.users,
+        mock_db.jobs,
+        mock_db.oauth_states,
+        mock_db.audit_logs,
+    ]:
         collection.insert_one = AsyncMock()
         collection.update_one = AsyncMock()
         collection.find_one = AsyncMock(return_value=None)
@@ -151,5 +159,19 @@ def mock_mongodb(monkeypatch):
 
     monkeypatch.setattr("pdfa.db.get_db", mock_get_db)
     monkeypatch.setattr("pdfa.repositories.get_db", mock_get_db)
+
+    # Mock MongoDB health check to always return True
+    async def mock_health_check(self):
+        return True
+
+    monkeypatch.setattr("pdfa.db.MongoDBConnection.health_check", mock_health_check)
+
+    # Set auth config: use enabled config only for tests that use auth_headers fixture
+    # Check if test uses auth_headers fixture by looking at the test function
+    auth_config = auth_config_disabled
+    if hasattr(request, "fixturenames") and "auth_headers" in request.fixturenames:
+        auth_config = auth_config_enabled
+
+    monkeypatch.setattr("pdfa.auth.auth_config", auth_config)
 
     return mock_db

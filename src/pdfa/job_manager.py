@@ -185,10 +185,15 @@ class JobManager:
         self.jobs[job_id] = job
 
         # Persist to MongoDB (async, non-blocking)
+        # Only persist if there's a running event loop (skip in synchronous tests)
         file_size = len(file_data)
-        asyncio.create_task(
-            self._persist_job_creation(job_id, filename, config, user_id, file_size)
-        )
+        try:
+            asyncio.create_task(
+                self._persist_job_creation(job_id, filename, config, user_id, file_size)
+            )
+        except RuntimeError:
+            # No event loop running (e.g., in synchronous tests)
+            pass
 
         log_msg = f"Created job {job_id} for file {filename}"
         if user_id:

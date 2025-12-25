@@ -77,10 +77,9 @@ logger.info(
     f"Optimize={compression_config.optimize}"
 )
 
-# Load database configuration from environment variables
+# Database configuration - loaded during startup to allow testing without MongoDB
 # MongoDB is required for service operation (hard migration)
-db_config = DatabaseConfig.from_env()
-logger.info(f"Database config loaded: database={db_config.mongodb_database}")
+db_config = None
 
 # Progress broadcast timeout configuration
 # For long-running conversions with many WebSocket clients, broadcasting progress
@@ -117,9 +116,15 @@ job_manager = get_job_manager()
 @app.on_event("startup")
 async def startup_event():
     """Start background tasks and connect to MongoDB on application startup."""
+    global db_config
+
     # Configure logging for all modules
     configure_logging()
     logger.info("Logging configured")
+
+    # Load database configuration from environment variables
+    db_config = DatabaseConfig.from_env()
+    logger.info(f"Database config loaded: database={db_config.mongodb_database}")
 
     # Connect to MongoDB (hard migration: service will fail if MongoDB unavailable)
     logger.info(
@@ -885,9 +890,7 @@ async def get_job_history(
     """
     # Validate limit
     if limit < 1 or limit > 100:
-        raise HTTPException(
-            status_code=400, detail="Limit must be between 1 and 100"
-        )
+        raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
 
     if offset < 0:
         raise HTTPException(status_code=400, detail="Offset must be non-negative")
@@ -928,9 +931,7 @@ async def get_job_history(
             "status": job.status,
             "created_at": job.created_at.isoformat() if job.created_at else None,
             "started_at": job.started_at.isoformat() if job.started_at else None,
-            "completed_at": job.completed_at.isoformat()
-            if job.completed_at
-            else None,
+            "completed_at": job.completed_at.isoformat() if job.completed_at else None,
             "duration_seconds": job.duration_seconds,
             "file_size_input": job.file_size_input,
             "file_size_output": job.file_size_output,

@@ -784,9 +784,7 @@ def test_jobs_history_with_status_filter(
     mock_cursor.skip = MagicMock(return_value=mock_cursor)
     mock_cursor.limit = MagicMock(return_value=mock_cursor)
 
-    response = client.get(
-        "/api/v1/jobs/history?status=completed", headers=auth_headers
-    )
+    response = client.get("/api/v1/jobs/history?status=completed", headers=auth_headers)
 
     assert response.status_code == 200
 
