@@ -35,6 +35,7 @@ from pdfa.compression_config import PRESETS, CompressionConfig
 from pdfa.converter import convert_to_pdfa
 from pdfa.db import MongoDBConnection, ensure_indexes
 from pdfa.db_config import DatabaseConfig
+from pdfa.repositories import JobRepository
 from pdfa.exceptions import (
     JobCancelledException,
     JobNotFoundException,
@@ -828,6 +829,124 @@ async def websocket_endpoint(websocket: WebSocket):
         if current_job_id:
             job_manager.unregister_websocket(current_job_id, websocket)
         logger.info("WebSocket connection closed")
+
+
+@app.get("/api/v1/jobs/history")
+async def get_job_history(
+    limit: int = 50,
+    offset: int = 0,
+    status: str | None = None,
+    current_user: User = Depends(get_current_user),
+):
+    """Get conversion job history for the authenticated user.
+
+    Returns a paginated list of jobs sorted by creation date (newest first).
+    This endpoint requires authentication.
+
+    Args:
+        limit: Maximum number of jobs to return (default: 50, max: 100)
+        offset: Number of jobs to skip for pagination (default: 0)
+        status: Filter by job status (optional): queued, processing, completed, failed, cancelled
+        current_user: Authenticated user (injected by dependency)
+
+    Returns:
+        Job history with pagination info:
+        - jobs: List of job objects
+        - total: Total number of jobs (for current filter)
+        - limit: Items per page
+        - offset: Current offset
+
+    Raises:
+        HTTPException: If authentication fails (401)
+
+    Example:
+        GET /api/v1/jobs/history?limit=10&offset=0&status=completed
+        Response:
+        {
+            "jobs": [
+                {
+                    "job_id": "abc123",
+                    "filename": "document.pdf",
+                    "status": "completed",
+                    "created_at": "2024-12-12T10:30:00Z",
+                    "completed_at": "2024-12-12T10:32:30Z",
+                    "duration_seconds": 150.5,
+                    "file_size_input": 1048576,
+                    "file_size_output": 524288,
+                    "compression_ratio": 0.5
+                },
+                ...
+            ],
+            "total": 42,
+            "limit": 10,
+            "offset": 0
+        }
+
+    """
+    # Validate limit
+    if limit < 1 or limit > 100:
+        raise HTTPException(
+            status_code=400, detail="Limit must be between 1 and 100"
+        )
+
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="Offset must be non-negative")
+
+    # Validate status filter
+    valid_statuses = ["queued", "processing", "completed", "failed", "cancelled"]
+    if status and status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}",
+        )
+
+    # Fetch jobs from MongoDB
+    job_repo = JobRepository()
+    jobs = await job_repo.get_user_jobs(
+        user_id=current_user.user_id,
+        limit=limit,
+        offset=offset,
+        status=status,
+    )
+
+    # Get total count for pagination (using same filters)
+    # Note: This is a simplified version. For production, you might want to cache this
+    # or use a more efficient counting mechanism
+    all_jobs = await job_repo.get_user_jobs(
+        user_id=current_user.user_id,
+        limit=1000,  # Get a large number to count
+        offset=0,
+        status=status,
+    )
+    total = len(all_jobs)
+
+    # Convert JobDocument to dict for JSON response
+    jobs_dict = [
+        {
+            "job_id": job.job_id,
+            "filename": job.filename,
+            "status": job.status,
+            "created_at": job.created_at.isoformat() if job.created_at else None,
+            "started_at": job.started_at.isoformat() if job.started_at else None,
+            "completed_at": job.completed_at.isoformat()
+            if job.completed_at
+            else None,
+            "duration_seconds": job.duration_seconds,
+            "file_size_input": job.file_size_input,
+            "file_size_output": job.file_size_output,
+            "compression_ratio": job.compression_ratio,
+            "error": job.error,
+            "config": job.config,
+        }
+        for job in jobs
+    ]
+
+    return {
+        "jobs": jobs_dict,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @app.get("/api/v1/jobs/{job_id}/status")
