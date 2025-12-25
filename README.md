@@ -356,6 +356,32 @@ export JWT_EXPIRY_HOURS=24
 export OAUTH_REDIRECT_URI="http://localhost:8000/auth/callback"
 ```
 
+### Default User (When Authentication Disabled)
+
+When authentication is disabled (`PDFA_ENABLE_AUTH=false`), the service automatically creates a local default user to enable features like job history and persistent storage without requiring OAuth setup.
+
+The default user can be customized via environment variables:
+
+```bash
+# Default user configuration (only used when PDFA_ENABLE_AUTH=false)
+export DEFAULT_USER_ID="local-default"        # Default user ID
+export DEFAULT_USER_EMAIL="local@localhost"    # Default user email
+export DEFAULT_USER_NAME="Local User"          # Default user display name
+```
+
+**How it works:**
+- On service startup, if authentication is disabled, a default user is created in MongoDB
+- All API operations use this default user automatically
+- Job history (`GET /api/v1/jobs/history`) returns jobs for the default user
+- WebSocket connections are attributed to the default user
+- This is **idempotent** - restarting the service won't create duplicate users
+
+**Use cases:**
+- ✅ Local development without OAuth setup
+- ✅ Single-user deployments
+- ✅ Testing and prototyping
+- ⚠️  Not recommended for multi-user production deployments (use OAuth instead)
+
 ### Google Cloud Console Setup
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)

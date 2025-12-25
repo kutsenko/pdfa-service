@@ -12,6 +12,7 @@ This directory contains formal User Stories in **INVEST** format for major featu
 |----|-------|--------|-------|-------|-----------------|
 | US-001 | MongoDB-Integration | ✅ Implementiert | 2024-12-21 | [US-001-mongodb-integration.md](US-001-mongodb-integration.md) | [Feature](../features/gherkin-mongodb-integration.feature) |
 | US-002 | Job Event Logging | ✅ Implementiert | 2024-12-25 | [US-002-job-event-logging.md](US-002-job-event-logging.md) | [Feature](../features/gherkin-job-event-logging.feature) |
+| US-003 | Lokaler Standardbenutzer | ✅ Implementiert | 2024-12-25 | [US-003-local-default-user.md](US-003-local-default-user.md) | [Feature](../features/gherkin-local-default-user.feature) |
 
 ---
 
@@ -124,6 +125,22 @@ Versions-Tracking mit:
 **Status**: ✅ Implementiert (2024-12-25)
 
 **Gherkin Feature**: [21 Szenarien](../features/gherkin-job-event-logging.feature)
+
+---
+
+### [US-003: Lokaler Standardbenutzer](US-003-local-default-user.md)
+
+**Story**: Als Benutzer ohne OAuth möchte ich einen automatischen lokalen Standardbenutzer, damit ich Features wie Job-Verlauf nutzen kann.
+
+**Kernpunkte**:
+- Automatische Erstellung bei AUTH_ENABLED=false
+- Konfigurierbar via Umgebungsvariablen
+- Idempotente Implementierung (Multi-Instance-safe)
+- Dependency Injection gibt User statt None zurück
+
+**Status**: ✅ Implementiert (2024-12-25)
+
+**Gherkin Feature**: [18 Szenarien](../features/gherkin-local-default-user.feature)
 
 ---
 

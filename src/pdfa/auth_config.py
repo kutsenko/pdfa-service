@@ -18,6 +18,12 @@ class AuthConfig:
         jwt_algorithm: Algorithm for JWT signing (default: HS256)
         jwt_expiry_hours: JWT token expiry in hours (default: 24)
         redirect_uri: OAuth callback URL
+        default_user_id: Default user ID when auth disabled
+                         (default: local-default)
+        default_user_email: Default user email when auth disabled
+                            (default: local@localhost)
+        default_user_name: Default user name when auth disabled
+                           (default: Local User)
 
     """
 
@@ -28,6 +34,9 @@ class AuthConfig:
     jwt_algorithm: str = "HS256"
     jwt_expiry_hours: int = 24
     redirect_uri: str = "http://localhost:8000/auth/callback"
+    default_user_id: str = "local-default"
+    default_user_email: str = "local@localhost"
+    default_user_name: str = "Local User"
 
     @classmethod
     def from_env(cls) -> AuthConfig:
@@ -44,6 +53,12 @@ class AuthConfig:
             JWT_ALGORITHM: JWT signing algorithm (default: HS256)
             JWT_EXPIRY_HOURS: JWT expiry in hours (default: 24)
             OAUTH_REDIRECT_URI: OAuth callback URL
+            DEFAULT_USER_ID: Default user ID when auth disabled
+                             (default: local-default)
+            DEFAULT_USER_EMAIL: Default user email when auth disabled
+                                (default: local@localhost)
+            DEFAULT_USER_NAME: Default user name when auth disabled
+                               (default: Local User)
 
         """
         enabled_val = os.getenv("PDFA_ENABLE_AUTH", "false").lower()
@@ -59,6 +74,9 @@ class AuthConfig:
             redirect_uri=os.getenv(
                 "OAUTH_REDIRECT_URI", "http://localhost:8000/auth/callback"
             ),
+            default_user_id=os.getenv("DEFAULT_USER_ID", "local-default"),
+            default_user_email=os.getenv("DEFAULT_USER_EMAIL", "local@localhost"),
+            default_user_name=os.getenv("DEFAULT_USER_NAME", "Local User"),
         )
 
     def validate(self) -> None:

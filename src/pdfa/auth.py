@@ -135,21 +135,37 @@ async def get_current_user(request: Request) -> User:
     return user
 
 
-async def get_current_user_optional(request: Request) -> User | None:
-    """FastAPI dependency to get current user (optional, bypasses when auth disabled).
+async def get_current_user_optional(
+    request: Request,
+) -> User | None:
+    """FastAPI dependency to get current user.
+
+    Returns default user when auth disabled, authenticated user when enabled.
 
     Args:
         request: FastAPI request object
 
     Returns:
-        Authenticated user or None if auth is disabled
+        - Authenticated OAuth user if auth is enabled and valid token provided
+        - Default user object if auth is disabled (uses DEFAULT_USER_* env vars)
+        - Default user object with hardcoded values if auth_config is None
+
+    The default user values are configurable via environment variables:
+        - DEFAULT_USER_ID (default: "local-default")
+        - DEFAULT_USER_EMAIL (default: "local@localhost")
+        - DEFAULT_USER_NAME (default: "Local User")
 
     """
     global auth_config
 
     if auth_config is None or not auth_config.enabled:
-        # Auth disabled - return None
-        return None
+        # Auth disabled - return default user
+        return User(
+            user_id=auth_config.default_user_id if auth_config else "local-default",
+            email=auth_config.default_user_email if auth_config else "local@localhost",
+            name=auth_config.default_user_name if auth_config else "Local User",
+            picture=None,
+        )
 
     # Auth enabled - require authentication
     return await get_current_user(request)

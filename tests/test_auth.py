@@ -89,6 +89,83 @@ def test_auth_config_validation_unsupported_algorithm():
         config.validate()
 
 
+# Default User Tests (US-003)
+
+
+def test_auth_config_has_default_user_fields():
+    """Auth config has default user fields with correct defaults."""
+    config = AuthConfig(
+        enabled=False,
+        google_client_id="",
+        google_client_secret="",
+        jwt_secret_key="",
+    )
+
+    assert hasattr(config, "default_user_id")
+    assert hasattr(config, "default_user_email")
+    assert hasattr(config, "default_user_name")
+    assert config.default_user_id == "local-default"
+    assert config.default_user_email == "local@localhost"
+    assert config.default_user_name == "Local User"
+
+
+def test_auth_config_default_user_custom_values():
+    """Auth config accepts custom default user values."""
+    config = AuthConfig(
+        enabled=False,
+        google_client_id="",
+        google_client_secret="",
+        jwt_secret_key="",
+        default_user_id="custom-id",
+        default_user_email="admin@example.com",
+        default_user_name="Admin",
+    )
+
+    assert config.default_user_id == "custom-id"
+    assert config.default_user_email == "admin@example.com"
+    assert config.default_user_name == "Admin"
+
+
+def test_auth_config_from_env_loads_default_user_defaults(monkeypatch):
+    """from_env() loads default user fields with defaults when env vars not set."""
+    monkeypatch.delenv("PDFA_ENABLE_AUTH", raising=False)
+    monkeypatch.delenv("DEFAULT_USER_ID", raising=False)
+    monkeypatch.delenv("DEFAULT_USER_EMAIL", raising=False)
+    monkeypatch.delenv("DEFAULT_USER_NAME", raising=False)
+
+    config = AuthConfig.from_env()
+
+    assert config.default_user_id == "local-default"
+    assert config.default_user_email == "local@localhost"
+    assert config.default_user_name == "Local User"
+
+
+def test_auth_config_from_env_loads_custom_default_user_id(monkeypatch):
+    """from_env() loads custom DEFAULT_USER_ID from environment."""
+    monkeypatch.delenv("PDFA_ENABLE_AUTH", raising=False)
+    monkeypatch.setenv("DEFAULT_USER_ID", "my-local-user")
+
+    config = AuthConfig.from_env()
+
+    assert config.default_user_id == "my-local-user"
+    assert config.default_user_email == "local@localhost"  # Still default
+    assert config.default_user_name == "Local User"  # Still default
+
+
+def test_auth_config_from_env_loads_all_custom_default_user_fields(monkeypatch):
+    """from_env() loads all custom default user fields from environment."""
+    monkeypatch.delenv("PDFA_ENABLE_AUTH", raising=False)
+    monkeypatch.setenv("DEFAULT_USER_ID", "admin")
+    monkeypatch.setenv("DEFAULT_USER_EMAIL", "admin@example.com")
+    monkeypatch.setenv("DEFAULT_USER_NAME", "Administrator")
+
+    config = AuthConfig.from_env()
+
+    assert config.default_user_id == "admin"
+    assert config.default_user_email == "admin@example.com"
+    assert config.default_user_name == "Administrator"
+
+
 # JWT Token Tests
 
 
@@ -252,7 +329,7 @@ async def test_get_current_user_invalid_token_format(auth_config_enabled):
 
 @pytest.mark.asyncio
 async def test_get_current_user_optional_with_auth_disabled(auth_config_disabled):
-    """get_current_user_optional returns None when auth disabled."""
+    """get_current_user_optional returns default user when auth disabled."""
     from fastapi import Request
 
     from pdfa.auth import get_current_user_optional
@@ -263,7 +340,11 @@ async def test_get_current_user_optional_with_auth_disabled(auth_config_disabled
     with patch("pdfa.auth.auth_config", auth_config_disabled):
         user = await get_current_user_optional(request)
 
-    assert user is None
+    # Updated: Should return default user, not None
+    assert user is not None
+    assert user.user_id == "local-default"
+    assert user.email == "local@localhost"
+    assert user.name == "Local User"
 
 
 @pytest.mark.asyncio
@@ -283,6 +364,107 @@ async def test_get_current_user_optional_with_auth_enabled(
 
     assert user is not None
     assert user.user_id == test_user.user_id
+
+
+# Default User Dependency Injection Tests (US-003 Phase 3)
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_optional_returns_default_user_when_auth_disabled():
+    """get_current_user_optional returns default User object when auth disabled."""
+    from fastapi import Request
+
+    from pdfa.auth import get_current_user_optional
+    from pdfa.auth_config import AuthConfig
+
+    request = MagicMock(spec=Request)
+    request.headers = {}
+
+    config = AuthConfig(
+        enabled=False,
+        google_client_id="",
+        google_client_secret="",
+        jwt_secret_key="",
+        default_user_id="local-default",
+        default_user_email="local@localhost",
+        default_user_name="Local User",
+    )
+
+    with patch("pdfa.auth.auth_config", config):
+        user = await get_current_user_optional(request)
+
+    assert user is not None  # Should NOT be None!
+    assert user.user_id == "local-default"
+    assert user.email == "local@localhost"
+    assert user.name == "Local User"
+    assert user.picture is None
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_optional_returns_custom_default_user():
+    """get_current_user_optional uses custom default user config."""
+    from fastapi import Request
+
+    from pdfa.auth import get_current_user_optional
+    from pdfa.auth_config import AuthConfig
+
+    request = MagicMock(spec=Request)
+
+    config = AuthConfig(
+        enabled=False,
+        google_client_id="",
+        google_client_secret="",
+        jwt_secret_key="",
+        default_user_id="my-user",
+        default_user_email="admin@example.com",
+        default_user_name="Administrator",
+    )
+
+    with patch("pdfa.auth.auth_config", config):
+        user = await get_current_user_optional(request)
+
+    assert user is not None
+    assert user.user_id == "my-user"
+    assert user.email == "admin@example.com"
+    assert user.name == "Administrator"
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_optional_fallback_when_auth_config_none():
+    """get_current_user_optional falls back to hardcoded defaults when auth_config is None."""
+    from fastapi import Request
+
+    from pdfa.auth import get_current_user_optional
+
+    request = MagicMock(spec=Request)
+
+    with patch("pdfa.auth.auth_config", None):
+        user = await get_current_user_optional(request)
+
+    assert user is not None
+    assert user.user_id == "local-default"
+    assert user.email == "local@localhost"
+    assert user.name == "Local User"
+
+
+@pytest.mark.asyncio
+async def test_get_current_user_optional_returns_oauth_user_when_auth_enabled(
+    auth_config_enabled, valid_jwt_token, test_user
+):
+    """get_current_user_optional returns OAuth user when auth enabled (not default user)."""
+    from fastapi import Request
+
+    from pdfa.auth import get_current_user_optional
+
+    request = MagicMock(spec=Request)
+    request.headers = {"Authorization": f"Bearer {valid_jwt_token}"}
+
+    with patch("pdfa.auth.auth_config", auth_config_enabled):
+        user = await get_current_user_optional(request)
+
+    assert user is not None
+    assert user.user_id == test_user.user_id  # OAuth user, NOT "local-default"
+    assert user.user_id != "local-default"
 
 
 # Google OAuth Tests

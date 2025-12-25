@@ -14,11 +14,13 @@ docs/specs/
 ├── user-stories/                                # User Stories (INVEST)
 │   ├── README.md                                # Übersicht User Stories
 │   ├── US-001-mongodb-integration.md            # MongoDB-Integration
-│   └── US-002-job-event-logging.md              # Job Event Logging
+│   ├── US-002-job-event-logging.md              # Job Event Logging
+│   └── US-003-local-default-user.md             # Lokaler Standardbenutzer
 └── features/                                     # Gherkin Features (BDD)
     ├── README.md                                 # Übersicht Gherkin Features
     ├── gherkin-mongodb-integration.feature       # MongoDB (36 Szenarien)
-    └── gherkin-job-event-logging.feature         # Event Logging (21 Szenarien)
+    ├── gherkin-job-event-logging.feature         # Event Logging (21 Szenarien)
+    └── gherkin-local-default-user.feature        # Lokaler Standardbenutzer (18 Szenarien)
 ```
 
 ---
@@ -29,6 +31,7 @@ docs/specs/
 |----|-------|--------|-------|------------|-----------------|
 | US-001 | MongoDB-Integration | ✅ Implementiert | 2024-12-21 | [User Story](user-stories/US-001-mongodb-integration.md) | [Feature](features/gherkin-mongodb-integration.feature) (36 Szenarien) |
 | US-002 | Job Event Logging | ✅ Implementiert | 2024-12-25 | [User Story](user-stories/US-002-job-event-logging.md) | [Feature](features/gherkin-job-event-logging.feature) (21 Szenarien) |
+| US-003 | Lokaler Standardbenutzer | ✅ Implementiert | 2024-12-25 | [User Story](user-stories/US-003-local-default-user.md) | [Feature](features/gherkin-local-default-user.feature) (18 Szenarien) |
 
 ---
 
@@ -86,6 +89,25 @@ User Stories folgen dem **INVEST**-Prinzip und enthalten:
 
 ---
 
+### [US-003: Lokaler Standardbenutzer](user-stories/US-003-local-default-user.md)
+
+**Zusammenfassung**: Automatische Erstellung eines lokalen Standardbenutzers wenn Authentifizierung deaktiviert ist.
+
+**Hauptziele**:
+- Job-Verlauf und persistente Features auch ohne OAuth
+- Konfigurierbare Standardbenutzer-Felder
+- Idempotente Multi-Instance-fähige Implementierung
+
+**Kernfeatures**:
+- `ensure_default_user()` - Erstellt User beim Startup
+- `DEFAULT_USER_ID`, `DEFAULT_USER_EMAIL`, `DEFAULT_USER_NAME` - Umgebungsvariablen
+- `get_current_user_optional()` - Gibt Default User statt None zurück
+- Backward-kompatibel mit Auth-Modus
+
+**Gherkin Feature**: [gherkin-local-default-user.feature](features/gherkin-local-default-user.feature) - 18 Szenarien
+
+---
+
 ## Gherkin Features
 
 📁 **Verzeichnis**: [`features/`](features/)
@@ -128,6 +150,23 @@ Gherkin-Features sind in **deutscher Sprache** verfasst (language: de) und folge
 **Gesamt**: 21 Szenarien
 
 **Zugehörige User Story**: [US-002: Job Event Logging](user-stories/US-002-job-event-logging.md)
+
+---
+
+### [gherkin-local-default-user.feature](features/gherkin-local-default-user.feature)
+
+**Szenario-Gruppen**:
+1. Service-Start und Default User-Erstellung (3 Szenarien)
+2. Konfigurierbare Standardbenutzer-Felder (2 Szenarien)
+3. Job-Attribution mit Default User (3 Szenarien)
+4. Job-Verlauf-Abfrage (3 Szenarien)
+5. Dependency Injection (3 Szenarien)
+6. Edge Cases und Error Handling (4 Szenarien)
+7. Vollständige Integration-Workflows (2 Szenarien)
+
+**Gesamt**: 18 Szenarien (inkl. Multi-Instance)
+
+**Zugehörige User Story**: [US-003: Lokaler Standardbenutzer](user-stories/US-003-local-default-user.md)
 
 ---
 
@@ -216,17 +255,19 @@ Funktionalität: [Titel]
 
 ## Statistiken
 
-**User Stories**: 2
+**User Stories**: 3
 - US-001: MongoDB-Integration (6.1 KB)
 - US-002: Job Event Logging (10 KB)
+- US-003: Lokaler Standardbenutzer (14 KB)
 
-**Gherkin Features**: 2
+**Gherkin Features**: 3
 - MongoDB Integration (18 KB, 36 Szenarien)
 - Job Event Logging (16 KB, 21 Szenarien)
+- Lokaler Standardbenutzer (8 KB, 18 Szenarien)
 
 **Gesamt**:
-- 57 Gherkin-Szenarien
-- ~50 KB Spezifikations-Content
+- 75 Gherkin-Szenarien
+- ~72 KB Spezifikations-Content
 
 **Abdeckung**:
 - ✅ Alle implementierten Features dokumentiert
@@ -252,3 +293,4 @@ Funktionalität: [Titel]
 |-------|---------|----------|
 | 2024-12-25 | 1.0 | Initiale Erstellung mit US-001 und US-002 |
 | 2024-12-25 | 2.0 | Umstrukturierung: User Stories und Gherkin Features in separate Verzeichnisse |
+| 2024-12-25 | 3.0 | US-003: Lokaler Standardbenutzer hinzugefügt (18 Szenarien) |

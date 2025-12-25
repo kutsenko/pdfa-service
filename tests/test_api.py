@@ -816,3 +816,125 @@ def test_jobs_history_invalid_status(client: TestClient, auth_headers: dict) -> 
     )
     assert response.status_code == 400
     assert "Invalid status" in response.json()["detail"]
+
+
+# Default User Creation Tests (US-003 Phase 2)
+
+
+@pytest.mark.asyncio
+async def test_ensure_default_user_creates_user_when_auth_disabled(monkeypatch):
+    """ensure_default_user() creates default user when auth disabled."""
+    import pdfa.api
+    from pdfa.api import ensure_default_user
+    from pdfa.auth_config import AuthConfig
+    from pdfa.repositories import UserRepository
+
+    # Setup: Mock auth_config as disabled
+    config = AuthConfig(
+        enabled=False,
+        google_client_id="",
+        google_client_secret="",
+        jwt_secret_key="",
+        default_user_id="local-default",
+        default_user_email="local@localhost",
+        default_user_name="Local User",
+    )
+    pdfa.api.auth_config = config
+
+    # Mock UserRepository
+    mock_user_repo = MagicMock(spec=UserRepository)
+    monkeypatch.setattr("pdfa.api.UserRepository", lambda: mock_user_repo)
+
+    # Execute
+    await ensure_default_user()
+
+    # Verify create_or_update_user was called with correct user data
+    mock_user_repo.create_or_update_user.assert_called_once()
+    call_args = mock_user_repo.create_or_update_user.call_args[0][0]
+    assert call_args.user_id == "local-default"
+    assert call_args.email == "local@localhost"
+    assert call_args.name == "Local User"
+    assert call_args.login_count == 1
+
+
+@pytest.mark.asyncio
+async def test_ensure_default_user_skips_when_auth_enabled(monkeypatch):
+    """ensure_default_user() skips creation when auth enabled."""
+    import pdfa.api
+    from pdfa.api import ensure_default_user
+    from pdfa.auth_config import AuthConfig
+    from pdfa.repositories import UserRepository
+
+    # Setup: Mock auth_config as enabled
+    config = AuthConfig(
+        enabled=True,
+        google_client_id="client",
+        google_client_secret="secret",
+        jwt_secret_key="a" * 32,
+    )
+    pdfa.api.auth_config = config
+
+    # Mock UserRepository
+    mock_user_repo = MagicMock(spec=UserRepository)
+    monkeypatch.setattr("pdfa.api.UserRepository", lambda: mock_user_repo)
+
+    # Execute
+    await ensure_default_user()
+
+    # Verify create_or_update_user was NOT called
+    mock_user_repo.create_or_update_user.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_ensure_default_user_skips_when_auth_config_none(monkeypatch):
+    """ensure_default_user() skips when auth_config is None."""
+    import pdfa.api
+    from pdfa.api import ensure_default_user
+    from pdfa.repositories import UserRepository
+
+    # Setup: auth_config is None
+    pdfa.api.auth_config = None
+
+    # Mock UserRepository
+    mock_user_repo = MagicMock(spec=UserRepository)
+    monkeypatch.setattr("pdfa.api.UserRepository", lambda: mock_user_repo)
+
+    # Execute
+    await ensure_default_user()
+
+    # Verify create_or_update_user was NOT called
+    mock_user_repo.create_or_update_user.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_ensure_default_user_uses_custom_config(monkeypatch):
+    """ensure_default_user() uses custom default user config."""
+    import pdfa.api
+    from pdfa.api import ensure_default_user
+    from pdfa.auth_config import AuthConfig
+    from pdfa.repositories import UserRepository
+
+    # Setup: Custom default user config
+    config = AuthConfig(
+        enabled=False,
+        google_client_id="",
+        google_client_secret="",
+        jwt_secret_key="",
+        default_user_id="my-user",
+        default_user_email="admin@example.com",
+        default_user_name="Administrator",
+    )
+    pdfa.api.auth_config = config
+
+    # Mock UserRepository
+    mock_user_repo = MagicMock(spec=UserRepository)
+    monkeypatch.setattr("pdfa.api.UserRepository", lambda: mock_user_repo)
+
+    # Execute
+    await ensure_default_user()
+
+    # Verify custom values were used
+    call_args = mock_user_repo.create_or_update_user.call_args[0][0]
+    assert call_args.user_id == "my-user"
+    assert call_args.email == "admin@example.com"
+    assert call_args.name == "Administrator"

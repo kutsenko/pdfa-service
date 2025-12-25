@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 import uuid
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Literal
@@ -49,8 +50,9 @@ from pdfa.format_converter import (
 from pdfa.image_converter import convert_image_to_pdf
 from pdfa.job_manager import get_job_manager
 from pdfa.logging_config import configure_logging, get_logger
+from pdfa.models import UserDocument
 from pdfa.progress_tracker import ProgressInfo
-from pdfa.repositories import JobRepository
+from pdfa.repositories import JobRepository, UserRepository
 from pdfa.user_models import User
 from pdfa.websocket_protocol import (
     CancelJobMessage,
@@ -112,11 +114,55 @@ app = FastAPI(
 # Initialize job manager
 job_manager = get_job_manager()
 
+# Global auth config (loaded in startup_event)
+auth_config = None
+
+
+async def ensure_default_user() -> None:
+    """Create default user in MongoDB when authentication is disabled.
+
+    This function is idempotent and can be called multiple times safely.
+    It only creates a default user if:
+    - auth_config is loaded
+    - Authentication is disabled (auth_config.enabled == False)
+
+    The default user is created using values from auth_config:
+    - default_user_id
+    - default_user_email
+    - default_user_name
+
+    These values can be customized via environment variables:
+    - DEFAULT_USER_ID (default: "local-default")
+    - DEFAULT_USER_EMAIL (default: "local@localhost")
+    - DEFAULT_USER_NAME (default: "Local User")
+    """
+    global auth_config
+
+    if auth_config is None or auth_config.enabled:
+        return  # Skip if auth enabled or config not loaded
+
+    user_repo = UserRepository()
+    default_user = UserDocument(
+        user_id=auth_config.default_user_id,
+        email=auth_config.default_user_email,
+        name=auth_config.default_user_name,
+        picture=None,
+        created_at=datetime.utcnow(),
+        last_login_at=datetime.utcnow(),
+        login_count=1,
+    )
+
+    await user_repo.create_or_update_user(default_user)
+    logger.info(
+        f"Default user ensured: user_id={auth_config.default_user_id}, "
+        f"email={auth_config.default_user_email}"
+    )
+
 
 @app.on_event("startup")
 async def startup_event():
     """Start background tasks and connect to MongoDB on application startup."""
-    global db_config
+    global db_config, auth_config
 
     # Configure logging for all modules
     configure_logging()
@@ -145,6 +191,12 @@ async def startup_event():
             "Service cannot start without MongoDB connection. "
             "Please check MONGODB_URI environment variable and ensure MongoDB is running."
         ) from e
+
+    # Set global auth_config reference for ensure_default_user()
+    auth_config = auth_config_instance
+
+    # Create default user if authentication is disabled
+    await ensure_default_user()
 
     logger.info("Starting background tasks...")
     job_manager.start_background_tasks()

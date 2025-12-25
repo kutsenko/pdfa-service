@@ -12,8 +12,9 @@ This directory contains **Gherkin Feature files** in BDD format (Behavior Driven
 |---------|-----------|---------|-------|------------|
 | MongoDB-Integration | 36 | Deutsch | [gherkin-mongodb-integration.feature](gherkin-mongodb-integration.feature) | [US-001](../user-stories/US-001-mongodb-integration.md) |
 | Job Event Logging | 21 | Deutsch | [gherkin-job-event-logging.feature](gherkin-job-event-logging.feature) | [US-002](../user-stories/US-002-job-event-logging.md) |
+| Lokaler Standardbenutzer | 18 | Deutsch | [gherkin-local-default-user.feature](gherkin-local-default-user.feature) | [US-003](../user-stories/US-003-local-default-user.md) |
 
-**Gesamt**: 57 Szenarien in 2 Features
+**Gesamt**: 75 Szenarien in 3 Features
 
 ---
 
@@ -178,6 +179,53 @@ Funktionalität: [Feature-Name]
    - Event-Callback ist optional
 
 **Zugehörige User Story**: [US-002: Job Event Logging](../user-stories/US-002-job-event-logging.md)
+
+---
+
+### [gherkin-local-default-user.feature](gherkin-local-default-user.feature)
+
+**Feature**: Lokaler Standardbenutzer für Non-Auth-Modus
+
+**Beschreibung**: Automatische Erstellung eines Standardbenutzers wenn Authentifizierung deaktiviert ist
+
+**Szenarien**: 18 in 7 Gruppen
+
+**Szenario-Gruppen**:
+1. **Service-Start und Default User-Erstellung** (3 Szenarien)
+   - Service mit deaktivierter Auth
+   - Service mit aktivierter Auth (kein Default User)
+   - Idempotente Erstellung
+
+2. **Konfigurierbare Standardbenutzer-Felder** (2 Szenarien)
+   - Custom Werte aus Umgebungsvariablen
+   - Teilweise Custom-Werte
+
+3. **Job-Attribution mit Default User** (3 Szenarien)
+   - Job via WebSocket mit Default User
+   - Custom Default User ID
+   - OAuth User bei aktivierter Auth
+
+4. **Job-Verlauf-Abfrage** (3 Szenarien)
+   - Jobs des Default Users
+   - Leerer Verlauf für neuen User
+   - Custom Default User Verlauf
+
+5. **Dependency Injection** (3 Szenarien)
+   - get_current_user_optional() mit Default User
+   - OAuth User bei aktivierter Auth
+   - Fallback bei fehlender Config
+
+6. **Edge Cases und Error Handling** (4 Szenarien)
+   - MongoDB-Verbindungsfehler
+   - Wechsel enabled→disabled
+   - Wechsel disabled→enabled
+   - Gelöschter Default User (Self-Healing)
+
+7. **Vollständige Integration-Workflows** (2 Szenarien)
+   - Kompletter Workflow ohne Auth
+   - Multi-Instance-Deployment
+
+**Zugehörige User Story**: [US-003: Lokaler Standardbenutzer](../user-stories/US-003-local-default-user.md)
 
 ---
 
