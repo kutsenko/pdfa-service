@@ -265,5 +265,274 @@ class TestLiveEventBroadcasting:
                 mock_job_manager.broadcast_to_job.assert_called_once()
 
 
+class TestJobCompletionAndDownload:
+    """Test that job completion and download flow works correctly."""
+
+    @pytest.mark.asyncio
+    async def test_completed_message_contains_download_url(
+        self, client: TestClient, sample_pdf: bytes
+    ) -> None:
+        """Verify that completed message includes download_url and filename.
+
+        This test catches the bug where downloads are not offered after completion.
+        """
+        # Mock the conversion function
+        def mock_convert(
+            input_pdf: Path,
+            output_pdf: Path,
+            *args,
+            **kwargs,
+        ) -> None:
+            # Create output file
+            output_pdf.write_bytes(b"%PDF-1.4 converted to PDF/A")
+
+        with patch("pdfa.converter.convert_to_pdfa", side_effect=mock_convert):
+            # Connect to WebSocket
+            with client.websocket_connect("/ws") as websocket:
+                # Submit job
+                websocket.send_json({
+                    "type": "submit",
+                    "filename": "test.pdf",
+                    "fileData": base64.b64encode(sample_pdf).decode(),
+                    "config": {
+                        "language": "eng",
+                        "pdfa_level": "2b",
+                    },
+                })
+
+                # Collect messages until completed
+                completed_message = None
+                timeout_count = 0
+                max_timeout = 100  # 10 seconds total
+
+                while timeout_count < max_timeout:
+                    try:
+                        msg = websocket.receive_json(timeout=0.1)
+                        print(f"[TEST] Received: {msg['type']}")
+
+                        if msg["type"] == "completed":
+                            completed_message = msg
+                            print(f"[TEST] Completed message: {msg}")
+                            break
+
+                    except Exception:
+                        timeout_count += 1
+                        await asyncio.sleep(0.1)
+
+        # CRITICAL ASSERTIONS - These catch the download bug
+        assert completed_message is not None, "Should receive completed message"
+        assert "download_url" in completed_message, "Completed message must have download_url"
+        assert "filename" in completed_message, "Completed message must have filename"
+
+        # Verify download_url format
+        assert completed_message["download_url"].startswith("/download/"), \
+            f"download_url should start with /download/, got: {completed_message['download_url']}"
+
+        # Verify filename has _pdfa suffix
+        assert completed_message["filename"].endswith("_pdfa.pdf"), \
+            f"filename should end with _pdfa.pdf, got: {completed_message['filename']}"
+
+        print(f"[TEST] ✓ Download URL: {completed_message['download_url']}")
+        print(f"[TEST] ✓ Filename: {completed_message['filename']}")
+
+
+    @pytest.mark.asyncio
+    async def test_download_endpoint_returns_file(
+        self, client: TestClient, sample_pdf: bytes
+    ) -> None:
+        """Verify that /download/{job_id} endpoint returns the converted file.
+
+        This test ensures the download actually works after completion.
+        """
+        job_id = None
+
+        # Mock the conversion function
+        def mock_convert(
+            input_pdf: Path,
+            output_pdf: Path,
+            *args,
+            **kwargs,
+        ) -> None:
+            # Create output file
+            output_pdf.write_bytes(b"%PDF-1.4 converted to PDF/A")
+
+        with patch("pdfa.converter.convert_to_pdfa", side_effect=mock_convert):
+            # Connect to WebSocket
+            with client.websocket_connect("/ws") as websocket:
+                # Submit job
+                websocket.send_json({
+                    "type": "submit",
+                    "filename": "test.pdf",
+                    "fileData": base64.b64encode(sample_pdf).decode(),
+                    "config": {},
+                })
+
+                # Wait for job_accepted to get job_id
+                msg = websocket.receive_json(timeout=5)
+                assert msg["type"] == "job_accepted"
+                job_id = msg["job_id"]
+                print(f"[TEST] Job ID: {job_id}")
+
+                # Wait for completion
+                while True:
+                    msg = websocket.receive_json(timeout=10)
+                    if msg["type"] == "completed":
+                        download_url = msg["download_url"]
+                        print(f"[TEST] Download URL: {download_url}")
+                        break
+
+        # Now test the download endpoint
+        assert job_id is not None
+
+        # Make GET request to download endpoint
+        response = client.get(f"/download/{job_id}")
+
+        # CRITICAL ASSERTIONS - These verify download works
+        assert response.status_code == 200, \
+            f"Download should return 200, got: {response.status_code}"
+
+        assert response.headers["content-type"] == "application/pdf", \
+            f"Should return PDF content-type, got: {response.headers.get('content-type')}"
+
+        # Verify we got the converted file
+        content = response.content
+        assert len(content) > 0, "Downloaded file should not be empty"
+        assert content.startswith(b"%PDF"), "Downloaded content should be a PDF"
+
+        print(f"[TEST] ✓ Downloaded {len(content)} bytes")
+        print(f"[TEST] ✓ Content-Type: {response.headers['content-type']}")
+
+
+    @pytest.mark.asyncio
+    async def test_complete_conversion_and_download_flow(
+        self, client: TestClient, sample_pdf: bytes
+    ) -> None:
+        """End-to-end test: Submit job, receive events, get completion, download file.
+
+        This is a comprehensive test that catches any breaks in the download flow.
+        """
+        # Mock the conversion function with events
+        def mock_convert(
+            input_pdf: Path,
+            output_pdf: Path,
+            *args,
+            event_callback=None,
+            progress_callback=None,
+            **kwargs,
+        ) -> None:
+            # Create output file
+            output_pdf.write_bytes(b"%PDF-1.4 converted to PDF/A-2b")
+
+            # Simulate progress
+            if progress_callback:
+                from pdfa.progress_tracker import ProgressInfo
+                progress_callback(
+                    ProgressInfo(
+                        step="pdfa",
+                        current=1,
+                        total=1,
+                        percentage=100.0,
+                        message="Conversion complete",
+                    )
+                )
+
+            # Simulate an event
+            if event_callback:
+                asyncio.run(
+                    event_callback(
+                        "ocr_decision",
+                        decision="skip",
+                        reason="tagged_pdf",
+                    )
+                )
+
+        with patch("pdfa.converter.convert_to_pdfa", side_effect=mock_convert):
+            # Connect to WebSocket
+            with client.websocket_connect("/ws") as websocket:
+                # Submit job
+                websocket.send_json({
+                    "type": "submit",
+                    "filename": "complete_test.pdf",
+                    "fileData": base64.b64encode(sample_pdf).decode(),
+                    "config": {
+                        "language": "eng",
+                        "pdfa_level": "2b",
+                    },
+                })
+
+                # Track what we received
+                job_id = None
+                received_job_accepted = False
+                received_progress = False
+                received_job_event = False
+                received_completed = False
+                download_url = None
+                filename = None
+
+                timeout_count = 0
+                max_timeout = 100
+
+                while timeout_count < max_timeout:
+                    try:
+                        msg = websocket.receive_json(timeout=0.1)
+                        msg_type = msg["type"]
+                        print(f"[TEST] Received: {msg_type}")
+
+                        if msg_type == "job_accepted":
+                            job_id = msg["job_id"]
+                            received_job_accepted = True
+                            print(f"[TEST] Job accepted: {job_id}")
+
+                        elif msg_type == "progress":
+                            received_progress = True
+                            print(f"[TEST] Progress: {msg.get('percentage', 0)}%")
+
+                        elif msg_type == "job_event":
+                            received_job_event = True
+                            print(f"[TEST] Event: {msg.get('event_type')}")
+
+                        elif msg_type == "completed":
+                            received_completed = True
+                            download_url = msg.get("download_url")
+                            filename = msg.get("filename")
+                            print(f"[TEST] Completed: {download_url}")
+                            break
+
+                        elif msg_type == "error":
+                            pytest.fail(f"Job failed with error: {msg.get('message')}")
+
+                    except Exception:
+                        timeout_count += 1
+                        await asyncio.sleep(0.1)
+
+        # COMPREHENSIVE ASSERTIONS
+        print("\n[TEST] Verifying complete flow...")
+
+        assert received_job_accepted, "Should receive job_accepted message"
+        assert job_id is not None, "Should have job_id"
+
+        assert received_progress, "Should receive at least one progress message"
+        assert received_job_event, "Should receive at least one job_event message"
+
+        # CRITICAL: These assertions catch the download bug
+        assert received_completed, "Should receive completed message"
+        assert download_url is not None, "Completed message should have download_url"
+        assert filename is not None, "Completed message should have filename"
+        assert download_url.startswith("/download/"), f"Invalid download_url: {download_url}"
+        assert filename == "complete_test_pdfa.pdf", f"Unexpected filename: {filename}"
+
+        # Test the download endpoint actually works
+        response = client.get(download_url)
+        assert response.status_code == 200, f"Download failed with status {response.status_code}"
+        assert response.headers["content-type"] == "application/pdf"
+        assert len(response.content) > 0, "Downloaded file is empty"
+
+        print("[TEST] ✓ Complete flow verified successfully!")
+        print(f"[TEST] ✓ Job ID: {job_id}")
+        print(f"[TEST] ✓ Download URL: {download_url}")
+        print(f"[TEST] ✓ Filename: {filename}")
+        print(f"[TEST] ✓ Downloaded: {len(response.content)} bytes")
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v", "-s"])
