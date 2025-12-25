@@ -33,6 +33,8 @@ from pdfa.auth import (
 from pdfa.auth_config import AuthConfig
 from pdfa.compression_config import PRESETS, CompressionConfig
 from pdfa.converter import convert_to_pdfa
+from pdfa.db import MongoDBConnection, ensure_indexes
+from pdfa.db_config import DatabaseConfig
 from pdfa.exceptions import (
     JobCancelledException,
     JobNotFoundException,
@@ -74,6 +76,11 @@ logger.info(
     f"Optimize={compression_config.optimize}"
 )
 
+# Load database configuration from environment variables
+# MongoDB is required for service operation (hard migration)
+db_config = DatabaseConfig.from_env()
+logger.info(f"Database config loaded: database={db_config.mongodb_database}")
+
 # Progress broadcast timeout configuration
 # For long-running conversions with many WebSocket clients, broadcasting progress
 # updates can take longer than the default 2 seconds. Increase this if you have
@@ -108,19 +115,46 @@ job_manager = get_job_manager()
 
 @app.on_event("startup")
 async def startup_event():
-    """Start background tasks on application startup."""
+    """Start background tasks and connect to MongoDB on application startup."""
     # Configure logging for all modules
     configure_logging()
     logger.info("Logging configured")
+
+    # Connect to MongoDB (hard migration: service will fail if MongoDB unavailable)
+    logger.info(
+        f"Connecting to MongoDB: database={db_config.mongodb_database}, "
+        f"uri={db_config.get_safe_uri_for_logging()}"
+    )
+    mongo = MongoDBConnection()
+    try:
+        await mongo.connect(db_config.mongodb_uri, db_config.mongodb_database)
+        logger.info("MongoDB connection established")
+
+        # Create indexes (idempotent operation)
+        await ensure_indexes()
+        logger.info("MongoDB indexes verified")
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {e}")
+        raise RuntimeError(
+            "Service cannot start without MongoDB connection. "
+            "Please check MONGODB_URI environment variable and ensure MongoDB is running."
+        ) from e
+
     logger.info("Starting background tasks...")
     job_manager.start_background_tasks()
+    logger.info("Application startup complete")
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Stop background tasks on application shutdown."""
+    """Stop background tasks and disconnect from MongoDB on application shutdown."""
     logger.info("Stopping background tasks...")
     await job_manager.stop_background_tasks()
+
+    logger.info("Disconnecting from MongoDB...")
+    mongo = MongoDBConnection()
+    await mongo.disconnect()
+    logger.info("Application shutdown complete")
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
@@ -128,8 +162,25 @@ async def health_check() -> dict[str, str]:
     """Health check endpoint (always public, no auth required).
 
     Supports both GET and HEAD methods for monitoring and load balancer checks.
+    Also verifies MongoDB connection health.
+
+    Returns:
+        Status dict with "status" and "database" fields
+
+    Raises:
+        HTTPException: 503 if MongoDB is unavailable
+
     """
-    return {"status": "healthy"}
+    # Check MongoDB health
+    mongo = MongoDBConnection()
+    db_healthy = await mongo.health_check()
+
+    if not db_healthy:
+        raise HTTPException(
+            status_code=503, detail="Service unavailable: database connection lost"
+        )
+
+    return {"status": "healthy", "database": "connected"}
 
 
 @app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
