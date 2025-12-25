@@ -16,7 +16,9 @@ from typing import Any, Literal
 from fastapi import WebSocket
 
 from pdfa.exceptions import JobNotFoundException
+from pdfa.models import AuditLogDocument, JobDocument
 from pdfa.progress_tracker import ProgressInfo
+from pdfa.repositories import AuditLogRepository, JobRepository
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +128,10 @@ class JobManager:
         self.processing_semaphore = asyncio.Semaphore(self.config.max_concurrent_jobs)
         self.lock = asyncio.Lock()
 
+        # MongoDB repositories for job persistence
+        self.job_repo = JobRepository()
+        self.audit_repo = AuditLogRepository()
+
         # Ensure temp directory exists
         self.config.temp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -175,14 +181,70 @@ class JobManager:
             temp_dir=temp_dir,
         )
 
-        # Store job
+        # Store job in-memory
         self.jobs[job_id] = job
+
+        # Persist to MongoDB (async, non-blocking)
+        file_size = len(file_data)
+        asyncio.create_task(
+            self._persist_job_creation(job_id, filename, config, user_id, file_size)
+        )
 
         log_msg = f"Created job {job_id} for file {filename}"
         if user_id:
             log_msg += f" (user: {user_id})"
         logger.info(log_msg)
         return job
+
+    async def _persist_job_creation(
+        self,
+        job_id: str,
+        filename: str,
+        config: dict[str, Any],
+        user_id: str | None,
+        file_size: int,
+    ) -> None:
+        """Persist job creation to MongoDB.
+
+        This is called asynchronously to avoid blocking job creation.
+
+        Args:
+            job_id: Job identifier
+            filename: Original filename
+            config: Conversion configuration
+            user_id: User identifier (None if auth disabled)
+            file_size: Input file size in bytes
+
+        """
+        try:
+            # Create job document for MongoDB
+            job_doc = JobDocument(
+                job_id=job_id,
+                user_id=user_id,
+                status="queued",
+                filename=filename,
+                config=config,
+                created_at=datetime.now(),
+                file_size_input=file_size,
+            )
+            await self.job_repo.create_job(job_doc)
+
+            # Log job creation event
+            await self.audit_repo.log_event(
+                AuditLogDocument(
+                    event_type="job_created",
+                    user_id=user_id,
+                    timestamp=datetime.now(),
+                    ip_address="internal",  # No request context here
+                    details={
+                        "job_id": job_id,
+                        "filename": filename,
+                        "file_size": file_size,
+                    },
+                )
+            )
+        except Exception as e:
+            logger.error(f"Failed to persist job creation to MongoDB: {e}")
 
     def get_job(self, job_id: str) -> Job:
         """Get a job by ID.
@@ -232,6 +294,91 @@ class JobManager:
                 job.output_path = output_path
 
             logger.info(f"Job {job_id} status updated to {status}")
+
+        # Persist to MongoDB (outside lock to avoid blocking)
+        await self._persist_job_update(job_id, status, error, output_path)
+
+    async def _persist_job_update(
+        self,
+        job_id: str,
+        status: JobStatus,
+        error: str | None,
+        output_path: Path | None,
+    ) -> None:
+        """Persist job status update to MongoDB.
+
+        Args:
+            job_id: Job identifier
+            status: New status
+            error: Error message (if failed)
+            output_path: Output file path (if completed)
+
+        """
+        try:
+            # Get job from in-memory storage for additional data
+            job = self.jobs.get(job_id)
+            if not job:
+                logger.warning(f"Job {job_id} not in memory, skipping MongoDB update")
+                return
+
+            # Build update fields
+            update_fields: dict[str, Any] = {}
+
+            if status == "processing" and job.started_at:
+                update_fields["started_at"] = job.started_at
+
+            if status in ("completed", "failed", "cancelled") and job.completed_at:
+                update_fields["completed_at"] = job.completed_at
+
+                # Calculate duration
+                if job.started_at:
+                    duration = (job.completed_at - job.started_at).total_seconds()
+                    update_fields["duration_seconds"] = duration
+
+                # Add output file size if completed successfully
+                if status == "completed" and output_path and output_path.exists():
+                    update_fields["file_size_output"] = output_path.stat().st_size
+
+                    # Calculate compression ratio if we have both sizes
+                    if (
+                        "file_size_output" in update_fields
+                        and job.input_path
+                        and job.input_path.exists()
+                    ):
+                        input_size = job.input_path.stat().st_size
+                        if input_size > 0:
+                            compression_ratio = (
+                                update_fields["file_size_output"] / input_size
+                            )
+                            update_fields["compression_ratio"] = compression_ratio
+
+            if error:
+                update_fields["error"] = error
+
+            # Update job in MongoDB
+            await self.job_repo.update_job_status(job_id, status, **update_fields)
+
+            # Log audit event for terminal states
+            if status in ("completed", "failed", "cancelled"):
+                event_type = f"job_{status}"
+                await self.audit_repo.log_event(
+                    AuditLogDocument(
+                        event_type=event_type,  # type: ignore
+                        user_id=job.user_id,
+                        timestamp=datetime.now(),
+                        ip_address="internal",
+                        details={
+                            "job_id": job_id,
+                            "filename": job.filename,
+                            "status": status,
+                            "duration_seconds": update_fields.get("duration_seconds"),
+                            "error": error,
+                        },
+                    )
+                )
+
+        except Exception as e:
+            logger.error(f"Failed to persist job update to MongoDB: {e}")
 
     async def update_job_progress(self, job_id: str, progress: ProgressInfo) -> None:
         """Update job progress.
