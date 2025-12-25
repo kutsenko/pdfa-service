@@ -315,8 +315,9 @@ async def test_google_oauth_callback_success(
     auth_config_enabled, test_user, mock_mongodb, monkeypatch
 ):
     """GoogleOAuthClient handles callback and returns user + token."""
-    from fastapi import Request
     from unittest.mock import AsyncMock
+
+    from fastapi import Request
 
     from pdfa.auth import GoogleOAuthClient
 

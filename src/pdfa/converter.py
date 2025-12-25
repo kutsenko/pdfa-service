@@ -5,8 +5,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import shutil
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from pathlib import Path
+from typing import Any
 
 import ocrmypdf
 import ocrmypdf.exceptions as ocrmypdf_exceptions
@@ -51,7 +52,7 @@ def has_pdf_tags(pdf_path: Path) -> bool:
 
 def needs_ocr(
     pdf_path: Path, sample_pages: int = DEFAULT_SAMPLE_PAGES
-) -> tuple[bool, str]:
+) -> dict[str, Any]:
     """Determine if a PDF needs OCR based on text content analysis.
 
     Analyzes the first N pages of a PDF to detect existing searchable text.
@@ -63,9 +64,13 @@ def needs_ocr(
         sample_pages: Number of pages to sample (default: DEFAULT_SAMPLE_PAGES).
 
     Returns:
-        Tuple of (needs_ocr, reason):
+        Dict with OCR decision and statistics:
         - needs_ocr: True if OCR should be performed, False if text exists
         - reason: Human-readable explanation for logging
+        - pages_with_text: Number of pages containing text
+        - total_pages_checked: Total pages analyzed
+        - text_ratio: Ratio of pages with text (0.0-1.0)
+        - total_characters: Total characters found across all pages
 
     Detection Logic:
         - Extracts text from first N pages
@@ -84,7 +89,14 @@ def needs_ocr(
             num_pages = len(pdf.pages)
 
             if num_pages == 0:
-                return True, "PDF has no pages"
+                return {
+                    "needs_ocr": True,
+                    "reason": "PDF has no pages",
+                    "pages_with_text": 0,
+                    "total_pages_checked": 0,
+                    "text_ratio": 0.0,
+                    "total_characters": 0,
+                }
 
             # Sample first N pages (or all pages if fewer)
             pages_to_check = min(sample_pages, num_pages)
@@ -143,35 +155,72 @@ def needs_ocr(
             # Decision logic
             if pages_to_check == 1:
                 # Single page: absolute threshold
+                text_ratio = 1.0 if total_chars >= MIN_CHARS_PER_PAGE else 0.0
                 if total_chars >= MIN_CHARS_PER_PAGE:
-                    return (
-                        False,
-                        f"Single page has {total_chars} characters (text detected)",
-                    )
+                    return {
+                        "needs_ocr": False,
+                        "reason": (
+                            f"Single page has {total_chars} characters "
+                            f"(text detected)"
+                        ),
+                        "pages_with_text": 1,
+                        "total_pages_checked": 1,
+                        "text_ratio": text_ratio,
+                        "total_characters": total_chars,
+                    }
                 else:
-                    return (
-                        True,
-                        f"Single page has only {total_chars} characters (needs OCR)",
-                    )
+                    return {
+                        "needs_ocr": True,
+                        "reason": (
+                            f"Single page has only {total_chars} characters "
+                            f"(needs OCR)"
+                        ),
+                        "pages_with_text": 0,
+                        "total_pages_checked": 1,
+                        "text_ratio": text_ratio,
+                        "total_characters": total_chars,
+                    }
             else:
                 # Multiple pages: ratio-based threshold
                 text_ratio = pages_with_text / pages_to_check
 
                 if text_ratio >= MIN_TEXT_RATIO:
-                    return False, (
-                        f"{pages_with_text}/{pages_to_check} pages have text "
-                        f"({text_ratio:.1%}, {total_chars} total chars) - text detected"
-                    )
+                    return {
+                        "needs_ocr": False,
+                        "reason": (
+                            f"{pages_with_text}/{pages_to_check} pages have "
+                            f"text ({text_ratio:.1%}, {total_chars} total "
+                            f"chars) - text detected"
+                        ),
+                        "pages_with_text": pages_with_text,
+                        "total_pages_checked": pages_to_check,
+                        "text_ratio": text_ratio,
+                        "total_characters": total_chars,
+                    }
                 else:
-                    return True, (
-                        f"Only {pages_with_text}/{pages_to_check} pages have text "
-                        f"({text_ratio:.1%}, {total_chars} total chars) - needs OCR"
-                    )
+                    return {
+                        "needs_ocr": True,
+                        "reason": (
+                            f"Only {pages_with_text}/{pages_to_check} pages have text "
+                            f"({text_ratio:.1%}, {total_chars} total chars) - needs OCR"
+                        ),
+                        "pages_with_text": pages_with_text,
+                        "total_pages_checked": pages_to_check,
+                        "text_ratio": text_ratio,
+                        "total_characters": total_chars,
+                    }
 
     except Exception as e:
         logger.warning(f"Could not analyze PDF text content for {pdf_path}: {e}")
         # Safe default: perform OCR if we can't determine
-        return True, f"Text analysis failed: {e}"
+        return {
+            "needs_ocr": True,
+            "reason": f"Text analysis failed: {e}",
+            "pages_with_text": 0,
+            "total_pages_checked": 0,
+            "text_ratio": 0.0,
+            "total_characters": 0,
+        }
 
 
 def convert_to_pdfa(
@@ -186,6 +235,7 @@ def convert_to_pdfa(
     compression_config: CompressionConfig | None = None,
     progress_callback: Callable[[ProgressInfo], None] | None = None,
     cancel_event: asyncio.Event | None = None,
+    event_callback: Callable[..., Awaitable[None]] | None = None,
 ) -> None:
     """Convert a PDF to PDF/A using OCRmyPDF, or pass through for plain PDF output.
 
@@ -204,8 +254,24 @@ def convert_to_pdfa(
         compression_config: Compression settings (default: None, uses defaults).
         progress_callback: Optional callback for progress updates.
         cancel_event: Optional event to check for cancellation requests.
+        event_callback: Optional async callback for logging job events.
+                       Called with (event_type: str, **kwargs: Any).
 
     """
+
+    # Helper to call async event_callback from sync context
+    def log_event(event_type: str, **kwargs: Any) -> None:
+        """Log event if callback is provided."""
+        if event_callback:
+            # Run the async callback in a new event loop if needed
+            try:
+                loop = asyncio.get_running_loop()
+                # We're in an event loop, schedule the callback
+                loop.create_task(event_callback(event_type, **kwargs))
+            except RuntimeError:
+                # No event loop running, run callback synchronously
+                asyncio.run(event_callback(event_type, **kwargs))
+
     if not input_pdf.exists():
         logger.error(f"Input file does not exist: {input_pdf}")
         raise FileNotFoundError(f"Input file does not exist: {input_pdf}")
@@ -215,10 +281,22 @@ def convert_to_pdfa(
         logger.info(f"PDF output mode: No OCR, copying file: {input_pdf}")
 
         # Check for tags (informational only)
-        if has_pdf_tags(input_pdf):
+        has_tags = has_pdf_tags(input_pdf)
+        if has_tags:
             logger.info(f"PDF has structure tags (preserved): {input_pdf}")
         else:
             logger.debug(f"PDF has no structure tags: {input_pdf}")
+
+        # Log passthrough mode event
+        log_event(
+            "passthrough_mode",
+            enabled=True,
+            reason="pdf_output_no_ocr",
+            pdfa_level=pdfa_level,
+            ocr_enabled=ocr_enabled,
+            has_tags=has_tags,
+            tags_preserved=has_tags,
+        )
 
         # Copy directly to output
         output_pdf.parent.mkdir(parents=True, exist_ok=True)
@@ -256,24 +334,68 @@ def convert_to_pdfa(
                 f"PDF has structure tags, skipping OCR as requested: {input_pdf}"
             )
 
+            # Log OCR decision event for tagged PDF
+            log_event(
+                "ocr_decision",
+                decision="skip",
+                reason="tagged_pdf",
+                has_struct_tree_root=True,
+            )
+
             # Preserve vector content for tagged PDFs (office documents)
+            original_profile = None
             if compression_config.remove_vectors:
                 logger.info(
                     "Tagged PDF detected - switching to "
                     "vector-preserving compression mode"
                 )
+                original_profile = "custom" if compression_config else "default"
                 compression_config = PRESETS["preserve"]
+
+                # Log compression profile auto-switch
+                log_event(
+                    "compression_selected",
+                    profile="preserve",
+                    reason="auto_switched_for_tagged_pdf",
+                    original_profile=original_profile,
+                    settings={
+                        "image_dpi": compression_config.image_dpi,
+                        "remove_vectors": compression_config.remove_vectors,
+                    },
+                )
 
         # Second check: Text content detection (for all other PDFs)
         else:
-            ocr_needed, reason = needs_ocr(input_pdf)
+            ocr_stats = needs_ocr(input_pdf)
 
-            if not ocr_needed:
+            if not ocr_stats["needs_ocr"]:
                 actual_ocr_enabled = False
                 skip_text = True
-                logger.info(f"Skipping OCR: {reason} - {input_pdf}")
+                logger.info(f"Skipping OCR: {ocr_stats['reason']} - {input_pdf}")
+
+                # Log OCR decision event with stats
+                log_event(
+                    "ocr_decision",
+                    decision="skip",
+                    reason="has_text",
+                    pages_with_text=ocr_stats["pages_with_text"],
+                    total_pages_checked=ocr_stats["total_pages_checked"],
+                    text_ratio=ocr_stats["text_ratio"],
+                    total_characters=ocr_stats["total_characters"],
+                )
             else:
-                logger.info(f"Performing OCR: {reason} - {input_pdf}")
+                logger.info(f"Performing OCR: {ocr_stats['reason']} - {input_pdf}")
+
+                # Log OCR decision event
+                log_event(
+                    "ocr_decision",
+                    decision="perform",
+                    reason="no_text",
+                    pages_with_text=ocr_stats["pages_with_text"],
+                    total_pages_checked=ocr_stats["total_pages_checked"],
+                    text_ratio=ocr_stats["text_ratio"],
+                    total_characters=ocr_stats["total_characters"],
+                )
 
     logger.info(
         f"Converting PDF to PDF/A-{pdfa_level}: {input_pdf} -> {output_pdf}",
@@ -369,12 +491,30 @@ def convert_to_pdfa(
             # Try a simpler PDF/A level for better compatibility
             # PDF/A-1 is most restrictive but most compatible
             safe_pdfa_level = pdfa_level
+            pdfa_downgrade = None
             if pdfa_level == "3":
                 safe_pdfa_level = "2"  # PDF/A-3 → PDF/A-2
+                pdfa_downgrade = {"original": "3", "fallback": "2"}
                 logger.debug("Downgrading PDF/A-3 to PDF/A-2 for better compatibility")
             elif pdfa_level == "2":
                 safe_pdfa_level = "1"  # PDF/A-2 → PDF/A-1
+                pdfa_downgrade = {"original": "2", "fallback": "1"}
                 logger.debug("Downgrading PDF/A-2 to PDF/A-1 for better compatibility")
+
+            # Log fallback tier 2 event
+            log_event(
+                "fallback_applied",
+                tier=2,
+                reason="ghostscript_error",
+                original_error=str(e),
+                safe_mode_config={
+                    "image_dpi": safe_config.image_dpi,
+                    "remove_vectors": safe_config.remove_vectors,
+                    "optimize": safe_config.optimize,
+                    "jbig2_lossy": safe_config.jbig2_lossy,
+                },
+                pdfa_level_downgrade=pdfa_downgrade,
+            )
 
             try:
                 ocrmypdf.ocr(
@@ -406,6 +546,21 @@ def convert_to_pdfa(
                     f"Safe-mode conversion also failed: {safe_mode_error}. "
                     "Tier 3 fallback: Attempting conversion without OCR..."
                 )
+
+                # Log fallback tier 3 event
+                log_event(
+                    "fallback_applied",
+                    tier=3,
+                    reason="tier2_failed",
+                    tier2_error=str(safe_mode_error),
+                    ocr_disabled=True,
+                    safe_mode_config={
+                        "image_dpi": safe_config.image_dpi,
+                        "remove_vectors": safe_config.remove_vectors,
+                        "optimize": safe_config.optimize,
+                    },
+                )
+
                 try:
                     ocrmypdf.ocr(
                         str(input_pdf),

@@ -44,6 +44,52 @@ class UserDocument(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
 
+class JobEvent(BaseModel):
+    """Single event in a job's execution history.
+
+    Events capture decision points and actions during job processing,
+    providing a detailed audit trail for troubleshooting and analytics.
+
+    Event types track key decisions and milestones:
+    - format_conversion: Office/Image→PDF conversion
+    - ocr_decision: Decision to perform/skip OCR with reasoning
+    - compression_selected: Compression profile choice
+    - passthrough_mode: Pass-through mode activated
+    - fallback_applied: Fallback tier used (tier 2 or 3)
+    - job_timeout: Job exceeded timeout limit
+    - job_cleanup: Job resources cleaned up
+
+    Attributes:
+        timestamp: When the event occurred (UTC, auto-generated)
+        event_type: Category of event (from predefined types)
+        message: Human-readable description in English
+        details: Structured event-specific data (JSON-serializable dict)
+
+    Example:
+        >>> event = JobEvent(
+        ...     event_type="ocr_decision",
+        ...     message="OCR skipped due to tagged PDF",
+        ...     details={"reason": "tagged_pdf", "has_struct_tree_root": True}
+        ... )
+
+    """
+
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    event_type: Literal[
+        "format_conversion",
+        "ocr_decision",
+        "compression_selected",
+        "passthrough_mode",
+        "fallback_applied",
+        "job_timeout",
+        "job_cleanup",
+    ]
+    message: str
+    details: dict[str, Any]
+
+    model_config = {"arbitrary_types_allowed": True}
+
+
 class JobDocument(BaseModel):
     """Conversion job document stored in MongoDB.
 
@@ -84,6 +130,7 @@ class JobDocument(BaseModel):
     compression_ratio: float | None = None
     error: str | None = None
     progress: dict[str, Any] | None = None
+    events: list[JobEvent] = Field(default_factory=list)
 
     model_config = {"arbitrary_types_allowed": True}
 

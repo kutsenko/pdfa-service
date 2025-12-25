@@ -35,7 +35,6 @@ from pdfa.compression_config import PRESETS, CompressionConfig
 from pdfa.converter import convert_to_pdfa
 from pdfa.db import MongoDBConnection, ensure_indexes
 from pdfa.db_config import DatabaseConfig
-from pdfa.repositories import JobRepository
 from pdfa.exceptions import (
     JobCancelledException,
     JobNotFoundException,
@@ -51,6 +50,7 @@ from pdfa.image_converter import convert_image_to_pdf
 from pdfa.job_manager import get_job_manager
 from pdfa.logging_config import configure_logging, get_logger
 from pdfa.progress_tracker import ProgressInfo
+from pdfa.repositories import JobRepository
 from pdfa.user_models import User
 from pdfa.websocket_protocol import (
     CancelJobMessage,
@@ -648,6 +648,34 @@ async def process_conversion_job(job_id: str) -> None:
                     exc_info=True,
                 )
 
+        # Event callback that logs events to MongoDB
+        async def event_callback(event_type: str, **kwargs) -> None:
+            """Log conversion events to MongoDB for job tracking."""
+            try:
+                # Dynamically import the appropriate logger function
+                from pdfa import event_logger
+
+                # Map event types to logger functions
+                event_loggers = {
+                    "format_conversion": event_logger.log_format_conversion_event,
+                    "ocr_decision": event_logger.log_ocr_decision_event,
+                    "compression_selected": event_logger.log_compression_selected_event,
+                    "passthrough_mode": event_logger.log_passthrough_mode_event,
+                    "fallback_applied": event_logger.log_fallback_applied_event,
+                }
+
+                logger_func = event_loggers.get(event_type)
+                if logger_func:
+                    await logger_func(job_id=job_id, **kwargs)
+                else:
+                    logger.warning(f"Unknown event type: {event_type}")
+            except Exception as e:
+                # Log errors but don't fail conversion
+                logger.error(
+                    f"Failed to log event {event_type} for job {job_id}: {e}",
+                    exc_info=True,
+                )
+
         # Determine file type and convert
         config = job.config
         pdf_path = job.input_path
@@ -656,16 +684,61 @@ async def process_conversion_job(job_id: str) -> None:
         if is_office_document(job.filename):
             logger.info(f"Converting Office document for job {job_id}")
             pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
+
+            # Track conversion time
+            import time
+
+            start_time = time.time()
+
             await asyncio.to_thread(
                 convert_office_to_pdf,
                 job.input_path,
                 pdf_path,
                 progress_callback=progress_callback,
             )
+
+            conversion_time = time.time() - start_time
+
+            # Log format conversion event
+            await event_callback(
+                "format_conversion",
+                source_format=job.filename.rsplit(".", 1)[-1].lower(),
+                target_format="pdf",
+                conversion_required=True,
+                converter="office_to_pdf",
+                conversion_time_seconds=conversion_time,
+            )
+
         elif is_image_file(job.filename):
             logger.info(f"Converting image to PDF for job {job_id}")
             pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
+
+            # Track conversion time
+            import time
+
+            start_time = time.time()
+
             await asyncio.to_thread(convert_image_to_pdf, job.input_path, pdf_path)
+
+            conversion_time = time.time() - start_time
+
+            # Log format conversion event
+            await event_callback(
+                "format_conversion",
+                source_format=job.filename.rsplit(".", 1)[-1].lower(),
+                target_format="pdf",
+                conversion_required=True,
+                converter="image_to_pdf",
+                conversion_time_seconds=conversion_time,
+            )
+        else:
+            # Direct PDF - no conversion needed
+            await event_callback(
+                "format_conversion",
+                source_format="pdf",
+                target_format="pdf",
+                conversion_required=False,
+            )
 
         # Convert to PDF/A
         output_path = job.input_path.parent / f"{job.input_path.stem}_pdfa.pdf"
@@ -684,6 +757,7 @@ async def process_conversion_job(job_id: str) -> None:
             skip_ocr_on_tagged_pdfs=config.get("skip_ocr_on_tagged_pdfs", True),
             compression_config=selected_compression,
             progress_callback=progress_callback,
+            event_callback=event_callback,
             cancel_event=job.cancel_event,
         )
 

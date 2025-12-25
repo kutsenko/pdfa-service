@@ -11,7 +11,6 @@ with appropriate connection pooling and replica sets for high availability.
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 from pymongo.errors import ConnectionFailure, ServerSelectionTimeoutError

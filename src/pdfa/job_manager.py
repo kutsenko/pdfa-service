@@ -15,6 +15,7 @@ from typing import Any, Literal
 
 from fastapi import WebSocket
 
+from pdfa.event_logger import log_job_cleanup_event, log_job_timeout_event
 from pdfa.exceptions import JobNotFoundException
 from pdfa.models import AuditLogDocument, JobDocument
 from pdfa.progress_tracker import ProgressInfo
@@ -557,10 +558,52 @@ class JobManager:
                 if job.completed_at:
                     age = (now - job.completed_at).total_seconds()
                     if age > ttl_seconds:
-                        to_delete.append(job_id)
+                        to_delete.append((job_id, job, age))
 
-        for job_id in to_delete:
+        for job_id, job, age in to_delete:
             logger.info(f"Cleaning up old job {job_id} (age > {ttl_seconds}s)")
+
+            # Collect file information before deletion
+            files_deleted = {}
+            total_size = 0
+
+            try:
+                if job.input_path and job.input_path.exists():
+                    files_deleted["input_file"] = str(job.input_path)
+                    total_size += job.input_path.stat().st_size
+
+                if job.output_path and job.output_path.exists():
+                    files_deleted["output_file"] = str(job.output_path)
+                    total_size += job.output_path.stat().st_size
+
+                if job.temp_dir and job.temp_dir.name:
+                    temp_path = Path(job.temp_dir.name)
+                    if temp_path.exists():
+                        files_deleted["temp_directory"] = str(temp_path)
+                        # Calculate temp dir size
+                        for path in temp_path.rglob("*"):
+                            if path.is_file():
+                                total_size += path.stat().st_size
+            except Exception as e:
+                logger.warning(f"Error collecting file info for cleanup event: {e}")
+
+            # Log cleanup event
+            try:
+                await log_job_cleanup_event(
+                    job_id=job_id,
+                    trigger="age_exceeded",
+                    ttl_seconds=ttl_seconds,
+                    age_seconds=age,
+                    files_deleted=files_deleted if files_deleted else None,
+                    total_size_bytes=total_size if total_size > 0 else None,
+                )
+            except Exception as e:
+                logger.error(
+                    f"Failed to log cleanup event for job {job_id}: {e}",
+                    exc_info=True,
+                )
+
+            # Delete the job
             await self.delete_job(job_id)
 
     async def check_timeouts(self) -> None:
@@ -573,6 +616,20 @@ class JobManager:
                 runtime = (now - job.started_at).total_seconds()
                 if runtime > timeout_seconds:
                     logger.warning(f"Job {job.job_id} timed out after {runtime:.1f}s")
+
+                    # Log timeout event
+                    try:
+                        await log_job_timeout_event(
+                            job_id=job.job_id,
+                            timeout_seconds=timeout_seconds,
+                            runtime_seconds=runtime,
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to log timeout event for job {job.job_id}: {e}",
+                            exc_info=True,
+                        )
+
                     await self.cancel_job(job.job_id)
                     await self.update_job_status(
                         job.job_id,

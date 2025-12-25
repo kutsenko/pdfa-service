@@ -18,7 +18,13 @@ from datetime import datetime
 from typing import Any
 
 from pdfa.db import get_db
-from pdfa.models import AuditLogDocument, JobDocument, OAuthStateDocument, UserDocument
+from pdfa.models import (
+    AuditLogDocument,
+    JobDocument,
+    JobEvent,
+    OAuthStateDocument,
+    UserDocument,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,9 +37,7 @@ class UserRepository:
 
     """
 
-    async def create_or_update_user(
-        self, user: UserDocument
-    ) -> UserDocument:
+    async def create_or_update_user(self, user: UserDocument) -> UserDocument:
         """Create a new user or update existing user on login.
 
         This method performs an upsert operation: if the user exists (by user_id),
@@ -82,7 +86,9 @@ class UserRepository:
             upsert=True,
         )
 
-        logger.debug(f"User profile updated: user_id={user.user_id}, email={user.email}")
+        logger.debug(
+            f"User profile updated: user_id={user.user_id}, email={user.email}"
+        )
         return user
 
     async def get_user(self, user_id: str) -> UserDocument | None:
@@ -295,6 +301,42 @@ class JobRepository:
             "avg_compression_ratio": 0,
         }
 
+    async def add_job_event(
+        self,
+        job_id: str,
+        event: JobEvent,
+    ) -> None:
+        """Add an event to a job's event log.
+
+        Uses MongoDB's $push operator to atomically append the event to the
+        job's events array. This operation is thread-safe and does not require
+        reading the document first.
+
+        Args:
+            job_id: Job identifier
+            event: Event to add to the job's history
+
+        Example:
+            event = JobEvent(
+                event_type="ocr_decision",
+                message="OCR skipped due to tagged PDF",
+                details={"reason": "tagged_pdf", "has_struct_tree_root": True}
+            )
+            await job_repo.add_job_event("uuid-123", event)
+
+        """
+        db = get_db()
+        event_dict = event.model_dump()
+
+        await db.jobs.update_one(
+            {"job_id": job_id},
+            {"$push": {"events": event_dict}},
+        )
+
+        logger.debug(
+            f"Event logged for job {job_id}: {event.event_type} - {event.message}"
+        )
+
 
 class OAuthStateRepository:
     """Repository for OAuth state token operations.
@@ -344,7 +386,9 @@ class OAuthStateRepository:
         result = await db.oauth_states.find_one_and_delete({"state": state_token})
 
         if result:
-            logger.debug(f"OAuth state validated and deleted: state={state_token[:16]}...")
+            logger.debug(
+                f"OAuth state validated and deleted: state={state_token[:16]}..."
+            )
             return True
 
         logger.warning(f"OAuth state validation failed: state={state_token[:16]}...")
@@ -450,9 +494,7 @@ class AuditLogRepository:
             "timestamp": {"$gte": threshold_dt},
         }
 
-        cursor = (
-            db.audit_logs.find(query_filter).sort("timestamp", -1).limit(limit)
-        )
+        cursor = db.audit_logs.find(query_filter).sort("timestamp", -1).limit(limit)
 
         events_data = await cursor.to_list(length=limit)
         return [AuditLogDocument(**event_data) for event_data in events_data]

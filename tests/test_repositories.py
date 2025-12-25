@@ -464,3 +464,246 @@ class TestAuditLogRepository:
         call_args = mock_find.call_args[0][0]
         assert "$in" in call_args["event_type"]
         assert "$gte" in call_args["timestamp"]
+
+
+class TestJobRepositoryEvents:
+    """Test cases for JobRepository event logging methods."""
+
+    @pytest.mark.asyncio
+    async def test_add_job_event(self, mock_mongodb):
+        """Should add event to job's events array using $push."""
+        # Arrange
+        from pdfa.models import JobEvent
+
+        repo = JobRepository()
+        job_id = "test-job-123"
+        event = JobEvent(
+            event_type="ocr_decision",
+            message="OCR skipped",
+            details={"reason": "tagged_pdf", "has_struct_tree_root": True},
+        )
+
+        # Act
+        await repo.add_job_event(job_id, event)
+
+        # Assert
+        mock_mongodb.jobs.update_one.assert_called_once()
+        call_args = mock_mongodb.jobs.update_one.call_args
+        assert call_args[0][0] == {"job_id": job_id}  # Filter by job_id
+        assert "$push" in call_args[0][1]  # Should use $push operator
+        assert "events" in call_args[0][1]["$push"]  # Push to events array
+
+        # Verify event data structure
+        pushed_event = call_args[0][1]["$push"]["events"]
+        assert pushed_event["event_type"] == "ocr_decision"
+        assert pushed_event["message"] == "OCR skipped"
+        assert pushed_event["details"]["reason"] == "tagged_pdf"
+
+    @pytest.mark.asyncio
+    async def test_add_multiple_job_events_in_order(self, mock_mongodb):
+        """Should add multiple events in the order they are logged."""
+        repo = JobRepository()
+        job_id = "test-job-123"
+
+        # Import JobEvent directly to avoid circular import issues
+        from pdfa.models import JobEvent
+
+        event1 = JobEvent(
+            event_type="format_conversion",
+            message="Converted Office to PDF",
+            details={"source_format": "docx"},
+        )
+        event2 = JobEvent(
+            event_type="ocr_decision",
+            message="OCR decision made",
+            details={"decision": "skip"},
+        )
+        event3 = JobEvent(
+            event_type="compression_selected",
+            message="Compression profile selected",
+            details={"profile": "balanced"},
+        )
+
+        # Act
+        await repo.add_job_event(job_id, event1)
+        await repo.add_job_event(job_id, event2)
+        await repo.add_job_event(job_id, event3)
+
+        # Assert
+        assert mock_mongodb.jobs.update_one.call_count == 3
+
+        # Verify events were pushed in order
+        calls = mock_mongodb.jobs.update_one.call_args_list
+        assert calls[0][0][1]["$push"]["events"]["event_type"] == "format_conversion"
+        assert calls[1][0][1]["$push"]["events"]["event_type"] == "ocr_decision"
+        assert calls[2][0][1]["$push"]["events"]["event_type"] == "compression_selected"
+
+    @pytest.mark.asyncio
+    async def test_get_job_with_events(self, mock_mongodb):
+        """Should retrieve job with events correctly."""
+        repo = JobRepository()
+
+        # Mock MongoDB response with events
+        mock_job_data = {
+            "job_id": "test-123",
+            "user_id": "user-456",
+            "status": "completed",
+            "filename": "test.pdf",
+            "config": {"pdfa_level": "2"},
+            "created_at": datetime(2024, 1, 1, 10, 0, 0),
+            "completed_at": datetime(2024, 1, 1, 10, 2, 30),
+            "events": [
+                {
+                    "timestamp": datetime(2024, 1, 1, 10, 0, 1),
+                    "event_type": "format_conversion",
+                    "message": "Converted Office to PDF",
+                    "details": {
+                        "source_format": "docx",
+                        "conversion_time_seconds": 3.2,
+                    },
+                },
+                {
+                    "timestamp": datetime(2024, 1, 1, 10, 0, 5),
+                    "event_type": "ocr_decision",
+                    "message": "OCR skipped due to tagged PDF",
+                    "details": {"decision": "skip", "reason": "tagged_pdf"},
+                },
+                {
+                    "timestamp": datetime(2024, 1, 1, 10, 0, 6),
+                    "event_type": "compression_selected",
+                    "message": "Compression profile auto-switched",
+                    "details": {
+                        "profile": "preserve",
+                        "reason": "auto_switched_for_tagged_pdf",
+                    },
+                },
+            ],
+        }
+        mock_mongodb.jobs.find_one = AsyncMock(return_value=mock_job_data)
+
+        # Act
+        job = await repo.get_job("test-123")
+
+        # Assert
+        assert job is not None
+        assert len(job.events) == 3
+        assert job.events[0].event_type == "format_conversion"
+        assert job.events[0].details["source_format"] == "docx"
+        assert job.events[1].event_type == "ocr_decision"
+        assert job.events[1].details["reason"] == "tagged_pdf"
+        assert job.events[2].event_type == "compression_selected"
+        assert job.events[2].details["profile"] == "preserve"
+
+    @pytest.mark.asyncio
+    async def test_get_job_backward_compatibility_no_events(self, mock_mongodb):
+        """Should handle old jobs without events field (backward compatibility)."""
+        repo = JobRepository()
+
+        # Mock old job document WITHOUT events field
+        mock_job_data = {
+            "job_id": "old-job",
+            "status": "completed",
+            "filename": "old.pdf",
+            "config": {},
+            "created_at": datetime(2024, 1, 1, 10, 0, 0),
+            # NO events field - simulating old document
+        }
+        mock_mongodb.jobs.find_one = AsyncMock(return_value=mock_job_data)
+
+        # Act
+        job = await repo.get_job("old-job")
+
+        # Assert
+        assert job is not None
+        assert job.events == []  # Should default to empty list
+        assert isinstance(job.events, list)
+
+    @pytest.mark.asyncio
+    async def test_add_job_event_with_complex_details(self, mock_mongodb):
+        """Should handle events with complex nested details."""
+        repo = JobRepository()
+        job_id = "test-job-123"
+
+        from pdfa.models import JobEvent
+
+        event = JobEvent(
+            event_type="fallback_applied",
+            message="Fallback tier 2 applied due to Ghostscript error",
+            details={
+                "tier": 2,
+                "reason": "ghostscript_error",
+                "original_error": "SubprocessOutputError: ...",
+                "safe_mode_config": {
+                    "image_dpi": 100,
+                    "remove_vectors": False,
+                    "optimize": 0,
+                    "jbig2_lossy": False,
+                },
+                "pdfa_level_downgrade": {
+                    "original": "3",
+                    "fallback": "2",
+                },
+            },
+        )
+
+        # Act
+        await repo.add_job_event(job_id, event)
+
+        # Assert
+        call_args = mock_mongodb.jobs.update_one.call_args
+        pushed_event = call_args[0][1]["$push"]["events"]
+
+        assert pushed_event["details"]["tier"] == 2
+        assert pushed_event["details"]["safe_mode_config"]["image_dpi"] == 100
+        assert pushed_event["details"]["pdfa_level_downgrade"]["original"] == "3"
+
+    @pytest.mark.asyncio
+    async def test_get_user_jobs_returns_events(self, mock_mongodb):
+        """Should return events when querying user jobs."""
+        repo = JobRepository()
+
+        mock_cursor = AsyncMock()
+        mock_cursor.to_list = AsyncMock(
+            return_value=[
+                {
+                    "job_id": "job-1",
+                    "user_id": "user-123",
+                    "status": "completed",
+                    "filename": "file1.pdf",
+                    "config": {},
+                    "created_at": datetime(2024, 1, 2),
+                    "events": [
+                        {
+                            "timestamp": datetime(2024, 1, 2, 10, 0, 0),
+                            "event_type": "format_conversion",
+                            "message": "Direct PDF",
+                            "details": {"source_format": "pdf"},
+                        }
+                    ],
+                },
+                {
+                    "job_id": "job-2",
+                    "user_id": "user-123",
+                    "status": "completed",
+                    "filename": "file2.pdf",
+                    "config": {},
+                    "created_at": datetime(2024, 1, 1),
+                    "events": [],  # Empty events array
+                },
+            ]
+        )
+
+        mock_find = MagicMock(return_value=mock_cursor)
+        mock_mongodb.jobs.find = mock_find
+        mock_cursor.sort = MagicMock(return_value=mock_cursor)
+        mock_cursor.skip = MagicMock(return_value=mock_cursor)
+        mock_cursor.limit = MagicMock(return_value=mock_cursor)
+
+        # Act
+        result = await repo.get_user_jobs("user-123", limit=2, offset=0)
+
+        # Assert
+        assert len(result) == 2
+        assert len(result[0].events) == 1
+        assert result[0].events[0].event_type == "format_conversion"
+        assert len(result[1].events) == 0  # Empty events list
