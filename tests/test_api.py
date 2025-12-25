@@ -670,3 +670,151 @@ def test_head_request_language_endpoint(client: TestClient) -> None:
     assert response.headers["content-type"] == "text/html; charset=utf-8"
     # HEAD should not return a body
     assert response.content == b""
+
+
+# Tests for /jobs/history endpoint
+
+
+def test_jobs_history_requires_authentication(client: TestClient) -> None:
+    """GET /api/v1/jobs/history should require authentication."""
+    response = client.get("/api/v1/jobs/history")
+    assert response.status_code == 401
+
+
+def test_jobs_history_success(
+    client: TestClient, auth_headers: dict, mock_mongodb
+) -> None:
+    """GET /api/v1/jobs/history should return user jobs with authentication."""
+    from datetime import datetime
+    from unittest.mock import AsyncMock, MagicMock
+
+    # Mock repository to return jobs
+    mock_cursor = AsyncMock()
+    mock_cursor.to_list = AsyncMock(
+        return_value=[
+            {
+                "job_id": "job-1",
+                "user_id": "google_user_123456",
+                "status": "completed",
+                "filename": "test1.pdf",
+                "config": {"pdfa_level": "2"},
+                "created_at": datetime(2024, 1, 2, 10, 0),
+                "started_at": datetime(2024, 1, 2, 10, 0, 5),
+                "completed_at": datetime(2024, 1, 2, 10, 2, 30),
+                "duration_seconds": 145.0,
+                "file_size_input": 1048576,
+                "file_size_output": 524288,
+                "compression_ratio": 0.5,
+                "error": None,
+            },
+            {
+                "job_id": "job-2",
+                "user_id": "google_user_123456",
+                "status": "completed",
+                "filename": "test2.pdf",
+                "config": {"pdfa_level": "3"},
+                "created_at": datetime(2024, 1, 1, 10, 0),
+                "started_at": datetime(2024, 1, 1, 10, 0, 5),
+                "completed_at": datetime(2024, 1, 1, 10, 1, 0),
+                "duration_seconds": 55.0,
+                "file_size_input": 2097152,
+                "file_size_output": 1048576,
+                "compression_ratio": 0.5,
+                "error": None,
+            },
+        ]
+    )
+
+    mock_find = MagicMock(return_value=mock_cursor)
+    mock_mongodb.jobs.find = mock_find
+    mock_cursor.sort = MagicMock(return_value=mock_cursor)
+    mock_cursor.skip = MagicMock(return_value=mock_cursor)
+    mock_cursor.limit = MagicMock(return_value=mock_cursor)
+
+    response = client.get("/api/v1/jobs/history", headers=auth_headers)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "jobs" in data
+    assert "total" in data
+    assert "limit" in data
+    assert "offset" in data
+    assert len(data["jobs"]) == 2
+    assert data["jobs"][0]["job_id"] == "job-1"
+    assert data["jobs"][0]["filename"] == "test1.pdf"
+    assert data["jobs"][0]["status"] == "completed"
+    assert data["jobs"][0]["duration_seconds"] == 145.0
+
+
+def test_jobs_history_with_pagination(
+    client: TestClient, auth_headers: dict, mock_mongodb
+) -> None:
+    """GET /api/v1/jobs/history should support pagination."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    mock_cursor = AsyncMock()
+    mock_cursor.to_list = AsyncMock(return_value=[])
+    mock_find = MagicMock(return_value=mock_cursor)
+    mock_mongodb.jobs.find = mock_find
+    mock_cursor.sort = MagicMock(return_value=mock_cursor)
+    mock_cursor.skip = MagicMock(return_value=mock_cursor)
+    mock_cursor.limit = MagicMock(return_value=mock_cursor)
+
+    response = client.get(
+        "/api/v1/jobs/history?limit=10&offset=20", headers=auth_headers
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["limit"] == 10
+    assert data["offset"] == 20
+
+
+def test_jobs_history_with_status_filter(
+    client: TestClient, auth_headers: dict, mock_mongodb
+) -> None:
+    """GET /api/v1/jobs/history should support status filtering."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    mock_cursor = AsyncMock()
+    mock_cursor.to_list = AsyncMock(return_value=[])
+    mock_find = MagicMock(return_value=mock_cursor)
+    mock_mongodb.jobs.find = mock_find
+    mock_cursor.sort = MagicMock(return_value=mock_cursor)
+    mock_cursor.skip = MagicMock(return_value=mock_cursor)
+    mock_cursor.limit = MagicMock(return_value=mock_cursor)
+
+    response = client.get(
+        "/api/v1/jobs/history?status=completed", headers=auth_headers
+    )
+
+    assert response.status_code == 200
+
+
+def test_jobs_history_invalid_limit(client: TestClient, auth_headers: dict) -> None:
+    """GET /api/v1/jobs/history should reject invalid limit values."""
+    # Limit too low
+    response = client.get("/api/v1/jobs/history?limit=0", headers=auth_headers)
+    assert response.status_code == 400
+    assert "must be between 1 and 100" in response.json()["detail"]
+
+    # Limit too high
+    response = client.get("/api/v1/jobs/history?limit=101", headers=auth_headers)
+    assert response.status_code == 400
+    assert "must be between 1 and 100" in response.json()["detail"]
+
+
+def test_jobs_history_invalid_offset(client: TestClient, auth_headers: dict) -> None:
+    """GET /api/v1/jobs/history should reject negative offset."""
+    response = client.get("/api/v1/jobs/history?offset=-1", headers=auth_headers)
+    assert response.status_code == 400
+    assert "must be non-negative" in response.json()["detail"]
+
+
+def test_jobs_history_invalid_status(client: TestClient, auth_headers: dict) -> None:
+    """GET /api/v1/jobs/history should reject invalid status values."""
+    response = client.get(
+        "/api/v1/jobs/history?status=invalid_status", headers=auth_headers
+    )
+    assert response.status_code == 400
+    assert "Invalid status" in response.json()["detail"]

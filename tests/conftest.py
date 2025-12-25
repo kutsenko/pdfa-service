@@ -113,10 +113,43 @@ def auth_headers(valid_jwt_token):
 
 
 @pytest.fixture(autouse=True)
-def clear_oauth_state():
-    """Clear OAuth state storage after each test."""
-    yield
-    # Cleanup after test
-    from pdfa.auth import _oauth_state_storage
+def mock_mongodb(monkeypatch):
+    """Auto-mock MongoDB for all unit tests.
 
-    _oauth_state_storage.clear()
+    This fixture automatically mocks MongoDB database operations so unit tests
+    can run without a real MongoDB instance. It provides AsyncMock objects for
+    all collection operations.
+
+    The mock is applied globally and automatically to all tests unless explicitly
+    disabled with the marker: @pytest.mark.no_mongo_mock
+    """
+    from unittest.mock import AsyncMock, MagicMock
+
+    # Create mock database
+    mock_db = MagicMock()
+
+    # Mock collections with AsyncMock for async operations
+    mock_db.users = MagicMock()
+    mock_db.jobs = MagicMock()
+    mock_db.oauth_states = MagicMock()
+    mock_db.audit_logs = MagicMock()
+
+    # Mock common collection methods
+    for collection in [mock_db.users, mock_db.jobs, mock_db.oauth_states, mock_db.audit_logs]:
+        collection.insert_one = AsyncMock()
+        collection.update_one = AsyncMock()
+        collection.find_one = AsyncMock(return_value=None)
+        collection.find_one_and_delete = AsyncMock(return_value=None)
+        collection.delete_one = AsyncMock()
+        collection.find = MagicMock()
+        collection.aggregate = MagicMock()
+        collection.create_index = AsyncMock()
+
+    # Mock get_db to return our mock database
+    def mock_get_db():
+        return mock_db
+
+    monkeypatch.setattr("pdfa.db.get_db", mock_get_db)
+    monkeypatch.setattr("pdfa.repositories.get_db", mock_get_db)
+
+    return mock_db
