@@ -2137,6 +2137,26 @@
         // Get current language from HTML data-lang attribute or browser detection
         const currentLang = detectAndRedirectToPreferredLanguage();
 
+        // Helper function to get nested value from dot notation key
+        function getNestedValue(obj, key) {
+            // First try direct key (flat structure)
+            if (obj[key] !== undefined) {
+                return obj[key];
+            }
+
+            // Then try nested structure (e.g., "modal.title" -> obj.modal.title)
+            const keys = key.split('.');
+            let value = obj;
+            for (const k of keys) {
+                if (value && value[k] !== undefined) {
+                    value = value[k];
+                } else {
+                    return undefined;
+                }
+            }
+            return value;
+        }
+
         // Apply translations
         function applyTranslations(lang) {
             const t = translations[lang] || translations.en;
@@ -2144,14 +2164,16 @@
             // Translate all elements with data-i18n attribute
             document.querySelectorAll('[data-i18n]').forEach(element => {
                 const key = element.getAttribute('data-i18n');
-                if (t[key]) {
-                    element.textContent = t[key];
+                const translatedText = getNestedValue(t, key);
+                if (translatedText !== undefined) {
+                    element.textContent = translatedText;
                 }
             });
 
             // Update page title
-            if (t['page.title']) {
-                document.title = t['page.title'];
+            const pageTitle = getNestedValue(t, 'page.title');
+            if (pageTitle) {
+                document.title = pageTitle;
             }
 
             // Mark active language in switcher
@@ -2168,7 +2190,7 @@
         // Helper function to get translated text with placeholders
         function t(key, replacements = {}) {
             const translations_current = translations[currentLang] || translations.en;
-            let text = translations_current[key] || key;
+            let text = getNestedValue(translations_current, key) || key;
 
             // Replace placeholders like {size}, {max}, etc.
             Object.keys(replacements).forEach(placeholder => {

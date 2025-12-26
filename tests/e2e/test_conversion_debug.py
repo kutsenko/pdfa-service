@@ -52,8 +52,10 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
 
                 // Test translation
                 const translated = this.translateEventMessage(message);
+                const translationWorked = translated !== message.message;
                 console.log('[DEBUG] Original message:', message.message);
                 console.log('[DEBUG] Translated message:', translated);
+                console.log('[DEBUG] Translation worked:', translationWorked);
                 console.log('[DEBUG] Current language:', currentLang);
 
                 return originalHandleJobEvent(message);
