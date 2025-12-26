@@ -331,9 +331,7 @@ class TestJobCompletionAndDownload:
         assert "filename" in completed_message, "Completed message must have filename"
 
         # Verify download_url format
-        assert completed_message["download_url"].startswith(
-            "/download/"
-        ), (
+        assert completed_message["download_url"].startswith("/download/"), (
             f"download_url should start with /download/, "
             f"got: {completed_message['download_url']}"
         )
@@ -411,9 +409,7 @@ class TestJobCompletionAndDownload:
             response.status_code == 200
         ), f"Download should return 200, got: {response.status_code}"
 
-        assert (
-            response.headers["content-type"] == "application/pdf"
-        ), (
+        assert response.headers["content-type"] == "application/pdf", (
             f"Should return PDF content-type, "
             f"got: {response.headers.get('content-type')}"
         )
