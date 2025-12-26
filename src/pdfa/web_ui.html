@@ -1544,6 +1544,20 @@
                 // Event list translations (flat keys for HTML)
                 'events.title': 'Conversion Events',
                 'events.details': 'Details',
+                // Progress step translations (OCRmyPDF steps)
+                progressSteps: {
+                    'Starting conversion': 'Starting conversion',
+                    'Office conversion': 'Converting Office document',
+                    'Scanning contents': 'Scanning contents',
+                    'OCR': 'OCR processing',
+                    'PDF/A conversion': 'PDF/A conversion',
+                    'Linearizing': 'Linearizing',
+                    'Recompressing JPEGs': 'Recompressing JPEGs',
+                    'Deflating JPEGs': 'Deflating JPEGs',
+                    'JBIG2': 'JBIG2 compression',
+                    'Optimize': 'Optimizing',
+                    'Repair': 'Repairing PDF'
+                },
                 // Event messages (nested structure for JavaScript)
                 events: {
                     messages: {
@@ -1702,6 +1716,20 @@
                 // Event-Listen-Übersetzungen (flache Schlüssel für HTML)
                 'events.title': 'Konvertierungsereignisse',
                 'events.details': 'Details',
+                // Fortschrittsschritt-Übersetzungen (OCRmyPDF-Schritte)
+                progressSteps: {
+                    'Starting conversion': 'Konvertierung wird gestartet',
+                    'Office conversion': 'Office-Dokument wird konvertiert',
+                    'Scanning contents': 'Inhalt wird gescannt',
+                    'OCR': 'OCR-Verarbeitung',
+                    'PDF/A conversion': 'PDF/A-Konvertierung',
+                    'Linearizing': 'Linearisierung',
+                    'Recompressing JPEGs': 'JPEGs werden neu komprimiert',
+                    'Deflating JPEGs': 'JPEGs werden entpackt',
+                    'JBIG2': 'JBIG2-Komprimierung',
+                    'Optimize': 'Optimierung',
+                    'Repair': 'PDF wird repariert'
+                },
                 // Event-Nachrichten (verschachtelte Struktur für JavaScript)
                 events: {
                     messages: {
@@ -1860,6 +1888,20 @@
                 // Traducciones de lista de eventos (claves planas para HTML)
                 'events.title': 'Eventos de Conversión',
                 'events.details': 'Detalles',
+                // Traducciones de pasos de progreso (pasos de OCRmyPDF)
+                progressSteps: {
+                    'Starting conversion': 'Iniciando conversión',
+                    'Office conversion': 'Convirtiendo documento Office',
+                    'Scanning contents': 'Escaneando contenido',
+                    'OCR': 'Procesamiento OCR',
+                    'PDF/A conversion': 'Conversión a PDF/A',
+                    'Linearizing': 'Linearización',
+                    'Recompressing JPEGs': 'Recomprimiendo JPEGs',
+                    'Deflating JPEGs': 'Descomprimiendo JPEGs',
+                    'JBIG2': 'Compresión JBIG2',
+                    'Optimize': 'Optimización',
+                    'Repair': 'Reparando PDF'
+                },
                 // Mensajes de eventos (estructura anidada para JavaScript)
                 events: {
                     messages: {
@@ -2018,6 +2060,20 @@
                 // Traductions de la liste d'événements (clés plates pour HTML)
                 'events.title': 'Événements de Conversion',
                 'events.details': 'Détails',
+                // Traductions des étapes de progression (étapes OCRmyPDF)
+                progressSteps: {
+                    'Starting conversion': 'Démarrage de la conversion',
+                    'Office conversion': 'Conversion du document Office',
+                    'Scanning contents': 'Analyse du contenu',
+                    'OCR': 'Traitement OCR',
+                    'PDF/A conversion': 'Conversion en PDF/A',
+                    'Linearizing': 'Linéarisation',
+                    'Recompressing JPEGs': 'Recompression des JPEGs',
+                    'Deflating JPEGs': 'Décompression des JPEGs',
+                    'JBIG2': 'Compression JBIG2',
+                    'Optimize': 'Optimisation',
+                    'Repair': 'Réparation du PDF'
+                },
                 // Messages d'événements (structure imbriquée pour JavaScript)
                 events: {
                     messages: {
@@ -2705,13 +2761,27 @@
             }
 
             handleProgress(message) {
+                // Translate progress step if translation exists
+                const translatedStep = this.translateProgressStep(message.step);
+
                 this.updateProgress({
-                    step: message.step,
+                    step: translatedStep,
                     percentage: message.percentage,
                     current: message.current,
                     total: message.total,
                     message: message.message
                 });
+            }
+
+            /**
+             * Translate progress step message
+             */
+            translateProgressStep(step) {
+                const translations_current = translations[currentLang] || translations.en;
+                if (translations_current.progressSteps && translations_current.progressSteps[step]) {
+                    return translations_current.progressSteps[step];
+                }
+                return step; // Fallback to original if no translation found
             }
 
             handleCompleted(message) {
