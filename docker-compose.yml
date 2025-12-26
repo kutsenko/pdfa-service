@@ -1,6 +1,29 @@
 services:
+  mongodb:
+    image: mongo:7.0
+    container_name: pdfa-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-change_this_admin_password}
+      MONGO_INITDB_DATABASE: pdfa_service
+      PDFA_DB_USER: pdfa_user
+      PDFA_DB_PASSWORD: ${PDFA_DB_PASSWORD:-change_this_password}
+    volumes:
+      - mongodb_data:/data/db
+      - ./docker/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    networks:
+      - pdfa-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   pdfa:
     build: .
+    container_name: pdfa-service
     ports:
       - "8000:8000"
     environment:
@@ -12,10 +35,28 @@ services:
       - PDFA_REMOVE_VECTORS=true    # Remove vector graphics (true/false, default: true)
       - PDFA_JBIG2_LOSSY=false      # Use lossy JBIG2 compression (true/false, default: false)
       - PDFA_JBIG2_PAGE_GROUP_SIZE=10  # JBIG2 page grouping (0-100+, default: 10)
+      # Authentication Settings
       - PDFA_ENABLE_AUTH=${PDFA_ENABLE_AUTH-false}
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID-none}
       - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET-none}
       - JWT_SECRET_KEY="${JWT_SECRET_KEY-none}
       - JWT_EXPIRY_HOURS=${JWT_EXPIRY_HOURS-24}
       - OAUTH_REDIRECT_URI=${OAUTH_REDIRECT_URI-http://localhost:8000/auth/callback}
+      # MongoDB Settings (Required)
+      - MONGODB_URI=mongodb://pdfa_user:${PDFA_DB_PASSWORD:-change_this_password}@mongodb:27017/pdfa_service?authSource=admin
+      - MONGODB_DATABASE=pdfa_service
+      - MONGODB_JOB_TTL_DAYS=90
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - pdfa-network
     restart: unless-stopped
+
+networks:
+  pdfa-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local

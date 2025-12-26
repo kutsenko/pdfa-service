@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi.testclient import TestClient
@@ -30,6 +31,7 @@ def test_convert_endpoint_success(monkeypatch, client: TestClient) -> None:
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params like event_callback
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         fake_convert.called_with = {  # type: ignore[attr-defined]
@@ -69,6 +71,7 @@ def test_convert_endpoint_with_ocr_disabled(monkeypatch, client: TestClient) -> 
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         fake_convert.called_with = {  # type: ignore[attr-defined]
@@ -240,6 +243,7 @@ def test_convert_with_compression_profile_balanced(
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         # Capture the compression config that was used
@@ -274,6 +278,7 @@ def test_convert_with_compression_profile_quality(
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         compression_config_used["config"] = compression_config
@@ -307,6 +312,7 @@ def test_convert_with_compression_profile_aggressive(
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         compression_config_used["config"] = compression_config
@@ -344,6 +350,7 @@ def test_convert_with_compression_profile_minimal(
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         compression_config_used["config"] = compression_config
@@ -410,6 +417,7 @@ def test_websocket_submit_job(monkeypatch, client: TestClient) -> None:
         compression_config=None,
         progress_callback=None,
         cancel_event=None,
+        event_callback=None,  # Added parameter
     ) -> None:
         # Simulate conversion
         output_pdf.write_bytes(b"%PDF-1.4 converted")
@@ -670,3 +678,271 @@ def test_head_request_language_endpoint(client: TestClient) -> None:
     assert response.headers["content-type"] == "text/html; charset=utf-8"
     # HEAD should not return a body
     assert response.content == b""
+
+
+# Tests for /jobs/history endpoint
+
+
+def test_jobs_history_requires_authentication(client: TestClient) -> None:
+    """GET /api/v1/jobs/history should require authentication."""
+    response = client.get("/api/v1/jobs/history")
+    assert response.status_code == 401
+
+
+def test_jobs_history_success(
+    client: TestClient, auth_headers: dict, mock_mongodb
+) -> None:
+    """GET /api/v1/jobs/history should return user jobs with authentication."""
+    from datetime import datetime
+    from unittest.mock import AsyncMock, MagicMock
+
+    # Mock repository to return jobs
+    mock_cursor = AsyncMock()
+    mock_cursor.to_list = AsyncMock(
+        return_value=[
+            {
+                "job_id": "job-1",
+                "user_id": "google_user_123456",
+                "status": "completed",
+                "filename": "test1.pdf",
+                "config": {"pdfa_level": "2"},
+                "created_at": datetime(2024, 1, 2, 10, 0),
+                "started_at": datetime(2024, 1, 2, 10, 0, 5),
+                "completed_at": datetime(2024, 1, 2, 10, 2, 30),
+                "duration_seconds": 145.0,
+                "file_size_input": 1048576,
+                "file_size_output": 524288,
+                "compression_ratio": 0.5,
+                "error": None,
+            },
+            {
+                "job_id": "job-2",
+                "user_id": "google_user_123456",
+                "status": "completed",
+                "filename": "test2.pdf",
+                "config": {"pdfa_level": "3"},
+                "created_at": datetime(2024, 1, 1, 10, 0),
+                "started_at": datetime(2024, 1, 1, 10, 0, 5),
+                "completed_at": datetime(2024, 1, 1, 10, 1, 0),
+                "duration_seconds": 55.0,
+                "file_size_input": 2097152,
+                "file_size_output": 1048576,
+                "compression_ratio": 0.5,
+                "error": None,
+            },
+        ]
+    )
+
+    mock_find = MagicMock(return_value=mock_cursor)
+    mock_mongodb.jobs.find = mock_find
+    mock_cursor.sort = MagicMock(return_value=mock_cursor)
+    mock_cursor.skip = MagicMock(return_value=mock_cursor)
+    mock_cursor.limit = MagicMock(return_value=mock_cursor)
+
+    response = client.get("/api/v1/jobs/history", headers=auth_headers)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert "jobs" in data
+    assert "total" in data
+    assert "limit" in data
+    assert "offset" in data
+    assert len(data["jobs"]) == 2
+    assert data["jobs"][0]["job_id"] == "job-1"
+    assert data["jobs"][0]["filename"] == "test1.pdf"
+    assert data["jobs"][0]["status"] == "completed"
+    assert data["jobs"][0]["duration_seconds"] == 145.0
+
+
+def test_jobs_history_with_pagination(
+    client: TestClient, auth_headers: dict, mock_mongodb
+) -> None:
+    """GET /api/v1/jobs/history should support pagination."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    mock_cursor = AsyncMock()
+    mock_cursor.to_list = AsyncMock(return_value=[])
+    mock_find = MagicMock(return_value=mock_cursor)
+    mock_mongodb.jobs.find = mock_find
+    mock_cursor.sort = MagicMock(return_value=mock_cursor)
+    mock_cursor.skip = MagicMock(return_value=mock_cursor)
+    mock_cursor.limit = MagicMock(return_value=mock_cursor)
+
+    response = client.get(
+        "/api/v1/jobs/history?limit=10&offset=20", headers=auth_headers
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["limit"] == 10
+    assert data["offset"] == 20
+
+
+def test_jobs_history_with_status_filter(
+    client: TestClient, auth_headers: dict, mock_mongodb
+) -> None:
+    """GET /api/v1/jobs/history should support status filtering."""
+    from unittest.mock import AsyncMock, MagicMock
+
+    mock_cursor = AsyncMock()
+    mock_cursor.to_list = AsyncMock(return_value=[])
+    mock_find = MagicMock(return_value=mock_cursor)
+    mock_mongodb.jobs.find = mock_find
+    mock_cursor.sort = MagicMock(return_value=mock_cursor)
+    mock_cursor.skip = MagicMock(return_value=mock_cursor)
+    mock_cursor.limit = MagicMock(return_value=mock_cursor)
+
+    response = client.get("/api/v1/jobs/history?status=completed", headers=auth_headers)
+
+    assert response.status_code == 200
+
+
+def test_jobs_history_invalid_limit(client: TestClient, auth_headers: dict) -> None:
+    """GET /api/v1/jobs/history should reject invalid limit values."""
+    # Limit too low
+    response = client.get("/api/v1/jobs/history?limit=0", headers=auth_headers)
+    assert response.status_code == 400
+    assert "must be between 1 and 100" in response.json()["detail"]
+
+    # Limit too high
+    response = client.get("/api/v1/jobs/history?limit=101", headers=auth_headers)
+    assert response.status_code == 400
+    assert "must be between 1 and 100" in response.json()["detail"]
+
+
+def test_jobs_history_invalid_offset(client: TestClient, auth_headers: dict) -> None:
+    """GET /api/v1/jobs/history should reject negative offset."""
+    response = client.get("/api/v1/jobs/history?offset=-1", headers=auth_headers)
+    assert response.status_code == 400
+    assert "must be non-negative" in response.json()["detail"]
+
+
+def test_jobs_history_invalid_status(client: TestClient, auth_headers: dict) -> None:
+    """GET /api/v1/jobs/history should reject invalid status values."""
+    response = client.get(
+        "/api/v1/jobs/history?status=invalid_status", headers=auth_headers
+    )
+    assert response.status_code == 400
+    assert "Invalid status" in response.json()["detail"]
+
+
+# Default User Creation Tests (US-003 Phase 2)
+
+
+@pytest.mark.asyncio
+async def test_ensure_default_user_creates_user_when_auth_disabled(monkeypatch):
+    """ensure_default_user() creates default user when auth disabled."""
+    import pdfa.api
+    from pdfa.api import ensure_default_user
+    from pdfa.auth_config import AuthConfig
+    from pdfa.repositories import UserRepository
+
+    # Setup: Mock auth_config as disabled
+    config = AuthConfig(
+        enabled=False,
+        google_client_id="",
+        google_client_secret="",
+        jwt_secret_key="",
+        default_user_id="local-default",
+        default_user_email="local@localhost",
+        default_user_name="Local User",
+    )
+    pdfa.api.auth_config = config
+
+    # Mock UserRepository
+    mock_user_repo = MagicMock(spec=UserRepository)
+    monkeypatch.setattr("pdfa.api.UserRepository", lambda: mock_user_repo)
+
+    # Execute
+    await ensure_default_user()
+
+    # Verify create_or_update_user was called with correct user data
+    mock_user_repo.create_or_update_user.assert_called_once()
+    call_args = mock_user_repo.create_or_update_user.call_args[0][0]
+    assert call_args.user_id == "local-default"
+    assert call_args.email == "local@localhost"
+    assert call_args.name == "Local User"
+    assert call_args.login_count == 1
+
+
+@pytest.mark.asyncio
+async def test_ensure_default_user_skips_when_auth_enabled(monkeypatch):
+    """ensure_default_user() skips creation when auth enabled."""
+    import pdfa.api
+    from pdfa.api import ensure_default_user
+    from pdfa.auth_config import AuthConfig
+    from pdfa.repositories import UserRepository
+
+    # Setup: Mock auth_config as enabled
+    config = AuthConfig(
+        enabled=True,
+        google_client_id="client",
+        google_client_secret="secret",
+        jwt_secret_key="a" * 32,
+    )
+    pdfa.api.auth_config = config
+
+    # Mock UserRepository
+    mock_user_repo = MagicMock(spec=UserRepository)
+    monkeypatch.setattr("pdfa.api.UserRepository", lambda: mock_user_repo)
+
+    # Execute
+    await ensure_default_user()
+
+    # Verify create_or_update_user was NOT called
+    mock_user_repo.create_or_update_user.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_ensure_default_user_skips_when_auth_config_none(monkeypatch):
+    """ensure_default_user() skips when auth_config is None."""
+    import pdfa.api
+    from pdfa.api import ensure_default_user
+    from pdfa.repositories import UserRepository
+
+    # Setup: auth_config is None
+    pdfa.api.auth_config = None
+
+    # Mock UserRepository
+    mock_user_repo = MagicMock(spec=UserRepository)
+    monkeypatch.setattr("pdfa.api.UserRepository", lambda: mock_user_repo)
+
+    # Execute
+    await ensure_default_user()
+
+    # Verify create_or_update_user was NOT called
+    mock_user_repo.create_or_update_user.assert_not_called()
+
+
+@pytest.mark.asyncio
+async def test_ensure_default_user_uses_custom_config(monkeypatch):
+    """ensure_default_user() uses custom default user config."""
+    import pdfa.api
+    from pdfa.api import ensure_default_user
+    from pdfa.auth_config import AuthConfig
+    from pdfa.repositories import UserRepository
+
+    # Setup: Custom default user config
+    config = AuthConfig(
+        enabled=False,
+        google_client_id="",
+        google_client_secret="",
+        jwt_secret_key="",
+        default_user_id="my-user",
+        default_user_email="admin@example.com",
+        default_user_name="Administrator",
+    )
+    pdfa.api.auth_config = config
+
+    # Mock UserRepository
+    mock_user_repo = MagicMock(spec=UserRepository)
+    monkeypatch.setattr("pdfa.api.UserRepository", lambda: mock_user_repo)
+
+    # Execute
+    await ensure_default_user()
+
+    # Verify custom values were used
+    call_args = mock_user_repo.create_or_update_user.call_args[0][0]
+    assert call_args.user_id == "my-user"
+    assert call_args.email == "admin@example.com"
+    assert call_args.name == "Administrator"

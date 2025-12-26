@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 import uuid
+from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Literal
@@ -33,6 +34,8 @@ from pdfa.auth import (
 from pdfa.auth_config import AuthConfig
 from pdfa.compression_config import PRESETS, CompressionConfig
 from pdfa.converter import convert_to_pdfa
+from pdfa.db import MongoDBConnection, ensure_indexes
+from pdfa.db_config import DatabaseConfig
 from pdfa.exceptions import (
     JobCancelledException,
     JobNotFoundException,
@@ -47,7 +50,9 @@ from pdfa.format_converter import (
 from pdfa.image_converter import convert_image_to_pdf
 from pdfa.job_manager import get_job_manager
 from pdfa.logging_config import configure_logging, get_logger
+from pdfa.models import UserDocument
 from pdfa.progress_tracker import ProgressInfo
+from pdfa.repositories import JobRepository, UserRepository
 from pdfa.user_models import User
 from pdfa.websocket_protocol import (
     CancelJobMessage,
@@ -73,6 +78,10 @@ logger.info(
     f"JPG quality={compression_config.jpg_quality}, "
     f"Optimize={compression_config.optimize}"
 )
+
+# Database configuration - loaded during startup to allow testing without MongoDB
+# MongoDB is required for service operation (hard migration)
+db_config = None
 
 # Progress broadcast timeout configuration
 # For long-running conversions with many WebSocket clients, broadcasting progress
@@ -105,22 +114,105 @@ app = FastAPI(
 # Initialize job manager
 job_manager = get_job_manager()
 
+# Global auth config (loaded in startup_event)
+auth_config = None
+
+
+async def ensure_default_user() -> None:
+    """Create default user in MongoDB when authentication is disabled.
+
+    This function is idempotent and can be called multiple times safely.
+    It only creates a default user if:
+    - auth_config is loaded
+    - Authentication is disabled (auth_config.enabled == False)
+
+    The default user is created using values from auth_config:
+    - default_user_id
+    - default_user_email
+    - default_user_name
+
+    These values can be customized via environment variables:
+    - DEFAULT_USER_ID (default: "local-default")
+    - DEFAULT_USER_EMAIL (default: "local@localhost")
+    - DEFAULT_USER_NAME (default: "Local User")
+    """
+    global auth_config
+
+    if auth_config is None or auth_config.enabled:
+        return  # Skip if auth enabled or config not loaded
+
+    user_repo = UserRepository()
+    default_user = UserDocument(
+        user_id=auth_config.default_user_id,
+        email=auth_config.default_user_email,
+        name=auth_config.default_user_name,
+        picture=None,
+        created_at=datetime.utcnow(),
+        last_login_at=datetime.utcnow(),
+        login_count=1,
+    )
+
+    await user_repo.create_or_update_user(default_user)
+    logger.info(
+        f"Default user ensured: user_id={auth_config.default_user_id}, "
+        f"email={auth_config.default_user_email}"
+    )
+
 
 @app.on_event("startup")
 async def startup_event():
-    """Start background tasks on application startup."""
+    """Start background tasks and connect to MongoDB on application startup."""
+    global db_config, auth_config
+
     # Configure logging for all modules
     configure_logging()
     logger.info("Logging configured")
+
+    # Load database configuration from environment variables
+    db_config = DatabaseConfig.from_env()
+    logger.info(f"Database config loaded: database={db_config.mongodb_database}")
+
+    # Connect to MongoDB (hard migration: service will fail if MongoDB unavailable)
+    logger.info(
+        f"Connecting to MongoDB: database={db_config.mongodb_database}, "
+        f"uri={db_config.get_safe_uri_for_logging()}"
+    )
+    mongo = MongoDBConnection()
+    try:
+        await mongo.connect(db_config.mongodb_uri, db_config.mongodb_database)
+        logger.info("MongoDB connection established")
+
+        # Create indexes (idempotent operation)
+        await ensure_indexes()
+        logger.info("MongoDB indexes verified")
+    except Exception as e:
+        logger.error(f"Failed to connect to MongoDB: {e}")
+        raise RuntimeError(
+            "Service cannot start without MongoDB connection. "
+            "Please check MONGODB_URI environment variable and ensure MongoDB is running."
+        ) from e
+
+    # Set global auth_config reference for ensure_default_user()
+    auth_config = auth_config_instance
+
+    # Create default user if authentication is disabled
+    await ensure_default_user()
+
     logger.info("Starting background tasks...")
     job_manager.start_background_tasks()
+    logger.info("Application startup complete")
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Stop background tasks on application shutdown."""
+    """Stop background tasks and disconnect from MongoDB on application shutdown."""
     logger.info("Stopping background tasks...")
     await job_manager.stop_background_tasks()
+
+    logger.info("Disconnecting from MongoDB...")
+    mongo = MongoDBConnection()
+    await mongo.disconnect()
+    logger.info("Application shutdown complete")
 
 
 @app.api_route("/health", methods=["GET", "HEAD"])
@@ -128,8 +220,25 @@ async def health_check() -> dict[str, str]:
     """Health check endpoint (always public, no auth required).
 
     Supports both GET and HEAD methods for monitoring and load balancer checks.
+    Also verifies MongoDB connection health.
+
+    Returns:
+        Status dict with "status" and "database" fields
+
+    Raises:
+        HTTPException: 503 if MongoDB is unavailable
+
     """
-    return {"status": "healthy"}
+    # Check MongoDB health
+    mongo = MongoDBConnection()
+    db_healthy = await mongo.health_check()
+
+    if not db_healthy:
+        raise HTTPException(
+            status_code=503, detail="Service unavailable: database connection lost"
+        )
+
+    return {"status": "healthy", "database": "connected"}
 
 
 @app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
@@ -275,18 +384,19 @@ async def oauth_callback(request: Request):
 
 
 @app.get("/auth/user")
-async def get_user_info(current_user: User = Depends(get_current_user)):
-    """Get current authenticated user information.
+async def get_user_info(current_user: User = Depends(get_current_user_optional)):
+    """Get current user information.
 
     Returns:
         User information (email, name, picture)
+        - If auth is enabled: returns authenticated OAuth user
+        - If auth is disabled: returns default local user
 
     Raises:
-        HTTPException: If not authenticated (401) or auth disabled (404)
+        HTTPException: If auth is enabled and user is not authenticated (401)
 
     """
-    if not auth_config_instance.enabled:
-        raise HTTPException(status_code=404, detail="Authentication is disabled")
+    # get_current_user_optional handles both auth-enabled and auth-disabled cases
 
     return {
         "email": current_user.email,
@@ -591,6 +701,51 @@ async def process_conversion_job(job_id: str) -> None:
                     exc_info=True,
                 )
 
+        # Event callback that logs events to MongoDB
+        async def async_event_callback(event_type: str, **kwargs) -> None:
+            """Log conversion events to MongoDB for job tracking."""
+            try:
+                # Dynamically import the appropriate logger function
+                from pdfa import event_logger
+
+                # Map event types to logger functions
+                event_loggers = {
+                    "format_conversion": event_logger.log_format_conversion_event,
+                    "ocr_decision": event_logger.log_ocr_decision_event,
+                    "compression_selected": event_logger.log_compression_selected_event,
+                    "passthrough_mode": event_logger.log_passthrough_mode_event,
+                    "fallback_applied": event_logger.log_fallback_applied_event,
+                }
+
+                logger_func = event_loggers.get(event_type)
+                if logger_func:
+                    await logger_func(job_id=job_id, **kwargs)
+                else:
+                    logger.warning(f"Unknown event type: {event_type}")
+            except Exception as e:
+                # Log errors but don't fail conversion
+                logger.error(
+                    f"Failed to log event {event_type} for job {job_id}: {e}",
+                    exc_info=True,
+                )
+
+        # Get the current event loop to schedule coroutines from worker thread
+        main_loop = asyncio.get_running_loop()
+
+        # Create synchronous wrapper for event callback that works from
+        # worker threads
+        def event_callback(event_type: str, **kwargs) -> None:
+            """Schedule async callback in main loop."""
+            # Schedule the coroutine in the main event loop from worker thread
+            future = asyncio.run_coroutine_threadsafe(
+                async_event_callback(event_type, **kwargs), main_loop
+            )
+            # Wait for completion with timeout to avoid blocking worker thread
+            try:
+                future.result(timeout=5.0)  # 5 second timeout
+            except Exception as e:
+                logger.error(f"Event callback failed for {event_type}: {e}")
+
         # Determine file type and convert
         config = job.config
         pdf_path = job.input_path
@@ -599,16 +754,61 @@ async def process_conversion_job(job_id: str) -> None:
         if is_office_document(job.filename):
             logger.info(f"Converting Office document for job {job_id}")
             pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
+
+            # Track conversion time
+            import time
+
+            start_time = time.time()
+
             await asyncio.to_thread(
                 convert_office_to_pdf,
                 job.input_path,
                 pdf_path,
                 progress_callback=progress_callback,
             )
+
+            conversion_time = time.time() - start_time
+
+            # Log format conversion event
+            await async_event_callback(
+                "format_conversion",
+                source_format=job.filename.rsplit(".", 1)[-1].lower(),
+                target_format="pdf",
+                conversion_required=True,
+                converter="office_to_pdf",
+                conversion_time_seconds=conversion_time,
+            )
+
         elif is_image_file(job.filename):
             logger.info(f"Converting image to PDF for job {job_id}")
             pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
+
+            # Track conversion time
+            import time
+
+            start_time = time.time()
+
             await asyncio.to_thread(convert_image_to_pdf, job.input_path, pdf_path)
+
+            conversion_time = time.time() - start_time
+
+            # Log format conversion event
+            await async_event_callback(
+                "format_conversion",
+                source_format=job.filename.rsplit(".", 1)[-1].lower(),
+                target_format="pdf",
+                conversion_required=True,
+                converter="image_to_pdf",
+                conversion_time_seconds=conversion_time,
+            )
+        else:
+            # Direct PDF - no conversion needed
+            await async_event_callback(
+                "format_conversion",
+                source_format="pdf",
+                target_format="pdf",
+                conversion_required=False,
+            )
 
         # Convert to PDF/A
         output_path = job.input_path.parent / f"{job.input_path.stem}_pdfa.pdf"
@@ -627,6 +827,7 @@ async def process_conversion_job(job_id: str) -> None:
             skip_ocr_on_tagged_pdfs=config.get("skip_ocr_on_tagged_pdfs", True),
             compression_config=selected_compression,
             progress_callback=progress_callback,
+            event_callback=event_callback,
             cancel_event=job.cancel_event,
         )
 
@@ -777,6 +978,120 @@ async def websocket_endpoint(websocket: WebSocket):
         if current_job_id:
             job_manager.unregister_websocket(current_job_id, websocket)
         logger.info("WebSocket connection closed")
+
+
+@app.get("/api/v1/jobs/history")
+async def get_job_history(
+    limit: int = 50,
+    offset: int = 0,
+    status: str | None = None,
+    current_user: User = Depends(get_current_user),
+):
+    """Get conversion job history for the authenticated user.
+
+    Returns a paginated list of jobs sorted by creation date (newest first).
+    This endpoint requires authentication.
+
+    Args:
+        limit: Maximum number of jobs to return (default: 50, max: 100)
+        offset: Number of jobs to skip for pagination (default: 0)
+        status: Filter by job status (optional): queued, processing, completed, failed, cancelled
+        current_user: Authenticated user (injected by dependency)
+
+    Returns:
+        Job history with pagination info:
+        - jobs: List of job objects
+        - total: Total number of jobs (for current filter)
+        - limit: Items per page
+        - offset: Current offset
+
+    Raises:
+        HTTPException: If authentication fails (401)
+
+    Example:
+        GET /api/v1/jobs/history?limit=10&offset=0&status=completed
+        Response:
+        {
+            "jobs": [
+                {
+                    "job_id": "abc123",
+                    "filename": "document.pdf",
+                    "status": "completed",
+                    "created_at": "2024-12-12T10:30:00Z",
+                    "completed_at": "2024-12-12T10:32:30Z",
+                    "duration_seconds": 150.5,
+                    "file_size_input": 1048576,
+                    "file_size_output": 524288,
+                    "compression_ratio": 0.5
+                },
+                ...
+            ],
+            "total": 42,
+            "limit": 10,
+            "offset": 0
+        }
+
+    """
+    # Validate limit
+    if limit < 1 or limit > 100:
+        raise HTTPException(status_code=400, detail="Limit must be between 1 and 100")
+
+    if offset < 0:
+        raise HTTPException(status_code=400, detail="Offset must be non-negative")
+
+    # Validate status filter
+    valid_statuses = ["queued", "processing", "completed", "failed", "cancelled"]
+    if status and status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be one of: {', '.join(valid_statuses)}",
+        )
+
+    # Fetch jobs from MongoDB
+    job_repo = JobRepository()
+    jobs = await job_repo.get_user_jobs(
+        user_id=current_user.user_id,
+        limit=limit,
+        offset=offset,
+        status=status,
+    )
+
+    # Get total count for pagination (using same filters)
+    # Note: This is a simplified version. For production, you might want to cache this
+    # or use a more efficient counting mechanism
+    all_jobs = await job_repo.get_user_jobs(
+        user_id=current_user.user_id,
+        limit=1000,  # Get a large number to count
+        offset=0,
+        status=status,
+    )
+    total = len(all_jobs)
+
+    # Convert JobDocument to dict for JSON response
+    jobs_dict = [
+        {
+            "job_id": job.job_id,
+            "filename": job.filename,
+            "status": job.status,
+            "created_at": job.created_at.isoformat() if job.created_at else None,
+            "started_at": job.started_at.isoformat() if job.started_at else None,
+            "completed_at": job.completed_at.isoformat() if job.completed_at else None,
+            "duration_seconds": job.duration_seconds,
+            "file_size_input": job.file_size_input,
+            "file_size_output": job.file_size_output,
+            "compression_ratio": job.compression_ratio,
+            "error": job.error,
+            "config": job.config,
+        }
+        for job in jobs
+    ]
+
+    return {
+        "jobs": jobs_dict,
+        "total": total,
+        "limit": limit,
+        "offset": offset,
+    }
 
 
 @app.get("/api/v1/jobs/{job_id}/status")

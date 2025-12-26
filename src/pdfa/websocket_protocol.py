@@ -219,6 +219,30 @@ class PongMessage(ServerMessage):
     type: Literal["pong"] = "pong"
 
 
+@dataclass
+class JobEventMessage(ServerMessage):
+    """Job event message.
+
+    Sent when conversion events occur (OCR decisions, format conversions, etc.).
+
+    Attributes:
+        type: Always "job_event"
+        job_id: UUID of the job
+        event_type: Type of event (format_conversion, ocr_decision, etc.)
+        timestamp: ISO 8601 timestamp when event occurred
+        message: Human-readable event description (English fallback)
+        details: Additional structured event data including i18n keys
+
+    """
+
+    type: Literal["job_event"] = "job_event"
+    job_id: str = ""
+    event_type: str = ""
+    timestamp: str = ""
+    message: str = ""
+    details: dict[str, Any] | None = None
+
+
 def parse_client_message(data: dict[str, Any]) -> ClientMessage:
     """Parse a client message from a dictionary.
 

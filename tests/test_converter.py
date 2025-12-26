@@ -217,10 +217,11 @@ def test_needs_ocr_text_pdf(monkeypatch, tmp_path) -> None:
     pdf_path = tmp_path / "text.pdf"
     pdf_path.write_bytes(b"%PDF-1.4 test")
 
-    ocr_needed, reason = converter.needs_ocr(pdf_path)
+    result = converter.needs_ocr(pdf_path)
 
-    assert ocr_needed is False
-    assert "text detected" in reason.lower()
+    assert result["needs_ocr"] is False
+    assert "text detected" in result["reason"].lower()
+    assert result["text_ratio"] >= 0.66
 
 
 def test_needs_ocr_scanned_pdf(monkeypatch, tmp_path) -> None:
@@ -245,10 +246,11 @@ def test_needs_ocr_scanned_pdf(monkeypatch, tmp_path) -> None:
     pdf_path = tmp_path / "scanned.pdf"
     pdf_path.write_bytes(b"%PDF-1.4 test")
 
-    ocr_needed, reason = converter.needs_ocr(pdf_path)
+    result = converter.needs_ocr(pdf_path)
 
-    assert ocr_needed is True
-    assert "needs ocr" in reason.lower()
+    assert result["needs_ocr"] is True
+    assert "needs ocr" in result["reason"].lower()
+    assert result["pages_with_text"] == 0
 
 
 def test_needs_ocr_mixed_content_mostly_scanned(monkeypatch, tmp_path) -> None:
@@ -280,10 +282,11 @@ def test_needs_ocr_mixed_content_mostly_scanned(monkeypatch, tmp_path) -> None:
     pdf_path = tmp_path / "mixed.pdf"
     pdf_path.write_bytes(b"%PDF-1.4 test")
 
-    ocr_needed, reason = converter.needs_ocr(pdf_path)
+    result = converter.needs_ocr(pdf_path)
 
     # Should need OCR because only 33% of pages have text
-    assert ocr_needed is True
+    assert result["needs_ocr"] is True
+    assert result["text_ratio"] < 0.66
 
 
 def test_needs_ocr_mixed_content_mostly_text(monkeypatch, tmp_path) -> None:
@@ -315,10 +318,11 @@ def test_needs_ocr_mixed_content_mostly_text(monkeypatch, tmp_path) -> None:
     pdf_path = tmp_path / "mostly_text.pdf"
     pdf_path.write_bytes(b"%PDF-1.4 test")
 
-    ocr_needed, reason = converter.needs_ocr(pdf_path)
+    result = converter.needs_ocr(pdf_path)
 
     # Should skip OCR because 66% of pages have text
-    assert ocr_needed is False
+    assert result["needs_ocr"] is False
+    assert result["text_ratio"] >= 0.66
 
 
 def test_needs_ocr_single_page_text(monkeypatch, tmp_path) -> None:
@@ -347,10 +351,11 @@ def test_needs_ocr_single_page_text(monkeypatch, tmp_path) -> None:
     pdf_path = tmp_path / "single_text.pdf"
     pdf_path.write_bytes(b"%PDF-1.4 test")
 
-    ocr_needed, reason = converter.needs_ocr(pdf_path)
+    result = converter.needs_ocr(pdf_path)
 
-    assert ocr_needed is False
-    assert "text detected" in reason.lower()
+    assert result["needs_ocr"] is False
+    assert "text detected" in result["reason"].lower()
+    assert result["total_pages_checked"] == 1
 
 
 def test_needs_ocr_single_page_minimal_text(monkeypatch, tmp_path) -> None:
@@ -379,10 +384,11 @@ def test_needs_ocr_single_page_minimal_text(monkeypatch, tmp_path) -> None:
     pdf_path = tmp_path / "single_minimal.pdf"
     pdf_path.write_bytes(b"%PDF-1.4 test")
 
-    ocr_needed, reason = converter.needs_ocr(pdf_path)
+    result = converter.needs_ocr(pdf_path)
 
-    assert ocr_needed is True
-    assert "needs ocr" in reason.lower()
+    assert result["needs_ocr"] is True
+    assert "needs ocr" in result["reason"].lower()
+    assert result["total_pages_checked"] == 1
 
 
 def test_needs_ocr_error_handling(monkeypatch, tmp_path) -> None:
@@ -395,11 +401,11 @@ def test_needs_ocr_error_handling(monkeypatch, tmp_path) -> None:
     pdf_path = tmp_path / "error.pdf"
     pdf_path.write_bytes(b"%PDF-1.4 test")
 
-    ocr_needed, reason = converter.needs_ocr(pdf_path)
+    result = converter.needs_ocr(pdf_path)
 
     # Should default to OCR on error
-    assert ocr_needed is True
-    assert "failed" in reason.lower() or "error" in reason.lower()
+    assert result["needs_ocr"] is True
+    assert "failed" in result["reason"].lower() or "error" in result["reason"].lower()
 
 
 def test_needs_ocr_empty_pdf(monkeypatch, tmp_path) -> None:
@@ -421,10 +427,11 @@ def test_needs_ocr_empty_pdf(monkeypatch, tmp_path) -> None:
     pdf_path = tmp_path / "empty.pdf"
     pdf_path.write_bytes(b"%PDF-1.4 test")
 
-    ocr_needed, reason = converter.needs_ocr(pdf_path)
+    result = converter.needs_ocr(pdf_path)
 
-    assert ocr_needed is True
-    assert "no pages" in reason.lower()
+    assert result["needs_ocr"] is True
+    assert result["total_pages_checked"] == 0
+    assert "no pages" in result["reason"].lower()
 
 
 def test_convert_to_pdfa_auto_skip_ocr_text_pdf(monkeypatch, tmp_path) -> None:
@@ -439,7 +446,18 @@ def test_convert_to_pdfa_auto_skip_ocr_text_pdf(monkeypatch, tmp_path) -> None:
 
     # Mock needs_ocr to return False (text detected)
     monkeypatch.setattr(
-        converter, "needs_ocr", Mock(return_value=(False, "Text detected"))
+        converter,
+        "needs_ocr",
+        Mock(
+            return_value={
+                "needs_ocr": False,
+                "reason": "Text detected",
+                "pages_with_text": 3,
+                "total_pages_checked": 3,
+                "text_ratio": 1.0,
+                "total_characters": 500,
+            }
+        ),
     )
 
     monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
@@ -474,7 +492,18 @@ def test_convert_to_pdfa_auto_run_ocr_scanned_pdf(monkeypatch, tmp_path) -> None
 
     # Mock needs_ocr to return True (needs OCR)
     monkeypatch.setattr(
-        converter, "needs_ocr", Mock(return_value=(True, "No text detected"))
+        converter,
+        "needs_ocr",
+        Mock(
+            return_value={
+                "needs_ocr": True,
+                "reason": "No text detected",
+                "pages_with_text": 0,
+                "total_pages_checked": 3,
+                "text_ratio": 0.0,
+                "total_characters": 0,
+            }
+        ),
     )
 
     monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
@@ -508,7 +537,16 @@ def test_convert_to_pdfa_tagged_pdf_takes_priority(monkeypatch, tmp_path) -> Non
     monkeypatch.setattr(converter, "has_pdf_tags", Mock(return_value=True))
 
     # Mock needs_ocr - should NOT be called for tagged PDFs
-    needs_ocr_mock = Mock(return_value=(False, "Text detected"))
+    needs_ocr_mock = Mock(
+        return_value={
+            "needs_ocr": False,
+            "reason": "Text detected",
+            "pages_with_text": 3,
+            "total_pages_checked": 3,
+            "text_ratio": 1.0,
+            "total_characters": 500,
+        }
+    )
     monkeypatch.setattr(converter, "needs_ocr", needs_ocr_mock)
 
     monkeypatch.setattr(converter.ocrmypdf, "ocr", fake_ocr)
@@ -614,7 +652,18 @@ def test_convert_to_pdfa_pdf_level_without_office_source(monkeypatch, tmp_path) 
 
     # Mock needs_ocr
     monkeypatch.setattr(
-        converter, "needs_ocr", Mock(return_value=(True, "No text, needs OCR"))
+        converter,
+        "needs_ocr",
+        Mock(
+            return_value={
+                "needs_ocr": True,
+                "reason": "No text, needs OCR",
+                "pages_with_text": 0,
+                "total_pages_checked": 1,
+                "text_ratio": 0.0,
+                "total_characters": 0,
+            }
+        ),
     )
 
     calls: dict[str, Any] = {}
@@ -656,7 +705,20 @@ def test_convert_to_pdfa_pdfa2_office_source(monkeypatch, tmp_path) -> None:
     # Mock has_pdf_tags to avoid tag detection logic
     monkeypatch.setattr(converter, "has_pdf_tags", Mock(return_value=False))
     # Mock needs_ocr to avoid text detection logic
-    monkeypatch.setattr(converter, "needs_ocr", Mock(return_value=(True, "Needs OCR")))
+    monkeypatch.setattr(
+        converter,
+        "needs_ocr",
+        Mock(
+            return_value={
+                "needs_ocr": True,
+                "reason": "Needs OCR",
+                "pages_with_text": 0,
+                "total_pages_checked": 3,
+                "text_ratio": 0.0,
+                "total_characters": 0,
+            }
+        ),
+    )
 
     input_pdf = tmp_path / "input.pdf"
     input_pdf.write_bytes(b"%PDF-1.4 office")
@@ -779,7 +841,16 @@ def test_convert_universal_pdf_output_with_text_auto_skip(
     monkeypatch.setattr(
         converter,
         "needs_ocr",
-        Mock(return_value=(False, "Has sufficient text content")),
+        Mock(
+            return_value={
+                "needs_ocr": False,
+                "reason": "Has sufficient text content",
+                "pages_with_text": 3,
+                "total_pages_checked": 3,
+                "text_ratio": 1.0,
+                "total_characters": 500,
+            }
+        ),
     )
 
     # Track OCR calls
@@ -818,7 +889,18 @@ def test_convert_universal_pdf_output_needs_ocr(monkeypatch, tmp_path) -> None:
 
     # Mock needs_ocr to return True (no text, needs OCR)
     monkeypatch.setattr(
-        converter, "needs_ocr", Mock(return_value=(True, "No text detected, needs OCR"))
+        converter,
+        "needs_ocr",
+        Mock(
+            return_value={
+                "needs_ocr": True,
+                "reason": "No text detected, needs OCR",
+                "pages_with_text": 0,
+                "total_pages_checked": 3,
+                "text_ratio": 0.0,
+                "total_characters": 8,
+            }
+        ),
     )
 
     # Track OCR calls

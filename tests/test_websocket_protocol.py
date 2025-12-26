@@ -12,6 +12,7 @@ from pdfa.websocket_protocol import (
     CompletedMessage,
     ErrorMessage,
     JobAcceptedMessage,
+    JobEventMessage,
     PingMessage,
     PongMessage,
     ProgressMessage,
@@ -180,6 +181,69 @@ class TestServerMessages:
 
         data = msg.to_dict()
         assert data["type"] == "pong"
+
+    def test_job_event_message_with_details(self):
+        """Test JobEventMessage with details."""
+        msg = JobEventMessage(
+            job_id="test-job-123",
+            event_type="ocr_decision",
+            timestamp="2025-12-25T10:30:15.123Z",
+            message="OCR skipped: tagged PDF detected",
+            details={
+                "decision": "skip",
+                "reason": "tagged_pdf",
+                "_i18n_key": "ocr_decision.skip.tagged_pdf",
+                "_i18n_params": {"decision": "skip", "reason": "tagged_pdf"},
+            },
+        )
+
+        data = msg.to_dict()
+        assert data["type"] == "job_event"
+        assert data["job_id"] == "test-job-123"
+        assert data["event_type"] == "ocr_decision"
+        assert data["timestamp"] == "2025-12-25T10:30:15.123Z"
+        assert "OCR skipped" in data["message"]
+        assert data["details"]["decision"] == "skip"
+        assert data["details"]["_i18n_key"] == "ocr_decision.skip.tagged_pdf"
+
+    def test_job_event_message_without_details(self):
+        """Test JobEventMessage without details."""
+        msg = JobEventMessage(
+            job_id="test-job-456",
+            event_type="job_cleanup",
+            timestamp="2025-12-25T10:35:00.000Z",
+            message="Temporary files cleaned",
+            details=None,
+        )
+
+        data = msg.to_dict()
+        assert data["type"] == "job_event"
+        assert data["job_id"] == "test-job-456"
+        assert data["event_type"] == "job_cleanup"
+        assert "Temporary files" in data["message"]
+        # details should not be in dict when None (filtered by to_dict())
+        assert "details" not in data or data.get("details") is None
+
+    def test_job_event_message_format_conversion(self):
+        """Test JobEventMessage for format conversion."""
+        msg = JobEventMessage(
+            job_id="test-job-789",
+            event_type="format_conversion",
+            timestamp="2025-12-25T10:32:00.000Z",
+            message="DOCX converted to PDF",
+            details={
+                "input_format": "docx",
+                "pages": 5,
+                "_i18n_key": "format_conversion.docx.success",
+                "_i18n_params": {"pages": 5},
+            },
+        )
+
+        data = msg.to_dict()
+        assert data["type"] == "job_event"
+        assert data["event_type"] == "format_conversion"
+        assert data["details"]["input_format"] == "docx"
+        assert data["details"]["pages"] == 5
 
 
 class TestParseClientMessage:

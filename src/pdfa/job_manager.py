@@ -15,8 +15,11 @@ from typing import Any, Literal
 
 from fastapi import WebSocket
 
+from pdfa.event_logger import log_job_cleanup_event, log_job_timeout_event
 from pdfa.exceptions import JobNotFoundException
+from pdfa.models import AuditLogDocument, JobDocument
 from pdfa.progress_tracker import ProgressInfo
+from pdfa.repositories import AuditLogRepository, JobRepository
 
 logger = logging.getLogger(__name__)
 
@@ -126,6 +129,10 @@ class JobManager:
         self.processing_semaphore = asyncio.Semaphore(self.config.max_concurrent_jobs)
         self.lock = asyncio.Lock()
 
+        # MongoDB repositories for job persistence
+        self.job_repo = JobRepository()
+        self.audit_repo = AuditLogRepository()
+
         # Ensure temp directory exists
         self.config.temp_dir.mkdir(parents=True, exist_ok=True)
 
@@ -175,14 +182,75 @@ class JobManager:
             temp_dir=temp_dir,
         )
 
-        # Store job
+        # Store job in-memory
         self.jobs[job_id] = job
+
+        # Persist to MongoDB (async, non-blocking)
+        # Only persist if there's a running event loop (skip in synchronous tests)
+        file_size = len(file_data)
+        try:
+            asyncio.create_task(
+                self._persist_job_creation(job_id, filename, config, user_id, file_size)
+            )
+        except RuntimeError:
+            # No event loop running (e.g., in synchronous tests)
+            pass
 
         log_msg = f"Created job {job_id} for file {filename}"
         if user_id:
             log_msg += f" (user: {user_id})"
         logger.info(log_msg)
         return job
+
+    async def _persist_job_creation(
+        self,
+        job_id: str,
+        filename: str,
+        config: dict[str, Any],
+        user_id: str | None,
+        file_size: int,
+    ) -> None:
+        """Persist job creation to MongoDB.
+
+        This is called asynchronously to avoid blocking job creation.
+
+        Args:
+            job_id: Job identifier
+            filename: Original filename
+            config: Conversion configuration
+            user_id: User identifier (None if auth disabled)
+            file_size: Input file size in bytes
+
+        """
+        try:
+            # Create job document for MongoDB
+            job_doc = JobDocument(
+                job_id=job_id,
+                user_id=user_id,
+                status="queued",
+                filename=filename,
+                config=config,
+                created_at=datetime.now(),
+                file_size_input=file_size,
+            )
+            await self.job_repo.create_job(job_doc)
+
+            # Log job creation event
+            await self.audit_repo.log_event(
+                AuditLogDocument(
+                    event_type="job_created",
+                    user_id=user_id,
+                    timestamp=datetime.now(),
+                    ip_address="internal",  # No request context here
+                    details={
+                        "job_id": job_id,
+                        "filename": filename,
+                        "file_size": file_size,
+                    },
+                )
+            )
+        except Exception as e:
+            logger.error(f"Failed to persist job creation to MongoDB: {e}")
 
     def get_job(self, job_id: str) -> Job:
         """Get a job by ID.
@@ -232,6 +300,91 @@ class JobManager:
                 job.output_path = output_path
 
             logger.info(f"Job {job_id} status updated to {status}")
+
+        # Persist to MongoDB (outside lock to avoid blocking)
+        await self._persist_job_update(job_id, status, error, output_path)
+
+    async def _persist_job_update(
+        self,
+        job_id: str,
+        status: JobStatus,
+        error: str | None,
+        output_path: Path | None,
+    ) -> None:
+        """Persist job status update to MongoDB.
+
+        Args:
+            job_id: Job identifier
+            status: New status
+            error: Error message (if failed)
+            output_path: Output file path (if completed)
+
+        """
+        try:
+            # Get job from in-memory storage for additional data
+            job = self.jobs.get(job_id)
+            if not job:
+                logger.warning(f"Job {job_id} not in memory, skipping MongoDB update")
+                return
+
+            # Build update fields
+            update_fields: dict[str, Any] = {}
+
+            if status == "processing" and job.started_at:
+                update_fields["started_at"] = job.started_at
+
+            if status in ("completed", "failed", "cancelled") and job.completed_at:
+                update_fields["completed_at"] = job.completed_at
+
+                # Calculate duration
+                if job.started_at:
+                    duration = (job.completed_at - job.started_at).total_seconds()
+                    update_fields["duration_seconds"] = duration
+
+                # Add output file size if completed successfully
+                if status == "completed" and output_path and output_path.exists():
+                    update_fields["file_size_output"] = output_path.stat().st_size
+
+                    # Calculate compression ratio if we have both sizes
+                    if (
+                        "file_size_output" in update_fields
+                        and job.input_path
+                        and job.input_path.exists()
+                    ):
+                        input_size = job.input_path.stat().st_size
+                        if input_size > 0:
+                            compression_ratio = (
+                                update_fields["file_size_output"] / input_size
+                            )
+                            update_fields["compression_ratio"] = compression_ratio
+
+            if error:
+                update_fields["error"] = error
+
+            # Update job in MongoDB
+            await self.job_repo.update_job_status(job_id, status, **update_fields)
+
+            # Log audit event for terminal states
+            if status in ("completed", "failed", "cancelled"):
+                event_type = f"job_{status}"
+                await self.audit_repo.log_event(
+                    AuditLogDocument(
+                        event_type=event_type,  # type: ignore
+                        user_id=job.user_id,
+                        timestamp=datetime.now(),
+                        ip_address="internal",
+                        details={
+                            "job_id": job_id,
+                            "filename": job.filename,
+                            "status": status,
+                            "duration_seconds": update_fields.get("duration_seconds"),
+                            "error": error,
+                        },
+                    )
+                )
+
+        except Exception as e:
+            logger.error(f"Failed to persist job update to MongoDB: {e}")
 
     async def update_job_progress(self, job_id: str, progress: ProgressInfo) -> None:
         """Update job progress.
@@ -405,10 +558,52 @@ class JobManager:
                 if job.completed_at:
                     age = (now - job.completed_at).total_seconds()
                     if age > ttl_seconds:
-                        to_delete.append(job_id)
+                        to_delete.append((job_id, job, age))
 
-        for job_id in to_delete:
+        for job_id, job, age in to_delete:
             logger.info(f"Cleaning up old job {job_id} (age > {ttl_seconds}s)")
+
+            # Collect file information before deletion
+            files_deleted = {}
+            total_size = 0
+
+            try:
+                if job.input_path and job.input_path.exists():
+                    files_deleted["input_file"] = str(job.input_path)
+                    total_size += job.input_path.stat().st_size
+
+                if job.output_path and job.output_path.exists():
+                    files_deleted["output_file"] = str(job.output_path)
+                    total_size += job.output_path.stat().st_size
+
+                if job.temp_dir and job.temp_dir.name:
+                    temp_path = Path(job.temp_dir.name)
+                    if temp_path.exists():
+                        files_deleted["temp_directory"] = str(temp_path)
+                        # Calculate temp dir size
+                        for path in temp_path.rglob("*"):
+                            if path.is_file():
+                                total_size += path.stat().st_size
+            except Exception as e:
+                logger.warning(f"Error collecting file info for cleanup event: {e}")
+
+            # Log cleanup event
+            try:
+                await log_job_cleanup_event(
+                    job_id=job_id,
+                    trigger="age_exceeded",
+                    ttl_seconds=ttl_seconds,
+                    age_seconds=age,
+                    files_deleted=files_deleted if files_deleted else None,
+                    total_size_bytes=total_size if total_size > 0 else None,
+                )
+            except Exception as e:
+                logger.error(
+                    f"Failed to log cleanup event for job {job_id}: {e}",
+                    exc_info=True,
+                )
+
+            # Delete the job
             await self.delete_job(job_id)
 
     async def check_timeouts(self) -> None:
@@ -421,6 +616,20 @@ class JobManager:
                 runtime = (now - job.started_at).total_seconds()
                 if runtime > timeout_seconds:
                     logger.warning(f"Job {job.job_id} timed out after {runtime:.1f}s")
+
+                    # Log timeout event
+                    try:
+                        await log_job_timeout_event(
+                            job_id=job.job_id,
+                            timeout_seconds=timeout_seconds,
+                            runtime_seconds=runtime,
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to log timeout event for job {job.job_id}: {e}",
+                            exc_info=True,
+                        )
+
                     await self.cancel_job(job.job_id)
                     await self.update_job_status(
                         job.job_id,
