@@ -1,6 +1,7 @@
 """Simple debug test to check what happens during conversion."""
 
 from pathlib import Path
+
 import pytest
 from playwright.sync_api import Page
 
@@ -24,11 +25,20 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
 
     # Capture all console messages
     console_messages = []
+
     def capture_console(msg):
         text = f"[{msg.type}] {msg.text}"
         console_messages.append(text)
         # Print WebSocket messages and DEBUG messages immediately
-        if any(keyword in msg.text for keyword in ["WebSocket message", "handleCompleted", "handleJobError", "[DEBUG]"]):
+        if any(
+            keyword in msg.text
+            for keyword in [
+                "WebSocket message",
+                "handleCompleted",
+                "handleJobError",
+                "[DEBUG]",
+            ]
+        ):
             print(f"  >>> {text}")
 
     page.on("console", capture_console)
@@ -41,7 +51,8 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
     page.goto("http://localhost:8001/en")
 
     # Inject debug script to log event details and translation
-    page.evaluate("""
+    page.evaluate(
+        """
         () => {
             // Override the handleJobEvent to log details
             const originalHandleJobEvent = window.conversionClient.handleJobEvent.bind(window.conversionClient);
@@ -61,7 +72,8 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
                 return originalHandleJobEvent(message);
             };
         }
-    """)
+    """
+    )
 
     page.screenshot(path="/tmp/01_page_loaded.png")
     print("Screenshot saved: /tmp/01_page_loaded.png")
@@ -101,7 +113,7 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
     status_text = status_elem.text_content()
     status_visible = status_elem.is_visible()
 
-    print(f"\nStatus element:")
+    print("\nStatus element:")
     print(f"  class: {status_class}")
     print(f"  text: {status_text}")
     print(f"  visible: {status_visible}")
@@ -123,7 +135,9 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
             print(err)
 
     # Check if WebSocket connected
-    ws_status = page.evaluate("() => window.conversionClient ? 'Client exists' : 'No client'")
+    ws_status = page.evaluate(
+        "() => window.conversionClient ? 'Client exists' : 'No client'"
+    )
     print(f"\nWebSocket client: {ws_status}")
 
     # Wait longer to see if anything happens
@@ -135,7 +149,7 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
     # Final status check
     status_class_final = status_elem.get_attribute("class")
     status_text_final = status_elem.text_content()
-    print(f"\nFinal status:")
+    print("\nFinal status:")
     print(f"  class: {status_class_final}")
     print(f"  text: {status_text_final}")
 

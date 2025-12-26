@@ -753,7 +753,9 @@ class TestEventSummaryModalDebugging:
 
         # Check logs for modal-related messages
         modal_logs = [log for log in logs if "modal" in log.lower()]
-        event_logs = [log for log in logs if "handleJobEvent" in log or "addEventToList" in log]
+        event_logs = [
+            log for log in logs if "handleJobEvent" in log or "addEventToList" in log
+        ]
         completed_logs = [log for log in logs if "handleCompleted" in log]
         show_modal_logs = [log for log in logs if "showEventSummaryModal" in log]
 
@@ -779,7 +781,9 @@ class TestEventSummaryModalDebugging:
             print("2. this.events.length === 0")
             print("3. setTimeout not executing")
         else:
-            print(f"\n[INFO] showEventSummaryModal() called {len(show_modal_logs)} times")
+            print(
+                f"\n[INFO] showEventSummaryModal() called {len(show_modal_logs)} times"
+            )
             for log in show_modal_logs:
                 print(f"  {log}")
 
@@ -788,7 +792,7 @@ class TestEventSummaryModalDebugging:
         is_visible = modal.is_visible()
         has_open_attr = modal.evaluate("el => el.hasAttribute('open')")
 
-        print(f"\n=== MODAL STATE ===")
+        print("\n=== MODAL STATE ===")
         print(f"Is visible: {is_visible}")
         print(f"Has 'open' attribute: {has_open_attr}")
 

@@ -53,7 +53,14 @@ def mongodb_test_container():
     print("[E2E Setup] Waiting for MongoDB to be ready...")
     for i in range(30):
         health_check = subprocess.run(
-            ["docker", "exec", "pdfa-mongodb-test", "mongosh", "--eval", "db.adminCommand('ping')"],
+            [
+                "docker",
+                "exec",
+                "pdfa-mongodb-test",
+                "mongosh",
+                "--eval",
+                "db.adminCommand('ping')",
+            ],
             capture_output=True,
         )
         if health_check.returncode == 0:
@@ -62,7 +69,10 @@ def mongodb_test_container():
         time.sleep(1)
     else:
         print("[E2E Setup] MongoDB failed to become healthy")
-        subprocess.run(["docker", "compose", "-f", str(compose_file), "down", "-v"], cwd=project_root)
+        subprocess.run(
+            ["docker", "compose", "-f", str(compose_file), "down", "-v"],
+            cwd=project_root,
+        )
         pytest.skip("MongoDB test container did not become healthy")
 
     yield
@@ -81,13 +91,15 @@ def api_process(ensure_test_data, mongodb_test_container):
     """Start the FastAPI server for E2E tests."""
     # Set test environment variables
     test_env = os.environ.copy()
-    test_env.update({
-        "MONGODB_URI": "mongodb://admin:test_password@localhost:27018/pdfa_test?authSource=admin",
-        "MONGODB_DATABASE": "pdfa_test",
-        "PDFA_ENABLE_AUTH": "false",  # Disable OAuth for tests
-        "PYTHONUNBUFFERED": "1",
-        "PDFA_OCR_ENABLED": "false",  # Disable OCR for tests (Tesseract language data not installed)
-    })
+    test_env.update(
+        {
+            "MONGODB_URI": "mongodb://admin:test_password@localhost:27018/pdfa_test?authSource=admin",
+            "MONGODB_DATABASE": "pdfa_test",
+            "PDFA_ENABLE_AUTH": "false",  # Disable OAuth for tests
+            "PYTHONUNBUFFERED": "1",
+            "PDFA_OCR_ENABLED": "false",  # Disable OCR for tests (Tesseract language data not installed)
+        }
+    )
 
     # Start server in background on port 8001 (to avoid conflicts with dev server)
     print("[E2E Setup] Starting FastAPI server on port 8001...")
@@ -105,7 +117,7 @@ def api_process(ensure_test_data, mongodb_test_container):
     # Check if server started successfully
     if process.poll() is not None:
         stdout, stderr = process.communicate()
-        print(f"[E2E Setup] Server failed to start!")
+        print("[E2E Setup] Server failed to start!")
         print(f"STDOUT: {stdout.decode()}")
         print(f"STDERR: {stderr.decode()}")
         pytest.skip("FastAPI server failed to start")

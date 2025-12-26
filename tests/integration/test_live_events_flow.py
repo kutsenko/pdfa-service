@@ -19,8 +19,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from pdfa import api
-from pdfa.job_manager import get_job_manager
-from pdfa.models import JobDocument, JobEvent
 from pdfa.progress_tracker import ProgressInfo
 
 
@@ -54,7 +52,6 @@ class TestLiveEventBroadcasting:
         self, client: TestClient, sample_pdf: bytes, tmp_path: Path
     ) -> None:
         """Verify that job events are broadcast to WebSocket clients."""
-
         # Track all WebSocket messages received
         messages_received = []
         job_events_received = []
@@ -108,16 +105,18 @@ class TestLiveEventBroadcasting:
             # Connect to WebSocket
             with client.websocket_connect("/ws") as websocket:
                 # Submit job
-                websocket.send_json({
-                    "type": "submit",
-                    "filename": "test.pdf",
-                    "fileData": base64.b64encode(sample_pdf).decode(),
-                    "config": {
-                        "language": "eng",
-                        "pdfa_level": "2",
-                        "ocr_enabled": True,
-                    },
-                })
+                websocket.send_json(
+                    {
+                        "type": "submit",
+                        "filename": "test.pdf",
+                        "fileData": base64.b64encode(sample_pdf).decode(),
+                        "config": {
+                            "language": "eng",
+                            "pdfa_level": "2",
+                            "ocr_enabled": True,
+                        },
+                    }
+                )
 
                 # Collect all messages until completed or error
                 job_id = None
@@ -142,7 +141,7 @@ class TestLiveEventBroadcasting:
                     # Check for completion
                     elif msg["type"] == "completed":
                         completed = True
-                        print(f"[TEST] Job completed")
+                        print("[TEST] Job completed")
                         print(f"[TEST] Download URL: {msg.get('download_url')}")
                         break
 
@@ -152,7 +151,7 @@ class TestLiveEventBroadcasting:
                         break
 
         # Print summary
-        print(f"\n[TEST SUMMARY]")
+        print("\n[TEST SUMMARY]")
         print(f"Total messages received: {len(messages_received)}")
         print(f"Job events received: {len(job_events_received)}")
         print(f"Message types: {[m['type'] for m in messages_received]}")
@@ -173,24 +172,32 @@ class TestLiveEventBroadcasting:
 
             # Verify i18n keys are present
             details = event["details"]
-            assert "_i18n_key" in details, f"Event {event['event_type']} missing _i18n_key"
-            assert "_i18n_params" in details, f"Event {event['event_type']} missing _i18n_params"
+            assert (
+                "_i18n_key" in details
+            ), f"Event {event['event_type']} missing _i18n_key"
+            assert (
+                "_i18n_params" in details
+            ), f"Event {event['event_type']} missing _i18n_params"
 
-            print(f"[TEST] Event {event['event_type']}: i18n_key = {details['_i18n_key']}")
+            print(
+                f"[TEST] Event {event['event_type']}: i18n_key = {details['_i18n_key']}"
+            )
 
         # Verify completed message has download_url
-        completed_msg = next((m for m in messages_received if m["type"] == "completed"), None)
+        completed_msg = next(
+            (m for m in messages_received if m["type"] == "completed"), None
+        )
         assert completed_msg is not None
         assert "download_url" in completed_msg
         assert "filename" in completed_msg
         print(f"[TEST] Completed message: {completed_msg}")
 
-
     @pytest.mark.asyncio
     async def test_event_message_structure(self) -> None:
         """Test that JobEventMessage has correct structure for frontend."""
-        from pdfa.websocket_protocol import JobEventMessage
         from datetime import datetime
+
+        from pdfa.websocket_protocol import JobEventMessage
 
         # Create a sample event message
         msg = JobEventMessage(
@@ -226,9 +233,10 @@ class TestLiveEventBroadcasting:
         parsed = json.loads(json_str)
         assert parsed["type"] == "job_event"
 
-
     @pytest.mark.asyncio
-    async def test_broadcast_failure_does_not_block_mongodb(self, tmp_path: Path) -> None:
+    async def test_broadcast_failure_does_not_block_mongodb(
+        self, tmp_path: Path
+    ) -> None:
         """Verify that WebSocket broadcast failures don't prevent MongoDB persistence.
 
         This test ensures that event logging is resilient to WebSocket failures.
@@ -273,6 +281,7 @@ class TestJobCompletionAndDownload:
 
         This test catches the bug where downloads are not offered after completion.
         """
+
         # Mock the conversion function
         def mock_convert(
             input_pdf: Path,
@@ -287,15 +296,17 @@ class TestJobCompletionAndDownload:
             # Connect to WebSocket
             with client.websocket_connect("/ws") as websocket:
                 # Submit job
-                websocket.send_json({
-                    "type": "submit",
-                    "filename": "test.pdf",
-                    "fileData": base64.b64encode(sample_pdf).decode(),
-                    "config": {
-                        "language": "eng",
-                        "pdfa_level": "2",
-                    },
-                })
+                websocket.send_json(
+                    {
+                        "type": "submit",
+                        "filename": "test.pdf",
+                        "fileData": base64.b64encode(sample_pdf).decode(),
+                        "config": {
+                            "language": "eng",
+                            "pdfa_level": "2",
+                        },
+                    }
+                )
 
                 # Collect messages until completed
                 completed_message = None
@@ -314,20 +325,23 @@ class TestJobCompletionAndDownload:
 
         # CRITICAL ASSERTIONS - These catch the download bug
         assert completed_message is not None, "Should receive completed message"
-        assert "download_url" in completed_message, "Completed message must have download_url"
+        assert (
+            "download_url" in completed_message
+        ), "Completed message must have download_url"
         assert "filename" in completed_message, "Completed message must have filename"
 
         # Verify download_url format
-        assert completed_message["download_url"].startswith("/download/"), \
-            f"download_url should start with /download/, got: {completed_message['download_url']}"
+        assert completed_message["download_url"].startswith(
+            "/download/"
+        ), f"download_url should start with /download/, got: {completed_message['download_url']}"
 
         # Verify filename has _pdfa suffix
-        assert completed_message["filename"].endswith("_pdfa.pdf"), \
-            f"filename should end with _pdfa.pdf, got: {completed_message['filename']}"
+        assert completed_message["filename"].endswith(
+            "_pdfa.pdf"
+        ), f"filename should end with _pdfa.pdf, got: {completed_message['filename']}"
 
         print(f"[TEST] ✓ Download URL: {completed_message['download_url']}")
         print(f"[TEST] ✓ Filename: {completed_message['filename']}")
-
 
     @pytest.mark.asyncio
     async def test_download_endpoint_returns_file(
@@ -353,12 +367,14 @@ class TestJobCompletionAndDownload:
             # Connect to WebSocket
             with client.websocket_connect("/ws") as websocket:
                 # Submit job
-                websocket.send_json({
-                    "type": "submit",
-                    "filename": "test.pdf",
-                    "fileData": base64.b64encode(sample_pdf).decode(),
-                    "config": {},
-                })
+                websocket.send_json(
+                    {
+                        "type": "submit",
+                        "filename": "test.pdf",
+                        "fileData": base64.b64encode(sample_pdf).decode(),
+                        "config": {},
+                    }
+                )
 
                 # Collect all messages until completed
                 messages = []
@@ -388,11 +404,13 @@ class TestJobCompletionAndDownload:
         response = client.get(f"/download/{job_id}")
 
         # CRITICAL ASSERTIONS - These verify download works
-        assert response.status_code == 200, \
-            f"Download should return 200, got: {response.status_code}"
+        assert (
+            response.status_code == 200
+        ), f"Download should return 200, got: {response.status_code}"
 
-        assert response.headers["content-type"] == "application/pdf", \
-            f"Should return PDF content-type, got: {response.headers.get('content-type')}"
+        assert (
+            response.headers["content-type"] == "application/pdf"
+        ), f"Should return PDF content-type, got: {response.headers.get('content-type')}"
 
         # Verify we got the converted file
         content = response.content
@@ -402,7 +420,6 @@ class TestJobCompletionAndDownload:
         print(f"[TEST] ✓ Downloaded {len(content)} bytes")
         print(f"[TEST] ✓ Content-Type: {response.headers['content-type']}")
 
-
     @pytest.mark.asyncio
     async def test_complete_conversion_and_download_flow(
         self, client: TestClient, sample_pdf: bytes
@@ -411,6 +428,7 @@ class TestJobCompletionAndDownload:
 
         This is a comprehensive test that catches any breaks in the download flow.
         """
+
         # Mock the conversion function with events
         def mock_convert(
             input_pdf: Path,
@@ -426,6 +444,7 @@ class TestJobCompletionAndDownload:
             # Simulate progress
             if progress_callback:
                 from pdfa.progress_tracker import ProgressInfo
+
                 progress_callback(
                     ProgressInfo(
                         step="pdfa",
@@ -450,15 +469,17 @@ class TestJobCompletionAndDownload:
             # Connect to WebSocket
             with client.websocket_connect("/ws") as websocket:
                 # Submit job
-                websocket.send_json({
-                    "type": "submit",
-                    "filename": "complete_test.pdf",
-                    "fileData": base64.b64encode(sample_pdf).decode(),
-                    "config": {
-                        "language": "eng",
-                        "pdfa_level": "2",
-                    },
-                })
+                websocket.send_json(
+                    {
+                        "type": "submit",
+                        "filename": "complete_test.pdf",
+                        "fileData": base64.b64encode(sample_pdf).decode(),
+                        "config": {
+                            "language": "eng",
+                            "pdfa_level": "2",
+                        },
+                    }
+                )
 
                 # Track what we received
                 job_id = None
@@ -510,12 +531,16 @@ class TestJobCompletionAndDownload:
         assert received_completed, "Should receive completed message"
         assert download_url is not None, "Completed message should have download_url"
         assert filename is not None, "Completed message should have filename"
-        assert download_url.startswith("/download/"), f"Invalid download_url: {download_url}"
+        assert download_url.startswith(
+            "/download/"
+        ), f"Invalid download_url: {download_url}"
         assert filename == "complete_test_pdfa.pdf", f"Unexpected filename: {filename}"
 
         # Test the download endpoint actually works
         response = client.get(download_url)
-        assert response.status_code == 200, f"Download failed with status {response.status_code}"
+        assert (
+            response.status_code == 200
+        ), f"Download failed with status {response.status_code}"
         assert response.headers["content-type"] == "application/pdf"
         assert len(response.content) > 0, "Downloaded file is empty"
 

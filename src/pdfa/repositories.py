@@ -64,7 +64,6 @@ class UserRepository:
 
         """
         db = get_db()
-        user_dict = user.model_dump()
 
         # Upsert: update if exists, insert if new
         # Also increment login_count on each login

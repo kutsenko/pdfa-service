@@ -12,7 +12,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from datetime import datetime
 from typing import Any
 
 from pdfa.models import JobEvent
@@ -92,9 +91,11 @@ async def log_format_conversion_event(
             message=event.message,
             details={
                 **event.details,
-                "_i18n_key": f"{event.event_type}.{source_format}.success"
-                if conversion_required
-                else f"{event.event_type}.none",
+                "_i18n_key": (
+                    f"{event.event_type}.{source_format}.success"
+                    if conversion_required
+                    else f"{event.event_type}.none"
+                ),
                 "_i18n_params": {
                     "source_format": source_format,
                     "target_format": target_format,
@@ -106,7 +107,7 @@ async def log_format_conversion_event(
             job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
             timeout=5.0,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning(f"Event broadcast timeout for job {job_id}")
     except Exception as e:
         logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
@@ -189,7 +190,7 @@ async def log_ocr_decision_event(
             job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
             timeout=5.0,  # Prevent blocking on slow connections
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning(f"Event broadcast timeout for job {job_id}")
     except Exception as e:
         logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
@@ -274,7 +275,7 @@ async def log_compression_selected_event(
             job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
             timeout=5.0,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning(f"Event broadcast timeout for job {job_id}")
     except Exception as e:
         logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
@@ -365,7 +366,7 @@ async def log_passthrough_mode_event(
             job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
             timeout=5.0,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning(f"Event broadcast timeout for job {job_id}")
     except Exception as e:
         logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
@@ -464,7 +465,7 @@ async def log_fallback_applied_event(
             job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
             timeout=5.0,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning(f"Event broadcast timeout for job {job_id}")
     except Exception as e:
         logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
@@ -530,7 +531,7 @@ async def log_job_timeout_event(
             job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
             timeout=5.0,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning(f"Event broadcast timeout for job {job_id}")
     except Exception as e:
         logger.warning(f"Failed to broadcast event for job {job_id}: {e}")
@@ -621,7 +622,7 @@ async def log_job_cleanup_event(
             job_manager.broadcast_to_job(job_id, ws_message.to_dict()),
             timeout=5.0,
         )
-    except asyncio.TimeoutError:
+    except TimeoutError:
         logger.warning(f"Event broadcast timeout for job {job_id}")
     except Exception as e:
         logger.warning(f"Failed to broadcast event for job {job_id}: {e}")

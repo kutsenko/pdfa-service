@@ -11,8 +11,6 @@ These tests reproduce real-world scenarios to catch issues like:
 - Event list showing only one event
 """
 
-import asyncio
-import json
 from pathlib import Path
 
 import pytest
@@ -87,9 +85,9 @@ class TestEventLoggingFlow:
 
                 # Verify event types
                 event_types = [event["event_type"] for event in events]
-                assert "format_conversion" in event_types, (
-                    "format_conversion event missing"
-                )
+                assert (
+                    "format_conversion" in event_types
+                ), "format_conversion event missing"
 
                 # Check event structure
                 for event in events:
@@ -98,9 +96,7 @@ class TestEventLoggingFlow:
                     assert "message" in event
                     assert "details" in event
 
-    async def test_no_asyncio_loop_errors(
-        self, test_pdf: Path, db_connection
-    ) -> None:
+    async def test_no_asyncio_loop_errors(self, test_pdf: Path, db_connection) -> None:
         """Test that events are logged without asyncio loop errors."""
         async with AsyncClient(app=app, base_url="http://test") as client:
             # Upload and convert file
@@ -127,9 +123,7 @@ class TestEventLoggingFlow:
 
                 # Before fix: Only 1 event due to asyncio error
                 # After fix: Multiple events (at least format_conversion)
-                assert len(events) >= 1, (
-                    f"Expected at least 1 event, got {len(events)}"
-                )
+                assert len(events) >= 1, f"Expected at least 1 event, got {len(events)}"
 
                 # If OCR was skipped, we should have ocr_decision event
                 # If compression was selected, we should have compression_selected
@@ -218,6 +212,6 @@ class TestEventCoverage:
                         "ocr_decision",
                         "compression_selected",
                     ]:
-                        assert "_i18n_key" in details, (
-                            f"Event {event['event_type']} missing _i18n_key"
-                        )
+                        assert (
+                            "_i18n_key" in details
+                        ), f"Event {event['event_type']} missing _i18n_key"
