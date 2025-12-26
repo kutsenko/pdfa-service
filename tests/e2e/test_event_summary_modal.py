@@ -717,3 +717,135 @@ class TestEventSummaryModalDarkMode:
         color = modal.evaluate("el => getComputedStyle(el).color")
         # Light mode uses #1f2937 which is rgb(31, 41, 55)
         assert "31, 41, 55" in color
+
+
+class TestEventSummaryModalDebugging:
+    """Debug tests to diagnose modal display issues."""
+
+    def test_debug_modal_trigger_timing(
+        self, page_with_server: Page, test_pdfs: dict[str, Path]
+    ) -> None:
+        """Debug test to check modal trigger timing and conditions.
+
+        This test captures comprehensive debug information to diagnose
+        why the modal might not appear after conversion.
+        """
+        page = page_with_server
+        page.goto("http://localhost:8000/en")
+
+        # Capture all console logs
+        logs = []
+        page.on("console", lambda msg: logs.append(f"{msg.type}: {msg.text}"))
+
+        # Upload file
+        file_input = page.locator('input[type="file"]')
+        file_input.set_input_files(test_pdfs["small"])
+
+        # Start conversion
+        convert_btn = page.locator("#convertBtn")
+        convert_btn.click()
+
+        # Wait for conversion to complete
+        page.wait_for_selector(".status.success", timeout=60000)
+
+        # Wait extra time for modal trigger (500ms + buffer)
+        page.wait_for_timeout(2000)
+
+        # Check logs for modal-related messages
+        modal_logs = [log for log in logs if "modal" in log.lower()]
+        event_logs = [log for log in logs if "handleJobEvent" in log or "addEventToList" in log]
+        completed_logs = [log for log in logs if "handleCompleted" in log]
+        show_modal_logs = [log for log in logs if "showEventSummaryModal" in log]
+
+        print("\n=== MODAL RELATED LOGS ===")
+        for log in modal_logs:
+            print(log)
+
+        print("\n=== EVENT LOGS ===")
+        for log in event_logs[:10]:  # First 10 events
+            print(log)
+
+        print(f"\n=== TOTAL EVENTS LOGGED: {len(event_logs)} ===")
+
+        print("\n=== COMPLETED LOGS ===")
+        for log in completed_logs:
+            print(log)
+
+        # Check if showEventSummaryModal was called
+        if not show_modal_logs:
+            print("\n[FAIL] showEventSummaryModal() was NEVER called!")
+            print("Possible reasons:")
+            print("1. handleCompleted() not called")
+            print("2. this.events.length === 0")
+            print("3. setTimeout not executing")
+        else:
+            print(f"\n[INFO] showEventSummaryModal() called {len(show_modal_logs)} times")
+            for log in show_modal_logs:
+                print(f"  {log}")
+
+        # Check modal element state
+        modal = page.locator("#eventSummaryModal")
+        is_visible = modal.is_visible()
+        has_open_attr = modal.evaluate("el => el.hasAttribute('open')")
+
+        print(f"\n=== MODAL STATE ===")
+        print(f"Is visible: {is_visible}")
+        print(f"Has 'open' attribute: {has_open_attr}")
+
+        # Check events array in JavaScript
+        events_length = page.evaluate(
+            "() => window.conversionClient ? window.conversionClient.events.length : -1"
+        )
+        print(f"Events in client array: {events_length}")
+
+        # Check inline event list
+        event_list = page.locator("#eventList")
+        inline_events = event_list.locator(".event-item").count()
+        print(f"Inline events in DOM: {inline_events}")
+
+        # This test always passes but provides debug output
+        print("\n[INFO] Debug test completed - check output above")
+
+    def test_events_display_in_inline_list(
+        self, page_with_server: Page, test_pdfs: dict[str, Path]
+    ) -> None:
+        """Verify that events are displayed in the inline event list during conversion."""
+        page = page_with_server
+        page.goto("http://localhost:8000/en")
+
+        # Enable console logging
+        received_events = []
+
+        def log_console(msg):
+            text = msg.text
+            if "[handleJobEvent]" in text or "[addEventToList]" in text:
+                received_events.append(text)
+                print(f"[Console] {text}")
+
+        page.on("console", log_console)
+
+        # Upload and convert
+        file_input = page.locator('input[type="file"]')
+        file_input.set_input_files(test_pdfs["small"])
+
+        convert_btn = page.locator("#convertBtn")
+        convert_btn.click()
+
+        # Wait for first event to appear
+        event_list_container = page.locator("#eventListContainer")
+        event_list_container.wait_for(state="visible", timeout=10000)
+
+        # Wait for conversion to complete
+        page.wait_for_selector(".status.success", timeout=60000)
+
+        # Check inline event list
+        event_list = page.locator("#eventList")
+        inline_events = event_list.locator(".event-item").count()
+
+        print(f"\n[INFO] Inline events displayed: {inline_events}")
+        print(f"[INFO] WebSocket events received: {len(received_events)}")
+
+        assert inline_events > 0, (
+            f"No events displayed in inline list. "
+            f"WebSocket events received: {len(received_events)}"
+        )
