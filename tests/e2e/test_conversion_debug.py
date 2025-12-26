@@ -115,6 +115,35 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
     print(f"  class: {status_class_final}")
     print(f"  text: {status_text_final}")
 
+    print("\n=== Checking for modal ===")
+    # Wait a bit after completion for modal to appear (should be 500ms)
+    page.wait_for_timeout(1000)
+
+    # Check modal
+    modal = page.locator("#eventSummaryModal")
+    modal_visible = modal.is_visible()
+    has_open = modal.evaluate("el => el.hasAttribute('open')")
+
+    print(f"Modal visible: {modal_visible}")
+    print(f"Modal has 'open' attribute: {has_open}")
+
+    if modal_visible:
+        # Check modal content
+        modal_title = page.locator("#modalTitle").text_content()
+        modal_events = page.locator("#modalEventList .event-item").count()
+        print(f"Modal title: {modal_title}")
+        print(f"Modal events: {modal_events}")
+        page.screenshot(path="/tmp/06_modal_visible.png")
+        print("Screenshot saved: /tmp/06_modal_visible.png")
+    else:
+        print("⚠️  MODAL NOT VISIBLE - This is the bug!")
+
+        # Check events array
+        events_in_array = page.evaluate(
+            "() => window.conversionClient ? window.conversionClient.events.length : -1"
+        )
+        print(f"Events in JavaScript array: {events_in_array}")
+
     print("\n=== Test completed - check screenshots in /tmp/ ===")
 
     # This test always passes - it's just for debugging
