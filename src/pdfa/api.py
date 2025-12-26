@@ -702,7 +702,7 @@ async def process_conversion_job(job_id: str) -> None:
                 )
 
         # Event callback that logs events to MongoDB
-        async def event_callback(event_type: str, **kwargs) -> None:
+        async def async_event_callback(event_type: str, **kwargs) -> None:
             """Log conversion events to MongoDB for job tracking."""
             try:
                 # Dynamically import the appropriate logger function
@@ -729,6 +729,22 @@ async def process_conversion_job(job_id: str) -> None:
                     exc_info=True,
                 )
 
+        # Get the current event loop to schedule coroutines from worker thread
+        main_loop = asyncio.get_running_loop()
+
+        # Create synchronous wrapper for event callback that works from worker threads
+        def event_callback(event_type: str, **kwargs) -> None:
+            """Synchronous wrapper that schedules async callback in main loop."""
+            # Schedule the coroutine in the main event loop from worker thread
+            future = asyncio.run_coroutine_threadsafe(
+                async_event_callback(event_type, **kwargs), main_loop
+            )
+            # Wait for completion with timeout to avoid blocking worker thread
+            try:
+                future.result(timeout=5.0)  # 5 second timeout
+            except Exception as e:
+                logger.error(f"Event callback failed for {event_type}: {e}")
+
         # Determine file type and convert
         config = job.config
         pdf_path = job.input_path
@@ -753,7 +769,7 @@ async def process_conversion_job(job_id: str) -> None:
             conversion_time = time.time() - start_time
 
             # Log format conversion event
-            await event_callback(
+            await async_event_callback(
                 "format_conversion",
                 source_format=job.filename.rsplit(".", 1)[-1].lower(),
                 target_format="pdf",
@@ -776,7 +792,7 @@ async def process_conversion_job(job_id: str) -> None:
             conversion_time = time.time() - start_time
 
             # Log format conversion event
-            await event_callback(
+            await async_event_callback(
                 "format_conversion",
                 source_format=job.filename.rsplit(".", 1)[-1].lower(),
                 target_format="pdf",
@@ -786,7 +802,7 @@ async def process_conversion_job(job_id: str) -> None:
             )
         else:
             # Direct PDF - no conversion needed
-            await event_callback(
+            await async_event_callback(
                 "format_conversion",
                 source_format="pdf",
                 target_format="pdf",
