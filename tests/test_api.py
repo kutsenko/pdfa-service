@@ -31,6 +31,7 @@ def test_convert_endpoint_success(monkeypatch, client: TestClient) -> None:
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params like event_callback
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         fake_convert.called_with = {  # type: ignore[attr-defined]
@@ -70,6 +71,7 @@ def test_convert_endpoint_with_ocr_disabled(monkeypatch, client: TestClient) -> 
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         fake_convert.called_with = {  # type: ignore[attr-defined]
@@ -241,6 +243,7 @@ def test_convert_with_compression_profile_balanced(
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         # Capture the compression config that was used
@@ -275,6 +278,7 @@ def test_convert_with_compression_profile_quality(
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         compression_config_used["config"] = compression_config
@@ -308,6 +312,7 @@ def test_convert_with_compression_profile_aggressive(
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         compression_config_used["config"] = compression_config
@@ -345,6 +350,7 @@ def test_convert_with_compression_profile_minimal(
         ocr_enabled,
         skip_ocr_on_tagged_pdfs=True,
         compression_config=None,
+        **kwargs,  # Accept additional params
     ) -> None:
         output_pdf.write_bytes(b"%PDF-1.4 converted")
         compression_config_used["config"] = compression_config
@@ -411,6 +417,7 @@ def test_websocket_submit_job(monkeypatch, client: TestClient) -> None:
         compression_config=None,
         progress_callback=None,
         cancel_event=None,
+        event_callback=None,  # Added parameter
     ) -> None:
         # Simulate conversion
         output_pdf.write_bytes(b"%PDF-1.4 converted")
