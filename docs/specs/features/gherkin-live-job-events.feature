@@ -312,6 +312,113 @@ Feature: Live Display of Conversion Events via WebSocket
     And the details are readable and valid JSON
 
 # ==========================================
+# Scenario 16-24: Event Summary Modal (NEW - 2025-12-26)
+# ==========================================
+
+  Scenario: Event summary modal appears after successful conversion
+    Given the user has completed a conversion successfully
+    And the download has started automatically
+    When 500ms pass after download start
+    Then the event summary modal is displayed
+    And the modal shows all conversion events
+    And the modal has a "Download" button
+    And the modal has an "OK" button
+    And the "OK" button has focus
+
+  Scenario: User can close modal with multiple methods
+    Given the event summary modal is open
+    When the user clicks "OK"
+    Then the modal closes and inline list remains visible
+
+    Given the event summary modal is open again
+    When the user clicks the X button
+    Then the modal closes and inline list remains visible
+
+    Given the event summary modal is open again
+    When the user presses Escape
+    Then the modal closes and inline list remains visible
+
+    Given the event summary modal is open again
+    When the user clicks on the backdrop
+    Then the modal closes and inline list remains visible
+
+  Scenario: User can re-download from modal
+    Given the event summary modal is open
+    And the modal shows the download button
+    When the user clicks the "Download" button
+    Then the file download starts again
+    And the modal remains open
+
+  Scenario: Modal keyboard navigation
+    Given the event summary modal is open
+    And the user is using keyboard only
+    Then the OK button has focus initially
+    When the user presses Tab
+    Then focus moves to the Download button
+    When the user presses Tab again
+    Then focus moves to the X close button
+    When the user presses Tab again
+    Then focus returns to the OK button (focus trap)
+    When the user presses Escape
+    Then the modal closes
+
+  Scenario: Modal is accessible to screen readers
+    Given the user is using a screen reader (NVDA oder ORCA)
+    And the user has completed a conversion
+    When the event summary modal opens
+    Then the screen reader announces "Dialog geöffnet: Konvertierungs-Zusammenfassung"
+    And the modal has role="dialog"
+    And the modal has aria-modal="true"
+    And the modal has aria-labelledby pointing to the title
+    When the user navigates through events with screen reader
+    Then all events are readable with their messages and timestamps
+    And the OK button is announced as "Schaltfläche, OK"
+    And the Download button is announced as "Schaltfläche, Herunterladen"
+
+  Scenario Outline: Modal in all 4 languages
+    Given the user has selected language "<sprache>"
+    And the user has completed a conversion successfully
+    When the event summary modal opens
+    Then the modal title shows "<titel>"
+    And the modal description shows "<beschreibung>"
+    And the OK button shows "<ok_text>"
+    And the Download button shows "<download_text>"
+
+    Examples:
+      | sprache | titel | beschreibung | ok_text | download_text |
+      | de | Konvertierungs-Zusammenfassung | Ihr Dokument wurde erfolgreich konvertiert. Das ist passiert: | OK | 📥 Herunterladen |
+      | en | Conversion Summary | Your document was successfully converted. Here's what happened: | OK | 📥 Download |
+      | es | Resumen de Conversión | Su documento se convirtió exitosamente. Esto es lo que sucedió: | OK | 📥 Descargar |
+      | fr | Résumé de Conversion | Votre document a été converti avec succès. Voici ce qui s'est passé: | OK | 📥 Télécharger |
+
+  Scenario: Modal dark mode
+    Given the user's system is set to dark mode (prefers-color-scheme: dark)
+    And the user has completed a conversion
+    When the event summary modal opens
+    Then the modal background is dark (#1f2937)
+    And the modal text is light (#e5e7eb)
+    And the backdrop has rgba(0,0,0,0.5) with blur
+    And event colors remain visible and distinct
+    And the OK button has accessible contrast
+
+  Scenario: Modal handles many events with scrolling
+    Given the user has converted a file with 15 conversion events
+    When the event summary modal opens
+    Then the modal body has a scrollbar (overflow-y: auto)
+    And all 15 events are visible when scrolling
+    And the modal does not overflow the viewport (max-height: 80vh)
+    And the modal header remains fixed while scrolling
+    And the modal footer remains fixed while scrolling
+
+  Scenario: No modal if no events exist
+    Given the user has converted a PDF that was already PDF/A compliant
+    And the conversion emitted 0 events (passthrough mode)
+    When the conversion completes successfully
+    Then the event summary modal does NOT appear
+    And the download proceeds normally without modal
+    And the inline event list remains hidden
+
+# ==========================================
 # Non-Functional Requirements
 # ==========================================
 

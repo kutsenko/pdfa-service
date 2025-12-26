@@ -84,6 +84,27 @@ So that I can better understand the progress and decisions made during conversio
    - ✅ Existing WebSocket clients ignore unknown message types
    - ✅ No breaking changes to existing protocol
 
+8. **Event Summary Modal** (NEW - 2025-12-26)
+   - ✅ Modal appears automatically 500ms after successful job completion
+   - ✅ Modal displays summary of all conversion events from completed job
+   - ✅ Modal shows same event formatting (icons, colors, messages, timestamps)
+   - ✅ Modal includes scrollable event list if many events (max-height: 60vh)
+   - ✅ "OK" button closes modal
+   - ✅ "Download" button allows re-downloading the file
+   - ✅ Escape key closes modal
+   - ✅ Backdrop click closes modal
+   - ✅ Modal appears AFTER download starts (non-blocking)
+   - ✅ Inline event list REMAINS visible after modal closes
+
+9. **Accessibility for Modal** (NEW)
+   - ✅ Uses native `<dialog>` element
+   - ✅ Focus trapped inside modal when open
+   - ✅ Initial focus on OK button
+   - ✅ ARIA: `role="dialog"`, `aria-labelledby`, `aria-modal="true"`
+   - ✅ Screen reader announces modal opening
+   - ✅ Keyboard: Tab, Shift+Tab, Escape, Enter
+   - ✅ Dark mode support
+
 ---
 
 ## Technical Implementation
@@ -322,6 +343,75 @@ Only 3 of 7 event types are announced to prevent overload:
 
 ---
 
+### Frontend: Event Summary Modal
+
+**File**: `src/pdfa/web_ui.html`
+
+**HTML Structure** (after eventListContainer, ~45 lines):
+- Native `<dialog>` element for accessibility
+- Modal header with title + close button (X)
+- Modal body with description + scrollable event list
+- Modal footer with Download + OK buttons
+- ARIA attributes for screen readers
+
+**CSS Styling** (~150 lines):
+- Modal base styles (max-width: 600px, max-height: 80vh)
+- Backdrop with blur effect
+- Scrollable body for many events
+- Dark mode support (`prefers-color-scheme: dark`)
+- Reduced motion support (`prefers-reduced-motion`)
+- High contrast mode support (`prefers-contrast: high`)
+
+**JavaScript** (~100 lines in ConversionClient class):
+
+Key methods added:
+```javascript
+showEventSummaryModal() {
+    // Opens modal after completion
+    // Clones events from this.events[] to modal
+    // Sets focus on OK button
+    // Announces to screen reader
+}
+
+createModalEventItem(event) {
+    // Renders event in simplified modal format
+    // Reuses getEventIcon(), translateEventMessage()
+    // Returns DOM element
+}
+
+closeEventSummaryModal() {
+    // Closes modal using dialog.close()
+}
+
+handleDownloadFromModal() {
+    // Re-triggers download using stored URL/filename
+    // Same logic as handleCompleted()
+}
+
+initModalListeners() {
+    // Sets up event listeners for:
+    // - OK button click
+    // - X button click
+    // - Download button click
+    // - Backdrop click
+    // - Escape key (native dialog)
+}
+```
+
+**Integration in `handleCompleted()`**:
+- Stores `lastDownloadUrl` and `lastFilename` before download
+- Opens modal 500ms after download starts (non-blocking)
+- Modal only opens if `this.events.length > 0`
+
+**i18n Translations** (4 languages: DE, EN, ES, FR):
+- `modal.title` - Modal title
+- `modal.description` - Description text
+- `modal.downloadButton` - Download button text
+- `modal.okButton` - OK button text
+- `modal.opened` - Screen reader announcement
+
+---
+
 ## Testing
 
 ### Unit Tests
@@ -477,12 +567,17 @@ escapeHtml(unsafe) {
 
 ### Frontend
 
-4. `src/pdfa/web_ui.html` (~900 lines modified/added)
-   - HTML structure (lines 780-802): +23 lines
-   - CSS styles (lines 428-657): +230 lines
-   - i18n translations: +300 lines
-   - JavaScript (ConversionClient class): +250 lines
-   - Event listeners: +10 lines
+4. `src/pdfa/web_ui.html` (~1219 lines modified/added)
+   - Existing: HTML structure (lines 780-802): 23 lines
+   - **NEW: Modal HTML structure: +45 lines**
+   - Existing: CSS styles (lines 428-657): 230 lines
+   - **NEW: Modal CSS styles: +150 lines**
+   - Existing: i18n translations: 300 lines
+   - **NEW: Modal i18n (4 languages): +24 lines**
+   - Existing: JavaScript (ConversionClient): 250 lines
+   - **NEW: Modal JavaScript logic: +100 lines**
+   - Existing: Event listeners: 10 lines
+   - **NEW: Modal event listeners: +7 lines**
 
 ---
 
