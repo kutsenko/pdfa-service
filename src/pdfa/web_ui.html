@@ -2656,6 +2656,10 @@
                 console.log('[handleCompleted] Called with message:', message);
                 this.hideProgress();
 
+                // Store download info for modal (NEW)
+                this.lastDownloadUrl = message.download_url;
+                this.lastFilename = message.filename;
+
                 // Download the file
                 const downloadUrl = message.download_url;
                 const filename = message.filename;
@@ -2718,6 +2722,13 @@
                         statusDiv.className = 'status';
                     }
                 }, 10000);
+
+                // Show event summary modal after download (NEW)
+                if (this.events.length > 0) {
+                    setTimeout(() => {
+                        this.showEventSummaryModal();
+                    }, 500);
+                }
 
                 // Reset form
                 form.reset();
