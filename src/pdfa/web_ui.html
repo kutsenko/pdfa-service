@@ -3164,7 +3164,12 @@
              */
             addEventToList(event) {
                 const eventList = document.getElementById('eventList');
-                if (!eventList) return;
+                if (!eventList) {
+                    console.error('[addEventToList] eventList element not found');
+                    return;
+                }
+
+                console.log('[addEventToList] Adding event:', event.event_type, '| Current DOM items:', eventList.children.length);
 
                 const eventItem = document.createElement('div');
                 eventItem.className = `event-item event-${event.event_type}`;
@@ -3208,6 +3213,8 @@
 
                 // Insert at top (newest first)
                 eventList.insertBefore(eventItem, eventList.firstChild);
+
+                console.log('[addEventToList] Event inserted | Total DOM items now:', eventList.children.length);
             }
 
             /**
@@ -3385,15 +3392,29 @@
                 const modal = document.getElementById('eventSummaryModal');
                 const modalEventList = document.getElementById('modalEventList');
 
-                if (!modal || !modalEventList) return;
-                if (this.events.length === 0) return; // No modal if no events
+                console.log('[showEventSummaryModal] Total events in array:', this.events.length);
+                console.log('[showEventSummaryModal] Events:', this.events);
+
+                if (!modal || !modalEventList) {
+                    console.error('[showEventSummaryModal] Modal elements not found');
+                    return;
+                }
+                if (this.events.length === 0) {
+                    console.log('[showEventSummaryModal] No events to display');
+                    return;
+                }
 
                 // Clear and populate modal
                 modalEventList.innerHTML = '';
                 const sortedEvents = [...this.events].reverse();
-                sortedEvents.forEach(event => {
+                console.log('[showEventSummaryModal] Sorted events count:', sortedEvents.length);
+
+                sortedEvents.forEach((event, index) => {
+                    console.log(`[showEventSummaryModal] Adding event ${index + 1}/${sortedEvents.length}:`, event.event_type);
                     modalEventList.appendChild(this.createModalEventItem(event));
                 });
+
+                console.log('[showEventSummaryModal] Modal populated with', modalEventList.children.length, 'event items');
 
                 // Store download info for modal download button
                 this.modalDownloadUrl = this.lastDownloadUrl;
