@@ -384,18 +384,19 @@ async def oauth_callback(request: Request):
 
 
 @app.get("/auth/user")
-async def get_user_info(current_user: User = Depends(get_current_user)):
-    """Get current authenticated user information.
+async def get_user_info(current_user: User = Depends(get_current_user_optional)):
+    """Get current user information.
 
     Returns:
         User information (email, name, picture)
+        - If auth is enabled: returns authenticated OAuth user
+        - If auth is disabled: returns default local user
 
     Raises:
-        HTTPException: If not authenticated (401) or auth disabled (404)
+        HTTPException: If auth is enabled and user is not authenticated (401)
 
     """
-    if not auth_config_instance.enabled:
-        raise HTTPException(status_code=404, detail="Authentication is disabled")
+    # get_current_user_optional handles both auth-enabled and auth-disabled cases
 
     return {
         "email": current_user.email,
