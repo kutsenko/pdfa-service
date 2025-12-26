@@ -2423,6 +2423,15 @@
                 // Event tracking for live event display
                 this.events = []; // Store events for current job
                 this.eventListVisible = false; // Track visibility state
+
+                // Modal state tracking (NEW)
+                this.modalDownloadUrl = null;
+                this.modalFilename = null;
+                this.lastDownloadUrl = null;
+                this.lastFilename = null;
+
+                // Initialize modal event listeners (NEW)
+                this.initModalListeners();
             }
 
             connect() {
@@ -3324,6 +3333,130 @@
                 }
 
                 this.eventListVisible = false;
+            }
+
+            /**
+             * Show event summary modal after successful completion
+             */
+            showEventSummaryModal() {
+                const modal = document.getElementById('eventSummaryModal');
+                const modalEventList = document.getElementById('modalEventList');
+
+                if (!modal || !modalEventList) return;
+                if (this.events.length === 0) return; // No modal if no events
+
+                // Clear and populate modal
+                modalEventList.innerHTML = '';
+                const sortedEvents = [...this.events].reverse();
+                sortedEvents.forEach(event => {
+                    modalEventList.appendChild(this.createModalEventItem(event));
+                });
+
+                // Store download info for modal download button
+                this.modalDownloadUrl = this.lastDownloadUrl;
+                this.modalFilename = this.lastFilename;
+
+                // Open modal
+                modal.showModal();
+                document.getElementById('modalOkBtn')?.focus();
+
+                // Announce to screen reader
+                this.announceToScreenReader(t('modal.opened'));
+            }
+
+            /**
+             * Create simplified event item for modal
+             */
+            createModalEventItem(event) {
+                const eventItem = document.createElement('div');
+                eventItem.className = `event-item event-${event.event_type}`;
+                eventItem.setAttribute('role', 'listitem');
+
+                const icon = this.getEventIcon(event.event_type);
+                const timestamp = new Date(event.timestamp);
+                const timeStr = timestamp.toLocaleTimeString(currentLang);
+                const message = this.translateEventMessage(event);
+
+                eventItem.innerHTML = `
+                    <span class="event-icon" aria-hidden="true">${icon}</span>
+                    <div class="event-content">
+                        <div class="event-header">
+                            <span class="event-message">${this.escapeHtml(message)}</span>
+                            <time class="event-timestamp" datetime="${event.timestamp}">
+                                ${timeStr}
+                            </time>
+                        </div>
+                    </div>
+                `;
+
+                return eventItem;
+            }
+
+            /**
+             * Close event summary modal
+             */
+            closeEventSummaryModal() {
+                document.getElementById('eventSummaryModal')?.close();
+            }
+
+            /**
+             * Handle download button click in modal
+             */
+            handleDownloadFromModal() {
+                if (!this.modalDownloadUrl || !this.modalFilename) return;
+
+                const headers = {};
+                if (authManager.token) {
+                    headers['Authorization'] = `Bearer ${authManager.token}`;
+                }
+
+                fetch(this.modalDownloadUrl, { headers })
+                    .then(response => response.blob())
+                    .then(blob => {
+                        const link = document.createElement('a');
+                        link.href = URL.createObjectURL(blob);
+                        link.download = this.modalFilename;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(link.href);
+                    })
+                    .catch(error => {
+                        console.error('[Modal Download] Failed:', error);
+                        alert(t('auth.downloadFailed'));
+                    });
+            }
+
+            /**
+             * Initialize modal event listeners
+             */
+            initModalListeners() {
+                const modal = document.getElementById('eventSummaryModal');
+                if (!modal) return;
+
+                // Close button
+                document.getElementById('modalCloseBtn')?.addEventListener('click', () => {
+                    this.closeEventSummaryModal();
+                });
+
+                // OK button
+                document.getElementById('modalOkBtn')?.addEventListener('click', () => {
+                    this.closeEventSummaryModal();
+                });
+
+                // Download button
+                document.getElementById('modalDownloadBtn')?.addEventListener('click', () => {
+                    this.handleDownloadFromModal();
+                });
+
+                // Backdrop click
+                modal.addEventListener('click', (e) => {
+                    const rect = modal.getBoundingClientRect();
+                    if (e.clientY < rect.top || e.clientY > rect.bottom ||
+                        e.clientX < rect.left || e.clientX > rect.right) {
+                        this.closeEventSummaryModal();
+                    }
+                });
             }
 
             /**
