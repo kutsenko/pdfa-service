@@ -27,8 +27,8 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
     def capture_console(msg):
         text = f"[{msg.type}] {msg.text}"
         console_messages.append(text)
-        # Print WebSocket messages immediately for debugging
-        if "WebSocket message" in msg.text or "handleCompleted" in msg.text or "handleJobError" in msg.text:
+        # Print WebSocket messages and DEBUG messages immediately
+        if any(keyword in msg.text for keyword in ["WebSocket message", "handleCompleted", "handleJobError", "[DEBUG]"]):
             print(f"  >>> {text}")
 
     page.on("console", capture_console)
@@ -39,6 +39,28 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
 
     print("\n=== Loading page ===")
     page.goto("http://localhost:8001/en")
+
+    # Inject debug script to log event details and translation
+    page.evaluate("""
+        () => {
+            // Override the handleJobEvent to log details
+            const originalHandleJobEvent = window.conversionClient.handleJobEvent.bind(window.conversionClient);
+            window.conversionClient.handleJobEvent = function(message) {
+                console.log('[DEBUG] Event details:', JSON.stringify(message.details, null, 2));
+                console.log('[DEBUG] Has _i18n_key:', message.details?._i18n_key);
+                console.log('[DEBUG] Has _i18n_params:', message.details?._i18n_params);
+
+                // Test translation
+                const translated = this.translateEventMessage(message);
+                console.log('[DEBUG] Original message:', message.message);
+                console.log('[DEBUG] Translated message:', translated);
+                console.log('[DEBUG] Current language:', currentLang);
+
+                return originalHandleJobEvent(message);
+            };
+        }
+    """)
+
     page.screenshot(path="/tmp/01_page_loaded.png")
     print("Screenshot saved: /tmp/01_page_loaded.png")
 
