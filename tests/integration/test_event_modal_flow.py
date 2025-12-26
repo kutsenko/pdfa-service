@@ -20,7 +20,11 @@ from pdfa.api import app
 from pdfa.db import get_db
 from pdfa.models import JobStatus
 
-pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+    pytest.mark.no_mongo_mock,  # Requires real MongoDB
+]
 
 
 @pytest.fixture
