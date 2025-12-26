@@ -42,6 +42,7 @@ async def db_connection():
 @pytest.fixture
 def test_pdf(tmp_path: Path) -> Path:
     """Create a simple test PDF file."""
+    pytest.importorskip("reportlab", reason="reportlab required for PDF generation")
     from tests.e2e.test_data.pdf_generator import create_small_pdf
 
     pdf_path = tmp_path / "test_conversion.pdf"
