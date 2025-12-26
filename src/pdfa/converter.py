@@ -235,7 +235,7 @@ def convert_to_pdfa(
     compression_config: CompressionConfig | None = None,
     progress_callback: Callable[[ProgressInfo], None] | None = None,
     cancel_event: asyncio.Event | None = None,
-    event_callback: Callable[..., Awaitable[None]] | None = None,
+    event_callback: Callable[..., None] | None = None,
 ) -> None:
     """Convert a PDF to PDF/A using OCRmyPDF, or pass through for plain PDF output.
 
@@ -254,23 +254,18 @@ def convert_to_pdfa(
         compression_config: Compression settings (default: None, uses defaults).
         progress_callback: Optional callback for progress updates.
         cancel_event: Optional event to check for cancellation requests.
-        event_callback: Optional async callback for logging job events.
+        event_callback: Optional synchronous callback for logging job events.
+                       (Handles async operations internally via run_coroutine_threadsafe)
                        Called with (event_type: str, **kwargs: Any).
 
     """
 
-    # Helper to call async event_callback from sync context
+    # Helper to call event_callback (now synchronous wrapper)
     def log_event(event_type: str, **kwargs: Any) -> None:
         """Log event if callback is provided."""
         if event_callback:
-            # Run the async callback in a new event loop if needed
-            try:
-                loop = asyncio.get_running_loop()
-                # We're in an event loop, schedule the callback
-                loop.create_task(event_callback(event_type, **kwargs))
-            except RuntimeError:
-                # No event loop running, run callback synchronously
-                asyncio.run(event_callback(event_type, **kwargs))
+            # event_callback is now a synchronous wrapper that handles async internally
+            event_callback(event_type, **kwargs)
 
     if not input_pdf.exists():
         logger.error(f"Input file does not exist: {input_pdf}")
