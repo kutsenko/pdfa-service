@@ -17,7 +17,7 @@ import pytest
 from httpx import AsyncClient
 
 from pdfa.api import app
-from pdfa.db import get_db_connection
+from pdfa.db import get_db
 from pdfa.models import JobStatus
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
@@ -25,14 +25,14 @@ pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
 @pytest.fixture
 async def db_connection():
-    """Get MongoDB connection for test verification."""
-    conn = get_db_connection()
-    if conn is None:
+    """Get MongoDB database for test verification."""
+    db = get_db()
+    if db is None:
         pytest.skip("MongoDB not available")
-    yield conn
+    yield db
     # Cleanup test data after each test
-    if conn and conn.db:
-        await conn.db.jobs.delete_many({"user_id": "test-user"})
+    if db:
+        await db.jobs.delete_many({"user_id": "test-user"})
 
 
 @pytest.fixture
@@ -71,8 +71,8 @@ class TestEventLoggingFlow:
 
             # Extract job_id from response (if available in headers or body)
             # For now, get the most recent job from DB
-            if db_connection and db_connection.db:
-                job = await db_connection.db.jobs.find_one(
+            if db_connection:
+                job = await db_connection.jobs.find_one(
                     {"user_id": None}, sort=[("created_at", -1)]
                 )
 
@@ -114,8 +114,8 @@ class TestEventLoggingFlow:
 
             assert response.status_code == 200
 
-            if db_connection and db_connection.db:
-                job = await db_connection.db.jobs.find_one(
+            if db_connection:
+                job = await db_connection.jobs.find_one(
                     {"user_id": None}, sort=[("created_at", -1)]
                 )
 
@@ -166,8 +166,8 @@ class TestEventCoverage:
 
             assert response.status_code == 200
 
-            if db_connection and db_connection.db:
-                job = await db_connection.db.jobs.find_one(
+            if db_connection:
+                job = await db_connection.jobs.find_one(
                     {"user_id": None}, sort=[("created_at", -1)]
                 )
 
@@ -198,8 +198,8 @@ class TestEventCoverage:
 
             assert response.status_code == 200
 
-            if db_connection and db_connection.db:
-                job = await db_connection.db.jobs.find_one(
+            if db_connection:
+                job = await db_connection.jobs.find_one(
                     {"user_id": None}, sort=[("created_at", -1)]
                 )
 
