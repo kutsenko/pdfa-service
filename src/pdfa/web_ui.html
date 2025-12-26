@@ -26,7 +26,7 @@
             border-radius: 10px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             padding: 40px;
-            max-width: 600px;
+            max-width: 800px;
             width: 100%;
         }
 
@@ -1017,6 +1017,145 @@
         .container.auth-enabled {
             margin-top: 60px;
         }
+
+        /* ================================================== */
+        /* Tab Navigation Styles                              */
+        /* ================================================== */
+        .tab-navigation {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e0e0e0;
+            position: relative;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab-button:hover {
+            background: rgba(102, 126, 234, 0.05);
+            color: #667eea;
+        }
+
+        .tab-button:focus {
+            outline: 2px solid #667eea;
+            outline-offset: -2px;
+            z-index: 1;
+        }
+
+        .tab-button.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: rgba(102, 126, 234, 0.08);
+        }
+
+        .tab-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Placeholder Tab Content */
+        .placeholder-content {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .placeholder-content .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .placeholder-content h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .placeholder-content p {
+            font-size: 16px;
+            color: #999;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        /* Mobile Responsive - Scrollable tabs */
+        @media (max-width: 600px) {
+            .tab-navigation {
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                gap: 2px;
+            }
+
+            .tab-button {
+                flex: 0 0 auto;
+                min-width: 90px;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .tab-navigation {
+                border-bottom-color: #374151;
+            }
+
+            .tab-button {
+                color: #9ca3af;
+            }
+
+            .tab-button:hover {
+                background: rgba(102, 126, 234, 0.1);
+                color: #818cf8;
+            }
+
+            .tab-button.active {
+                color: #818cf8;
+                border-bottom-color: #818cf8;
+                background: rgba(102, 126, 234, 0.15);
+            }
+
+            .placeholder-content h2 {
+                color: #e5e7eb;
+            }
+
+            .placeholder-content p {
+                color: #6b7280;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1060,9 +1199,61 @@
             <p class="subtitle" data-i18n="header.subtitle">Convert your documents to archival PDF/A format with OCR</p>
         </header>
 
-        <div class="info-box" role="note" aria-label="Supported file formats">
-            <span data-i18n="info.supportedFormats">ℹ️ Supported formats: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP</span>
-        </div>
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation" role="tablist" aria-label="Main navigation">
+            <button id="tab-konverter-btn"
+                    class="tab-button active"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="tab-konverter"
+                    data-i18n="tabs.konverter">
+                Konverter
+            </button>
+            <button id="tab-kamera-btn"
+                    class="tab-button"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="tab-kamera"
+                    data-i18n="tabs.kamera">
+                Kamera
+            </button>
+            <button id="tab-auftraege-btn"
+                    class="tab-button"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="tab-auftraege"
+                    data-i18n="tabs.auftraege">
+                Aufträge
+            </button>
+            <button id="tab-konto-btn"
+                    class="tab-button"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="tab-konto"
+                    data-i18n="tabs.konto">
+                Konto
+            </button>
+            <button id="tab-dokumentation-btn"
+                    class="tab-button"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="tab-dokumentation"
+                    data-i18n="tabs.dokumentation">
+                Dokumentation
+            </button>
+        </nav>
+
+        <!-- Tab Panels -->
+
+        <!-- Konverter Tab (existing converter functionality) -->
+        <div id="tab-konverter"
+             class="tab-panel active"
+             role="tabpanel"
+             aria-labelledby="tab-konverter-btn">
+
+            <div class="info-box" role="note" aria-label="Supported file formats">
+                <span data-i18n="info.supportedFormats">ℹ️ Supported formats: PDF, DOCX, PPTX, XLSX, ODT, ODS, ODP</span>
+            </div>
 
         <!-- Screen reader live region for announcements -->
         <div id="srAnnouncements"
@@ -1278,6 +1469,59 @@
                 </footer>
             </div>
         </dialog>
+        </div>
+
+        <!-- Kamera Tab (placeholder) -->
+        <div id="tab-kamera"
+             class="tab-panel"
+             role="tabpanel"
+             aria-labelledby="tab-kamera-btn"
+             hidden>
+            <div class="placeholder-content">
+                <div class="icon" aria-hidden="true">📷</div>
+                <h2 data-i18n="placeholder.kamera.title">Camera Scanner</h2>
+                <p data-i18n="placeholder.kamera.description">Coming soon: Upload documents directly from your camera or scanner</p>
+            </div>
+        </div>
+
+        <!-- Aufträge Tab (placeholder) -->
+        <div id="tab-auftraege"
+             class="tab-panel"
+             role="tabpanel"
+             aria-labelledby="tab-auftraege-btn"
+             hidden>
+            <div class="placeholder-content">
+                <div class="icon" aria-hidden="true">📋</div>
+                <h2 data-i18n="placeholder.auftraege.title">Job History</h2>
+                <p data-i18n="placeholder.auftraege.description">Coming soon: View and manage your conversion history</p>
+            </div>
+        </div>
+
+        <!-- Konto Tab (placeholder) -->
+        <div id="tab-konto"
+             class="tab-panel"
+             role="tabpanel"
+             aria-labelledby="tab-konto-btn"
+             hidden>
+            <div class="placeholder-content">
+                <div class="icon" aria-hidden="true">👤</div>
+                <h2 data-i18n="placeholder.konto.title">Account Settings</h2>
+                <p data-i18n="placeholder.konto.description">Coming soon: Manage your account preferences and settings</p>
+            </div>
+        </div>
+
+        <!-- Dokumentation Tab (placeholder) -->
+        <div id="tab-dokumentation"
+             class="tab-panel"
+             role="tabpanel"
+             aria-labelledby="tab-dokumentation-btn"
+             hidden>
+            <div class="placeholder-content">
+                <div class="icon" aria-hidden="true">📖</div>
+                <h2 data-i18n="placeholder.dokumentation.title">Documentation</h2>
+                <p data-i18n="placeholder.dokumentation.description">Coming soon: User guides and help documentation</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1541,6 +1785,21 @@
                 'auth.loginFailed': 'Authentication failed. Please try again.',
                 'auth.downloadFailed': 'Download failed. Please try again.',
                 'auth.viewPdfFailed': 'Failed to open PDF. Please try again.',
+                // Tab labels
+                'tabs.konverter': 'Converter',
+                'tabs.kamera': 'Camera',
+                'tabs.auftraege': 'Jobs',
+                'tabs.konto': 'Account',
+                'tabs.dokumentation': 'Documentation',
+                // Placeholder content
+                'placeholder.kamera.title': 'Camera Scanner',
+                'placeholder.kamera.description': 'Coming soon: Upload documents directly from your camera or scanner',
+                'placeholder.auftraege.title': 'Job History',
+                'placeholder.auftraege.description': 'Coming soon: View and manage your conversion history',
+                'placeholder.konto.title': 'Account Settings',
+                'placeholder.konto.description': 'Coming soon: Manage your account preferences and settings',
+                'placeholder.dokumentation.title': 'Documentation',
+                'placeholder.dokumentation.description': 'Coming soon: User guides and help documentation',
                 // Event list translations (flat keys for HTML)
                 'events.title': 'Conversion Events',
                 'events.details': 'Details',
@@ -1716,6 +1975,21 @@
                 'auth.loginFailed': 'Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.',
                 'auth.downloadFailed': 'Download fehlgeschlagen. Bitte versuchen Sie es erneut.',
                 'auth.viewPdfFailed': 'PDF konnte nicht geöffnet werden. Bitte versuchen Sie es erneut.',
+                // Tab-Beschriftungen
+                'tabs.konverter': 'Konverter',
+                'tabs.kamera': 'Kamera',
+                'tabs.auftraege': 'Aufträge',
+                'tabs.konto': 'Konto',
+                'tabs.dokumentation': 'Dokumentation',
+                // Platzhalter-Inhalte
+                'placeholder.kamera.title': 'Kamera-Scanner',
+                'placeholder.kamera.description': 'Demnächst: Dokumente direkt von Ihrer Kamera oder Ihrem Scanner hochladen',
+                'placeholder.auftraege.title': 'Auftragsverlauf',
+                'placeholder.auftraege.description': 'Demnächst: Ihren Konvertierungsverlauf anzeigen und verwalten',
+                'placeholder.konto.title': 'Kontoeinstellungen',
+                'placeholder.konto.description': 'Demnächst: Ihre Kontoeinstellungen und Präferenzen verwalten',
+                'placeholder.dokumentation.title': 'Dokumentation',
+                'placeholder.dokumentation.description': 'Demnächst: Benutzerhandbücher und Hilfedokumentation',
                 // Event-Listen-Übersetzungen (flache Schlüssel für HTML)
                 'events.title': 'Konvertierungsereignisse',
                 'events.details': 'Details',
@@ -1891,6 +2165,21 @@
                 'auth.loginFailed': 'Error de autenticación. Por favor, inténtelo de nuevo.',
                 'auth.downloadFailed': 'Error en la descarga. Por favor, inténtelo de nuevo.',
                 'auth.viewPdfFailed': 'No se pudo abrir el PDF. Por favor, inténtelo de nuevo.',
+                // Etiquetas de pestañas
+                'tabs.konverter': 'Convertidor',
+                'tabs.kamera': 'Cámara',
+                'tabs.auftraege': 'Trabajos',
+                'tabs.konto': 'Cuenta',
+                'tabs.dokumentation': 'Documentación',
+                // Contenido de marcador de posición
+                'placeholder.kamera.title': 'Escáner de Cámara',
+                'placeholder.kamera.description': 'Próximamente: Cargue documentos directamente desde su cámara o escáner',
+                'placeholder.auftraege.title': 'Historial de Trabajos',
+                'placeholder.auftraege.description': 'Próximamente: Vea y administre su historial de conversiones',
+                'placeholder.konto.title': 'Configuración de Cuenta',
+                'placeholder.konto.description': 'Próximamente: Administre sus preferencias y configuraciones de cuenta',
+                'placeholder.dokumentation.title': 'Documentación',
+                'placeholder.dokumentation.description': 'Próximamente: Guías de usuario y documentación de ayuda',
                 // Traducciones de lista de eventos (claves planas para HTML)
                 'events.title': 'Eventos de Conversión',
                 'events.details': 'Detalles',
@@ -2066,6 +2355,21 @@
                 'auth.loginFailed': 'Échec de l\'authentification. Veuillez réessayer.',
                 'auth.downloadFailed': 'Échec du téléchargement. Veuillez réessayer.',
                 'auth.viewPdfFailed': 'Impossible d\'ouvrir le PDF. Veuillez réessayer.',
+                // Étiquettes des onglets
+                'tabs.konverter': 'Convertisseur',
+                'tabs.kamera': 'Caméra',
+                'tabs.auftraege': 'Tâches',
+                'tabs.konto': 'Compte',
+                'tabs.dokumentation': 'Documentation',
+                // Contenu de l'espace réservé
+                'placeholder.kamera.title': 'Scanner de Caméra',
+                'placeholder.kamera.description': 'Bientôt disponible : Téléchargez des documents directement depuis votre caméra ou scanner',
+                'placeholder.auftraege.title': 'Historique des Tâches',
+                'placeholder.auftraege.description': 'Bientôt disponible : Consultez et gérez votre historique de conversion',
+                'placeholder.konto.title': 'Paramètres du Compte',
+                'placeholder.konto.description': 'Bientôt disponible : Gérez vos préférences et paramètres de compte',
+                'placeholder.dokumentation.title': 'Documentation',
+                'placeholder.dokumentation.description': 'Bientôt disponible : Guides d\'utilisation et documentation d\'aide',
                 // Traductions de la liste d'événements (clés plates pour HTML)
                 'events.title': 'Événements de Conversion',
                 'events.details': 'Détails',
@@ -3829,6 +4133,128 @@
         }
 
         // ============================================================================
+        // Tab Switching Logic
+        // ============================================================================
+
+        /**
+         * Initialize tab navigation
+         */
+        function initTabNavigation() {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+
+            // Track current active tab
+            let currentTab = 'tab-konverter';
+
+            // Handle tab click
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTabId = button.getAttribute('aria-controls');
+                    switchTab(targetTabId);
+                });
+
+                // Keyboard navigation
+                button.addEventListener('keydown', (e) => {
+                    let newIndex = -1;
+                    const currentIndex = Array.from(tabButtons).indexOf(button);
+
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        newIndex = (currentIndex + 1) % tabButtons.length;
+                    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        newIndex = (currentIndex - 1 + tabButtons.length) % tabButtons.length;
+                    } else if (e.key === 'Home') {
+                        e.preventDefault();
+                        newIndex = 0;
+                    } else if (e.key === 'End') {
+                        e.preventDefault();
+                        newIndex = tabButtons.length - 1;
+                    }
+
+                    if (newIndex !== -1) {
+                        tabButtons[newIndex].focus();
+                        const targetTabId = tabButtons[newIndex].getAttribute('aria-controls');
+                        switchTab(targetTabId);
+                    }
+                });
+            });
+
+            /**
+             * Switch to a specific tab
+             * @param {string} tabId - ID of the tab panel to show
+             */
+            function switchTab(tabId) {
+                // Don't switch if already active
+                if (tabId === currentTab) return;
+
+                console.log(`[Tabs] Switching from ${currentTab} to ${tabId}`);
+
+                // Update buttons
+                tabButtons.forEach(btn => {
+                    const isActive = btn.getAttribute('aria-controls') === tabId;
+                    btn.classList.toggle('active', isActive);
+                    btn.setAttribute('aria-selected', isActive);
+                    btn.setAttribute('tabindex', isActive ? '0' : '-1');
+                });
+
+                // Update panels
+                tabPanels.forEach(panel => {
+                    const isActive = panel.id === tabId;
+                    panel.classList.toggle('active', isActive);
+                    panel.hidden = !isActive;
+                });
+
+                currentTab = tabId;
+
+                // Update URL hash (optional - preserves tab on refresh)
+                if (history.replaceState) {
+                    const hash = tabId.replace('tab-', '');
+                    history.replaceState(null, null, `#${hash}`);
+                }
+
+                // Announce to screen readers
+                const tabName = document.querySelector(`[aria-controls="${tabId}"]`)?.textContent || tabId;
+                announceToScreenReader(`Switched to ${tabName} tab`);
+            }
+
+            /**
+             * Initialize tab from URL hash
+             */
+            function initFromHash() {
+                const hash = window.location.hash.slice(1); // Remove '#'
+                if (hash) {
+                    const tabId = `tab-${hash}`;
+                    const targetPanel = document.getElementById(tabId);
+                    if (targetPanel) {
+                        switchTab(tabId);
+                    }
+                }
+            }
+
+            // Handle browser back/forward
+            window.addEventListener('hashchange', () => {
+                initFromHash();
+            });
+
+            // Initialize from URL on load
+            initFromHash();
+
+            console.log('[Tabs] Tab navigation initialized');
+        }
+
+        // Helper function to announce to screen readers
+        function announceToScreenReader(message) {
+            const srAnnouncements = document.getElementById('srAnnouncements');
+            if (srAnnouncements) {
+                srAnnouncements.textContent = message;
+                setTimeout(() => {
+                    srAnnouncements.textContent = '';
+                }, 1000);
+            }
+        }
+
+        // ============================================================================
         // Authentication Initialization
         // ============================================================================
 
@@ -3848,6 +4274,9 @@
                 } else {
                     console.log('[Auth] WebSocket connection skipped - user not authenticated');
                 }
+
+                // Initialize tab navigation
+                initTabNavigation();
 
                 // Bind login button
                 const loginBtn = document.getElementById('googleLoginBtn');
