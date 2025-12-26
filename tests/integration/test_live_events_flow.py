@@ -9,7 +9,6 @@ This module tests the complete event broadcasting flow:
 
 from __future__ import annotations
 
-import asyncio
 import base64
 import json
 from pathlib import Path
