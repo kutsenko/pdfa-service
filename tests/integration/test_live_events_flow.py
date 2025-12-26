@@ -70,23 +70,18 @@ class TestLiveEventBroadcasting:
 
             # Simulate event logging if callback provided
             if event_callback:
-                # Simulate OCR decision event
-                asyncio.run(
-                    event_callback(
-                        "ocr_decision",
-                        decision="skip",
-                        reason="tagged_pdf",
-                        has_struct_tree_root=True,
-                    )
+                # event_callback is a synchronous wrapper, call it directly
+                event_callback(
+                    "ocr_decision",
+                    decision="skip",
+                    reason="tagged_pdf",
+                    has_struct_tree_root=True,
                 )
 
-                # Simulate passthrough mode event
-                asyncio.run(
-                    event_callback(
-                        "passthrough_mode",
-                        mode="pdf_output_no_ocr",
-                        tags_preserved=True,
-                    )
+                event_callback(
+                    "passthrough_mode",
+                    mode="pdf_output_no_ocr",
+                    tags_preserved=True,
                 )
 
             # Simulate progress if callback provided
