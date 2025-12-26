@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  mongodb-test:
+    image: mongo:7.0
+    container_name: pdfa-mongodb-test
+    ports:
+      - "27018:27017"  # Different port to avoid conflicts
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: test_password
+      MONGO_INITDB_DATABASE: pdfa_test
+      PDFA_DB_USER: pdfa_test_user
+      PDFA_DB_PASSWORD: test_password
+    tmpfs:
+      - /data/db  # Use tmpfs for fast ephemeral storage
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+    networks:
+      - pdfa-test-network
+
+networks:
+  pdfa-test-network:
+    driver: bridge

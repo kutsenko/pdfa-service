@@ -731,7 +731,7 @@ class TestEventSummaryModalDebugging:
         why the modal might not appear after conversion.
         """
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Capture all console logs
         logs = []
@@ -811,7 +811,7 @@ class TestEventSummaryModalDebugging:
     ) -> None:
         """Verify that events are displayed in the inline event list during conversion."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Enable console logging
         received_events = []
