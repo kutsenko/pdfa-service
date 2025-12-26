@@ -454,12 +454,11 @@ class TestJobCompletionAndDownload:
 
             # Simulate an event
             if event_callback:
-                asyncio.run(
-                    event_callback(
-                        "ocr_decision",
-                        decision="skip",
-                        reason="tagged_pdf",
-                    )
+                # event_callback is a synchronous wrapper, call it directly
+                event_callback(
+                    "ocr_decision",
+                    decision="skip",
+                    reason="tagged_pdf",
                 )
 
         with patch("pdfa.api.convert_to_pdfa", side_effect=mock_convert):
