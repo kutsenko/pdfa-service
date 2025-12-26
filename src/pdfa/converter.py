@@ -261,12 +261,34 @@ def convert_to_pdfa(
 
     """
 
-    # Helper to call event_callback (now synchronous wrapper)
+    # Helper to call event_callback (supports both sync and async)
     def log_event(event_type: str, **kwargs: Any) -> None:
         """Log event if callback is provided."""
         if event_callback:
-            # event_callback is now a synchronous wrapper that handles async internally
-            event_callback(event_type, **kwargs)
+            import inspect
+
+            # Check if callback is a coroutine function (async def)
+            if inspect.iscoroutinefunction(event_callback):
+                # Async callback: need to run it in an event loop
+                try:
+                    loop = asyncio.get_running_loop()
+                    # We're in an async context, create task
+                    loop.create_task(event_callback(event_type, **kwargs))
+                except RuntimeError:
+                    # No event loop running (worker thread), run in new loop
+                    asyncio.run(event_callback(event_type, **kwargs))
+            else:
+                # Sync callback: just call it
+                result = event_callback(event_type, **kwargs)
+                # If it returned a coroutine (e.g., AsyncMock), warn but continue
+                if inspect.iscoroutine(result):
+                    import warnings
+
+                    warnings.warn(
+                        "event_callback returned coroutine but is not async function",
+                        RuntimeWarning,
+                        stacklevel=2,
+                    )
 
     if not input_pdf.exists():
         logger.error(f"Input file does not exist: {input_pdf}")
