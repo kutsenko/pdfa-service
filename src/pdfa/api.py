@@ -732,9 +732,10 @@ async def process_conversion_job(job_id: str) -> None:
         # Get the current event loop to schedule coroutines from worker thread
         main_loop = asyncio.get_running_loop()
 
-        # Create synchronous wrapper for event callback that works from worker threads
+        # Create synchronous wrapper for event callback that works from
+        # worker threads
         def event_callback(event_type: str, **kwargs) -> None:
-            """Synchronous wrapper that schedules async callback in main loop."""
+            """Schedule async callback in main loop."""
             # Schedule the coroutine in the main event loop from worker thread
             future = asyncio.run_coroutine_threadsafe(
                 async_event_callback(event_type, **kwargs), main_loop

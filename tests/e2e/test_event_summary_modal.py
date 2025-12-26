@@ -813,7 +813,7 @@ class TestEventSummaryModalDebugging:
     def test_events_display_in_inline_list(
         self, page_with_server: Page, test_pdfs: dict[str, Path]
     ) -> None:
-        """Verify that events are displayed in the inline event list during conversion."""
+        """Verify events displayed in inline event list during conversion."""
         page = page_with_server
         page.goto("http://localhost:8001/en")
 

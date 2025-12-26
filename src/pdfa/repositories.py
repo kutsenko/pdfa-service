@@ -165,7 +165,8 @@ class JobRepository:
         Args:
             job_id: Job identifier
             status: New status value
-            **kwargs: Additional fields to update (e.g., error, completed_at, duration_seconds)
+            **kwargs: Additional fields to update (e.g., error,
+                     completed_at, duration_seconds)
 
         Example:
             await job_repo.update_job_status(
@@ -474,7 +475,8 @@ class AuditLogRepository:
         """Get recent security-related events.
 
         Args:
-            event_types: List of event types to query (e.g., ["auth_failure", "user_login"])
+            event_types: List of event types to query
+                        (e.g., ["auth_failure", "user_login"])
             hours: Number of hours to look back (default: 24)
             limit: Maximum number of events to return (default: 1000)
 

@@ -97,7 +97,8 @@ def api_process(ensure_test_data, mongodb_test_container):
             "MONGODB_DATABASE": "pdfa_test",
             "PDFA_ENABLE_AUTH": "false",  # Disable OAuth for tests
             "PYTHONUNBUFFERED": "1",
-            "PDFA_OCR_ENABLED": "false",  # Disable OCR for tests (Tesseract language data not installed)
+            # Disable OCR for tests (Tesseract language data not installed)
+            "PDFA_OCR_ENABLED": "false",
         }
     )
 

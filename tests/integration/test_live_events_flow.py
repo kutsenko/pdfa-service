@@ -333,7 +333,10 @@ class TestJobCompletionAndDownload:
         # Verify download_url format
         assert completed_message["download_url"].startswith(
             "/download/"
-        ), f"download_url should start with /download/, got: {completed_message['download_url']}"
+        ), (
+            f"download_url should start with /download/, "
+            f"got: {completed_message['download_url']}"
+        )
 
         # Verify filename has _pdfa suffix
         assert completed_message["filename"].endswith(
@@ -410,7 +413,10 @@ class TestJobCompletionAndDownload:
 
         assert (
             response.headers["content-type"] == "application/pdf"
-        ), f"Should return PDF content-type, got: {response.headers.get('content-type')}"
+        ), (
+            f"Should return PDF content-type, "
+            f"got: {response.headers.get('content-type')}"
+        )
 
         # Verify we got the converted file
         content = response.content

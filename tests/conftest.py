@@ -120,11 +120,12 @@ def mock_mongodb(monkeypatch, auth_config_disabled, auth_config_enabled, request
     can run without a real MongoDB instance. It provides AsyncMock objects for
     all collection operations.
 
-    By default, authentication is DISABLED for tests. Tests that need authentication
-    should use the auth_headers fixture and mark themselves with @pytest.mark.enable_auth.
+    By default, authentication is DISABLED for tests. Tests that need
+    authentication should use the auth_headers fixture and mark themselves
+    with @pytest.mark.enable_auth.
 
-    The mock is applied globally and automatically to all tests unless explicitly
-    disabled with the marker: @pytest.mark.no_mongo_mock
+    The mock is applied globally and automatically to all tests unless
+    explicitly disabled with the marker: @pytest.mark.no_mongo_mock
     """
     from unittest.mock import AsyncMock, MagicMock
 

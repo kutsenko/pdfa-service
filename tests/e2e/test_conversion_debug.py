@@ -55,9 +55,15 @@ def test_simple_upload_and_debug(page_with_server: Page, test_pdf: Path) -> None
         """
         () => {
             // Override the handleJobEvent to log details
-            const originalHandleJobEvent = window.conversionClient.handleJobEvent.bind(window.conversionClient);
+            const originalHandleJobEvent =
+                window.conversionClient.handleJobEvent.bind(
+                    window.conversionClient
+                );
             window.conversionClient.handleJobEvent = function(message) {
-                console.log('[DEBUG] Event details:', JSON.stringify(message.details, null, 2));
+                console.log(
+                    '[DEBUG] Event details:',
+                    JSON.stringify(message.details, null, 2)
+                );
                 console.log('[DEBUG] Has _i18n_key:', message.details?._i18n_key);
                 console.log('[DEBUG] Has _i18n_params:', message.details?._i18n_params);
 

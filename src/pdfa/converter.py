@@ -254,8 +254,9 @@ def convert_to_pdfa(
         compression_config: Compression settings (default: None, uses defaults).
         progress_callback: Optional callback for progress updates.
         cancel_event: Optional event to check for cancellation requests.
-        event_callback: Optional synchronous callback for logging job events.
-                       (Handles async operations internally via run_coroutine_threadsafe)
+        event_callback: Optional synchronous callback for logging job
+                       events. Handles async operations internally via
+                       run_coroutine_threadsafe.
                        Called with (event_type: str, **kwargs: Any).
 
     """

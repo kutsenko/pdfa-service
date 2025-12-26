@@ -431,7 +431,10 @@ async def test_get_current_user_optional_returns_custom_default_user():
 
 @pytest.mark.asyncio
 async def test_get_current_user_optional_fallback_when_auth_config_none():
-    """get_current_user_optional falls back to hardcoded defaults when auth_config is None."""
+    """get_current_user_optional falls back to hardcoded defaults.
+
+    When auth_config is None.
+    """
     from fastapi import Request
 
     from pdfa.auth import get_current_user_optional
@@ -451,7 +454,10 @@ async def test_get_current_user_optional_fallback_when_auth_config_none():
 async def test_get_current_user_optional_returns_oauth_user_when_auth_enabled(
     auth_config_enabled, valid_jwt_token, test_user
 ):
-    """get_current_user_optional returns OAuth user when auth enabled (not default user)."""
+    """get_current_user_optional returns OAuth user when auth enabled.
+
+    Not default user.
+    """
     from fastapi import Request
 
     from pdfa.auth import get_current_user_optional
