@@ -44,6 +44,36 @@ class UserDocument(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
 
+class UserPreferencesDocument(BaseModel):
+    """User preferences for default conversion parameters.
+
+    Stores user's preferred default settings for the PDF converter.
+    These defaults are auto-applied when the user visits the converter form.
+
+    Attributes:
+        user_id: User identifier (unique index)
+        default_pdfa_level: Preferred PDF type (standard, 1, 2, or 3)
+        default_ocr_language: Preferred OCR language code (e.g., "deu+eng")
+        default_compression_profile: Preferred compression setting
+        default_ocr_enabled: Whether OCR should be enabled by default
+        default_skip_ocr_on_tagged: Whether to skip OCR for tagged PDFs by default
+        updated_at: Last update timestamp
+
+    """
+
+    user_id: str
+    default_pdfa_level: Literal["standard", "1", "2", "3"] = "2"
+    default_ocr_language: str = "deu+eng"
+    default_compression_profile: Literal[
+        "balanced", "quality", "aggressive", "minimal"
+    ] = "balanced"
+    default_ocr_enabled: bool = True
+    default_skip_ocr_on_tagged: bool = True
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+    model_config = {"arbitrary_types_allowed": True}
+
+
 class JobEvent(BaseModel):
     """Single event in a job's execution history.
 

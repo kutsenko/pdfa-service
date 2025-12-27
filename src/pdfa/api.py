@@ -50,9 +50,13 @@ from pdfa.format_converter import (
 from pdfa.image_converter import convert_image_to_pdf
 from pdfa.job_manager import get_job_manager
 from pdfa.logging_config import configure_logging, get_logger
-from pdfa.models import UserDocument
+from pdfa.models import UserDocument, UserPreferencesDocument
 from pdfa.progress_tracker import ProgressInfo
-from pdfa.repositories import JobRepository, UserRepository
+from pdfa.repositories import (
+    JobRepository,
+    UserPreferencesRepository,
+    UserRepository,
+)
 from pdfa.user_models import User
 from pdfa.websocket_protocol import (
     CancelJobMessage,
@@ -403,6 +407,194 @@ async def get_user_info(current_user: User = Depends(get_current_user_optional))
         "name": current_user.name,
         "picture": current_user.picture,
     }
+
+
+# User profile and preferences endpoints
+
+
+@app.get("/api/v1/user/profile")
+async def get_user_profile(current_user: User = Depends(get_current_user_optional)):
+    """Get comprehensive user profile including stats and activity.
+
+    Returns profile info, login stats, job stats, and recent activity.
+    Works with auth disabled (returns default user data).
+
+    Returns:
+        Dictionary containing:
+        - user: Basic user information
+        - login_stats: Account creation, last login, login count
+        - job_stats: Conversion statistics (total, success rate, etc.)
+        - recent_activity: Last 20 audit events
+
+    """
+    from pdfa.repositories import AuditLogRepository
+
+    user_repo = UserRepository()
+    job_repo = JobRepository()
+    audit_repo = AuditLogRepository()
+
+    # Get user document for login stats (if auth enabled and user exists)
+    user_doc = None
+    if auth_config_instance.enabled and current_user:
+        user_doc = await user_repo.get_user(current_user.user_id)
+
+    # Get job statistics
+    job_stats = await job_repo.get_job_stats(current_user.user_id)
+
+    # Get recent audit events (last 20)
+    recent_activity = await audit_repo.get_user_events(current_user.user_id, limit=20)
+
+    return {
+        "user": {
+            "user_id": current_user.user_id,
+            "email": current_user.email,
+            "name": current_user.name,
+            "picture": current_user.picture,
+        },
+        "login_stats": {
+            "created_at": user_doc.created_at.isoformat() if user_doc else None,
+            "last_login_at": user_doc.last_login_at.isoformat() if user_doc else None,
+            "login_count": user_doc.login_count if user_doc else None,
+        },
+        "job_stats": job_stats,
+        "recent_activity": [
+            {
+                "event_type": event.event_type,
+                "timestamp": event.timestamp.isoformat(),
+                "ip_address": event.ip_address,
+                "details": event.details,
+            }
+            for event in recent_activity
+        ],
+    }
+
+
+@app.get("/api/v1/user/preferences")
+async def get_user_preferences(
+    current_user: User = Depends(get_current_user_optional),
+):
+    """Get user preferences or system defaults.
+
+    Returns user's saved conversion preferences if they exist,
+    otherwise returns system default values.
+
+    Returns:
+        UserPreferencesDocument with default conversion parameters
+
+    """
+    user_prefs_repo = UserPreferencesRepository()
+    prefs = await user_prefs_repo.get_preferences(current_user.user_id)
+
+    if prefs:
+        return prefs.model_dump()
+    else:
+        # Return system defaults
+        return UserPreferencesDocument(user_id=current_user.user_id).model_dump()
+
+
+@app.put("/api/v1/user/preferences")
+async def update_user_preferences(
+    preferences: dict[str, Any],
+    current_user: User = Depends(get_current_user_optional),
+):
+    """Update user preferences.
+
+    Saves user's preferred default conversion parameters.
+
+    Args:
+        preferences: Dictionary with preference fields
+
+    Returns:
+        Updated UserPreferencesDocument
+
+    """
+    user_prefs_repo = UserPreferencesRepository()
+
+    # Validate and create preferences document
+    prefs_doc = UserPreferencesDocument(
+        user_id=current_user.user_id,
+        default_pdfa_level=preferences.get("default_pdfa_level", "2"),
+        default_ocr_language=preferences.get("default_ocr_language", "deu+eng"),
+        default_compression_profile=preferences.get(
+            "default_compression_profile", "balanced"
+        ),
+        default_ocr_enabled=preferences.get("default_ocr_enabled", True),
+        default_skip_ocr_on_tagged=preferences.get("default_skip_ocr_on_tagged", True),
+    )
+
+    updated = await user_prefs_repo.create_or_update_preferences(prefs_doc)
+    return updated.model_dump()
+
+
+@app.delete("/api/v1/user/account")
+async def delete_user_account(
+    body: dict[str, str],
+    current_user: User = Depends(get_current_user),
+):
+    """Delete user account and all associated data.
+
+    Requires email confirmation to prevent accidental deletion.
+    Deletes: user profile, jobs, audit logs, preferences.
+
+    This endpoint is disabled when authentication is disabled (returns 403).
+
+    Args:
+        body: Dictionary containing email_confirmation field
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException: 400 if email doesn't match, 403 if auth disabled
+
+    """
+    from pdfa.repositories import AuditLogRepository
+
+    # Verify email confirmation
+    email_confirmation = body.get("email_confirmation", "")
+    if email_confirmation != current_user.email:
+        raise HTTPException(
+            status_code=400,
+            detail="Email confirmation does not match. Account deletion cancelled.",
+        )
+
+    # Initialize repositories
+    user_repo = UserRepository()
+    job_repo = JobRepository()
+    user_prefs_repo = UserPreferencesRepository()
+    audit_repo = AuditLogRepository()
+
+    # Delete all user data (cascade deletion)
+    from pdfa.db import get_db
+
+    db = get_db()
+
+    # Delete jobs
+    await db.jobs.delete_many({"user_id": current_user.user_id})
+
+    # Delete audit logs
+    await db.audit_logs.delete_many({"user_id": current_user.user_id})
+
+    # Delete preferences
+    await user_prefs_repo.delete_preferences(current_user.user_id)
+
+    # Delete user profile
+    await db.users.delete_one({"user_id": current_user.user_id})
+
+    # Log deletion event before user is gone
+    from pdfa.models import AuditLogDocument
+
+    await audit_repo.log_event(
+        AuditLogDocument(
+            event_type="user_logout",  # Closest available event type
+            user_id=current_user.user_id,
+            timestamp=datetime.utcnow(),
+            ip_address="",
+            details={"reason": "account_deleted"},
+        )
+    )
+
+    return {"message": "Account deleted successfully"}
 
 
 # Conversion endpoints
