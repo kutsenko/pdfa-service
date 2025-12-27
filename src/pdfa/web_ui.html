@@ -6526,40 +6526,101 @@
                 document.getElementById('jobsContent').style.display = 'block';
 
                 const tbody = document.getElementById('jobsTableBody');
-                tbody.innerHTML = this.jobs.map(job => this.createJobRow(job)).join('');
 
-                // Bind row click handlers
+                // SMART DOM UPDATE: Preserve focus and minimize DOM changes
+
+                // Save current focus and expanded state
+                const activeElement = document.activeElement;
+                const wasFocused = tbody.contains(activeElement);
+                const focusedJobId = wasFocused ? activeElement.closest('.job-row')?.dataset.jobId : null;
+                const expandedJobId = this.expandedJobId;
+
+                // Index existing rows by job_id
+                const existingRows = new Map();
                 tbody.querySelectorAll('tr.job-row').forEach(row => {
-                    row.addEventListener('click', (e) => {
-                        if (!e.target.closest('button')) {
-                            this.toggleJobExpansion(row.dataset.jobId);
+                    existingRows.set(row.dataset.jobId, row);
+                });
+
+                // Track which rows to keep
+                const processedJobIds = new Set();
+
+                // Update or create rows
+                this.jobs.forEach((job, index) => {
+                    processedJobIds.add(job.job_id);
+                    const existingRow = existingRows.get(job.job_id);
+
+                    if (existingRow) {
+                        // Row exists - check if update is needed
+                        if (this.jobHasChanged(job, existingRow)) {
+                            console.log(`[Jobs] Updating changed job: ${job.job_id}`);
+                            const newRow = this.createJobRowElement(job);
+                            existingRow.replaceWith(newRow);
+
+                            // Preserve expanded state
+                            if (expandedJobId === job.job_id) {
+                                this.expandedJobId = null; // Reset to trigger re-expansion
+                                this.toggleJobExpansion(job.job_id);
+                            }
+                        } else {
+                            // No changes - keep existing row, just check position
+                            const currentIndex = Array.from(tbody.children).indexOf(existingRow);
+                            const expectedIndex = index * 2; // Account for event rows
+
+                            if (currentIndex !== expectedIndex) {
+                                const referenceNode = tbody.children[expectedIndex];
+                                if (referenceNode && referenceNode !== existingRow) {
+                                    tbody.insertBefore(existingRow, referenceNode);
+                                }
+                            }
                         }
-                    });
+                    } else {
+                        // New job - create and insert
+                        console.log(`[Jobs] Adding new job: ${job.job_id}`);
+                        const newRow = this.createJobRowElement(job);
 
-                    // Make row keyboard accessible
-                    row.setAttribute('tabindex', '0');
-                    row.addEventListener('keydown', (e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                            e.preventDefault();
-                            this.toggleJobExpansion(row.dataset.jobId);
+                        // Find correct position (accounting for event rows)
+                        let insertBeforeNode = null;
+                        const jobRows = Array.from(tbody.querySelectorAll('tr.job-row'));
+                        if (index < jobRows.length) {
+                            insertBeforeNode = jobRows[index];
                         }
-                    });
+
+                        if (insertBeforeNode) {
+                            tbody.insertBefore(newRow, insertBeforeNode);
+                        } else {
+                            tbody.appendChild(newRow);
+                        }
+                    }
                 });
 
-                // Bind action buttons
-                tbody.querySelectorAll('.download-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.downloadJob(btn.dataset.jobId, btn.dataset.filename);
-                    });
+                // Remove deleted jobs
+                existingRows.forEach((row, jobId) => {
+                    if (!processedJobIds.has(jobId)) {
+                        console.log(`[Jobs] Removing deleted job: ${jobId}`);
+
+                        // Remove event row if exists
+                        const eventRow = row.nextElementSibling;
+                        if (eventRow && eventRow.classList.contains('events-row')) {
+                            eventRow.remove();
+                        }
+
+                        row.remove();
+
+                        // Clear expanded state if this was the expanded job
+                        if (this.expandedJobId === jobId) {
+                            this.expandedJobId = null;
+                        }
+                    }
                 });
 
-                tbody.querySelectorAll('.retry-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        this.retryJob(btn.dataset.jobId);
-                    });
-                });
+                // Restore focus if it was in the table
+                if (wasFocused && focusedJobId) {
+                    const focusTarget = tbody.querySelector(`tr[data-job-id="${focusedJobId}"]`);
+                    if (focusTarget) {
+                        // Small delay to ensure DOM is ready
+                        setTimeout(() => focusTarget.focus(), 0);
+                    }
+                }
 
                 this.updatePagination();
 
@@ -6603,6 +6664,86 @@
                         </td>
                     </tr>
                 `;
+            }
+
+            /**
+             * Create job row as DOM element (for smart update)
+             * @param {Object} job - Job object
+             * @returns {HTMLElement} Row element
+             */
+            createJobRowElement(job) {
+                const template = document.createElement('template');
+                template.innerHTML = this.createJobRow(job).trim();
+                const row = template.content.firstChild;
+                this.bindJobRowHandlers(row, job.job_id);
+                return row;
+            }
+
+            /**
+             * Check if job data has changed compared to existing row
+             * @param {Object} job - New job object
+             * @param {HTMLElement} existingRow - Existing DOM row
+             * @returns {boolean} True if job has changed
+             */
+            jobHasChanged(job, existingRow) {
+                // Extract current data from row
+                const currentStatus = existingRow.querySelector('.status-badge').textContent.trim();
+                const currentEventsCount = existingRow.querySelector('.badge').textContent.match(/\d+/);
+                const currentDuration = existingRow.querySelector('[data-label="Duration"]').textContent.trim();
+
+                // Compare key fields
+                const newStatus = t(`jobs.status.${job.status}`) || job.status;
+                const newEventsCount = String(job.events_count || 0);
+                const newDuration = job.duration_seconds ? this.formatDuration(job.duration_seconds) : '-';
+
+                return (
+                    currentStatus !== newStatus ||
+                    (currentEventsCount && currentEventsCount[0] !== newEventsCount) ||
+                    currentDuration !== newDuration
+                );
+            }
+
+            /**
+             * Bind event handlers to job row
+             * @param {HTMLElement} row - Row element
+             * @param {string} jobId - Job ID
+             */
+            bindJobRowHandlers(row, jobId) {
+                // Row click handler
+                row.addEventListener('click', (e) => {
+                    if (!e.target.closest('button')) {
+                        this.toggleJobExpansion(jobId);
+                    }
+                });
+
+                // Keyboard accessibility
+                row.setAttribute('tabindex', '0');
+                row.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.toggleJobExpansion(jobId);
+                    }
+                });
+
+                // Download button
+                const downloadBtn = row.querySelector('.download-btn');
+                if (downloadBtn) {
+                    downloadBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.downloadJob(downloadBtn.dataset.jobId, downloadBtn.dataset.filename);
+                    });
+                }
+
+                // Retry button
+                const retryBtn = row.querySelector('.retry-btn');
+                if (retryBtn) {
+                    retryBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.retryJob(retryBtn.dataset.jobId);
+                    });
+                }
+
+                // Expand button - handler is managed by toggleJobExpansion
             }
 
             async toggleJobExpansion(jobId) {
