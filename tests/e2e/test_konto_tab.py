@@ -29,6 +29,7 @@ from playwright.sync_api import Page, expect
 # Account Information Display Tests
 # =============================================================================
 
+
 class TestAccountInformationDisplay:
     """Tests for account information display functionality."""
 
@@ -38,16 +39,18 @@ class TestAccountInformationDisplay:
         page.wait_for_load_state("networkidle")
 
         # Click Konto tab
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
 
         # Should show loading
         expect(page.locator("#kontoLoading")).to_be_visible()
-        expect(page.locator("#kontoLoading p")).to_contain_text("Loading account information")
+        expect(page.locator("#kontoLoading p")).to_contain_text(
+            "Loading account information"
+        )
 
     def test_should_display_default_user_profile_auth_disabled(self, page: Page):
         """Should display Local User profile when auth is disabled."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
 
         # Wait for content
         expect(page.locator("#kontoContent")).to_be_visible()
@@ -65,7 +68,7 @@ class TestAccountInformationDisplay:
         """All major sections should be visible."""
         page.goto("http://localhost:8000/en")
         page.wait_for_load_state("networkidle")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Check section headings
@@ -80,7 +83,7 @@ class TestAccountInformationDisplay:
     def test_should_display_job_statistics(self, page: Page):
         """Job statistics should be visible."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Job stats should be present
@@ -92,7 +95,7 @@ class TestAccountInformationDisplay:
     def test_should_display_activity_log_or_empty_message(self, page: Page):
         """Activity log should show events or empty message."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         activity_log = page.locator("#kontoActivityLog")
@@ -100,14 +103,19 @@ class TestAccountInformationDisplay:
 
         # Should either have items or show empty message
         has_items = activity_log.locator(".activity-item").count() > 0
-        has_empty_msg = activity_log.locator('p:has-text("No recent activity")').is_visible()
+        has_empty_msg = activity_log.locator(
+            'p:has-text("No recent activity")'
+        ).is_visible()
 
-        assert has_items or has_empty_msg, "Activity log should show events or empty message"
+        assert (
+            has_items or has_empty_msg
+        ), "Activity log should show events or empty message"
 
 
 # =============================================================================
 # User Preferences Tests
 # =============================================================================
+
 
 class TestUserPreferences:
     """Tests for user preferences functionality."""
@@ -115,7 +123,7 @@ class TestUserPreferences:
     def test_should_display_preferences_form(self, page: Page):
         """Preferences form should be visible with all fields."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Form should exist
@@ -131,7 +139,7 @@ class TestUserPreferences:
     def test_should_have_standard_pdf_option(self, page: Page):
         """PDF Type dropdown should include Standard PDF option."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         pdf_type_select = page.locator("#prefPdfaLevel")
@@ -149,7 +157,7 @@ class TestUserPreferences:
     def test_should_display_default_preferences(self, page: Page):
         """Default preferences should be shown for new user."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Check default values
@@ -162,16 +170,16 @@ class TestUserPreferences:
     def test_should_have_save_and_reset_buttons(self, page: Page):
         """Save and Reset buttons should be visible."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         expect(page.locator('button:has-text("Save Preferences")')).to_be_visible()
-        expect(page.locator('#resetPreferencesBtn')).to_be_visible()
+        expect(page.locator("#resetPreferencesBtn")).to_be_visible()
 
     def test_should_reset_preferences_to_defaults(self, page: Page):
         """Reset button should restore default values."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Change some values
@@ -197,35 +205,39 @@ class TestUserPreferences:
 # Account Deletion Tests
 # =============================================================================
 
+
 class TestAccountDeletion:
     """Tests for account deletion functionality."""
 
     def test_should_show_danger_zone(self, page: Page):
         """Danger Zone section should be visible."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Danger Zone should exist
         expect(page.locator('h2:has-text("Danger Zone")')).to_be_visible()
-        expect(page.locator('.danger-warning')).to_be_visible()
-        expect(page.locator('.danger-warning')).to_contain_text("cannot be undone")
+        expect(page.locator(".danger-warning")).to_be_visible()
+        expect(page.locator(".danger-warning")).to_contain_text("cannot be undone")
 
     def test_should_disable_deletion_for_local_user(self, page: Page):
         """Account deletion should be disabled in local mode."""
         page.goto("http://localhost:8000")
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Delete button hidden, message shown
         expect(page.locator("#deleteAccountBtn")).to_be_hidden()
         expect(page.locator("#deleteDisabledMessage")).to_be_visible()
-        expect(page.locator("#deleteDisabledMessage")).to_contain_text("not available in local mode")
+        expect(page.locator("#deleteDisabledMessage")).to_contain_text(
+            "not available in local mode"
+        )
 
 
 # =============================================================================
 # Internationalization Tests
 # =============================================================================
+
 
 class TestInternationalization:
     """Tests for i18n support."""
@@ -235,7 +247,7 @@ class TestInternationalization:
         page.goto("http://localhost:8000/en")
         page.wait_for_load_state("networkidle")
 
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Check English headings
@@ -248,7 +260,7 @@ class TestInternationalization:
         page.goto("http://localhost:8000/de")
         page.wait_for_load_state("networkidle")
 
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Check German headings
@@ -265,8 +277,12 @@ class TestInternationalization:
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Check Spanish headings (use data-i18n attributes for specificity)
-        expect(page.locator('h2[data-i18n="konto.accountInfo"]')).to_contain_text("Información de Cuenta")
-        expect(page.locator('h2[data-i18n="konto.settings"]')).to_contain_text("Configuración")
+        expect(page.locator('h2[data-i18n="konto.accountInfo"]')).to_contain_text(
+            "Información de Cuenta"
+        )
+        expect(page.locator('h2[data-i18n="konto.settings"]')).to_contain_text(
+            "Configuración"
+        )
 
     def test_should_display_french_translations(self, page: Page):
         """French translations should be visible."""
@@ -277,13 +293,18 @@ class TestInternationalization:
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Check French headings (use data-i18n attributes for specificity)
-        expect(page.locator('h2[data-i18n="konto.accountInfo"]')).to_contain_text("Informations de Compte")
-        expect(page.locator('h2[data-i18n="konto.settings"]')).to_contain_text("Paramètres")
+        expect(page.locator('h2[data-i18n="konto.accountInfo"]')).to_contain_text(
+            "Informations de Compte"
+        )
+        expect(page.locator('h2[data-i18n="konto.settings"]')).to_contain_text(
+            "Paramètres"
+        )
 
 
 # =============================================================================
 # Responsive Design Tests
 # =============================================================================
+
 
 class TestResponsiveDesign:
     """Tests for responsive design."""
@@ -293,15 +314,17 @@ class TestResponsiveDesign:
         page.set_viewport_size({"width": 1920, "height": 1080})
         page.goto("http://localhost:8000")
 
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Grid should be 2 columns
         grid = page.locator(".konto-grid")
-        grid_columns = grid.evaluate("el => window.getComputedStyle(el).gridTemplateColumns")
+        grid_columns = grid.evaluate(
+            "el => window.getComputedStyle(el).gridTemplateColumns"
+        )
 
         # Should have 2 columns
-        columns = [c for c in grid_columns.split() if 'px' in c or 'fr' in c]
+        columns = [c for c in grid_columns.split() if "px" in c or "fr" in c]
         assert len(columns) == 2, f"Expected 2 columns, got {len(columns)}"
 
     def test_should_use_single_column_on_mobile(self, page: Page):
@@ -309,15 +332,17 @@ class TestResponsiveDesign:
         page.set_viewport_size({"width": 375, "height": 667})
         page.goto("http://localhost:8000")
 
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Grid should be 1 column
         grid = page.locator(".konto-grid")
-        grid_columns = grid.evaluate("el => window.getComputedStyle(el).gridTemplateColumns")
+        grid_columns = grid.evaluate(
+            "el => window.getComputedStyle(el).gridTemplateColumns"
+        )
 
         # Should have 1 column
-        columns = [c for c in grid_columns.split() if 'px' in c or 'fr' in c]
+        columns = [c for c in grid_columns.split() if "px" in c or "fr" in c]
         assert len(columns) == 1, f"Expected 1 column, got {len(columns)}"
 
     def test_should_not_overflow_horizontally_on_mobile(self, page: Page):
@@ -325,13 +350,15 @@ class TestResponsiveDesign:
         page.set_viewport_size({"width": 375, "height": 667})
         page.goto("http://localhost:8000")
 
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Check no horizontal scroll
-        has_h_scroll = page.evaluate("""
+        has_h_scroll = page.evaluate(
+            """
             () => document.documentElement.scrollWidth > document.documentElement.clientWidth
-        """)
+        """
+        )
 
         assert not has_h_scroll, "Page should not have horizontal scrollbar on mobile"
 
@@ -339,6 +366,7 @@ class TestResponsiveDesign:
 # =============================================================================
 # Dark Mode Tests
 # =============================================================================
+
 
 class TestDarkMode:
     """Tests for dark mode support."""
@@ -348,7 +376,7 @@ class TestDarkMode:
         page.emulate_media(color_scheme="dark")
         page.goto("http://localhost:8000")
 
-        page.click('#tab-konto-btn')
+        page.click("#tab-konto-btn")
         expect(page.locator("#kontoContent")).to_be_visible()
 
         # Check card has dark background
@@ -357,7 +385,8 @@ class TestDarkMode:
 
         # Extract RGB values
         import re
-        rgb_match = re.findall(r'\d+', bg_color)
+
+        rgb_match = re.findall(r"\d+", bg_color)
         if rgb_match:
             rgb = [int(x) for x in rgb_match[:3]]
             max_value = max(rgb)
@@ -369,6 +398,7 @@ class TestDarkMode:
 # =============================================================================
 # Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def page(playwright):

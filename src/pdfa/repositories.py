@@ -132,9 +132,7 @@ class UserPreferencesRepository:
 
     """
 
-    async def get_preferences(
-        self, user_id: str
-    ) -> UserPreferencesDocument | None:
+    async def get_preferences(self, user_id: str) -> UserPreferencesDocument | None:
         """Get user preferences by user_id.
 
         Args:
