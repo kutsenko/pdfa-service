@@ -6492,14 +6492,78 @@
                 this.expandedJobId = null;
                 this.eventsCache = new Map(); // Cache loaded events
                 this.pollingInterval = null;
+                this.keyboardNavigationDetected = false;
 
-                // Auto-refresh settings (accessibility-aware)
-                // Disable auto-refresh by default if user prefers reduced motion
-                const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-                this.autoRefreshEnabled = !prefersReducedMotion;
+                // Auto-refresh settings (enhanced accessibility detection)
+                // Disable auto-refresh if ANY assistive technology indicator is detected
+                this.autoRefreshEnabled = this.detectAccessibilityPreferences();
 
-                console.log('[Jobs] Auto-refresh:', this.autoRefreshEnabled ? 'ENABLED' : 'DISABLED',
-                           '(prefers-reduced-motion:', prefersReducedMotion, ')');
+                // Monitor keyboard navigation for dynamic detection
+                this.setupKeyboardNavigationDetection();
+            }
+
+            /**
+             * Multi-Signal Accessibility Detection
+             * Detects assistive technology usage via multiple browser signals
+             * @returns {boolean} true if auto-refresh should be ENABLED, false if DISABLED
+             */
+            detectAccessibilityPreferences() {
+                const signals = {
+                    reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+                    highContrast: window.matchMedia('(prefers-contrast: more)').matches,
+                    reducedTransparency: window.matchMedia('(prefers-reduced-transparency: reduce)').matches,
+                    forcedColors: window.matchMedia('(forced-colors: active)').matches
+                };
+
+                // Detect active signals
+                const activeSignals = Object.entries(signals)
+                    .filter(([_, value]) => value)
+                    .map(([key, _]) => key);
+
+                const assistiveTechDetected = activeSignals.length > 0;
+
+                // Logging for transparency
+                console.log('[Jobs] Accessibility Detection:');
+                console.log('  - prefers-reduced-motion:', signals.reducedMotion);
+                console.log('  - prefers-contrast (high):', signals.highContrast);
+                console.log('  - prefers-reduced-transparency:', signals.reducedTransparency);
+                console.log('  - forced-colors (Windows High Contrast):', signals.forcedColors);
+
+                if (assistiveTechDetected) {
+                    console.log('  ⚠️  Assistive Technology detected:', activeSignals.join(', '));
+                    console.log('  → Auto-refresh DEFAULT: DISABLED (user can enable manually)');
+                    return false; // Disable auto-refresh
+                } else {
+                    console.log('  ✓ No accessibility preferences detected');
+                    console.log('  → Auto-refresh DEFAULT: ENABLED');
+                    return true; // Enable auto-refresh
+                }
+            }
+
+            /**
+             * Setup keyboard navigation detection
+             * Detects if user is navigating with keyboard (Tab key)
+             */
+            setupKeyboardNavigationDetection() {
+                // Listen for Tab key to detect keyboard-only users
+                const tabKeyHandler = (e) => {
+                    if (e.key === 'Tab' && !this.keyboardNavigationDetected) {
+                        this.keyboardNavigationDetected = true;
+                        console.log('[Jobs] Keyboard navigation detected (Tab key used)');
+
+                        // If auto-refresh is currently enabled AND keyboard nav detected,
+                        // suggest disabling it (non-intrusive)
+                        if (this.autoRefreshEnabled) {
+                            console.log('[Jobs] ℹ️  Tip: Consider disabling auto-refresh for keyboard navigation');
+                            console.log('[Jobs]     Click the "Auto-Refresh" toggle button to disable');
+                        }
+
+                        // Remove listener after first detection (performance)
+                        document.removeEventListener('keydown', tabKeyHandler);
+                    }
+                };
+
+                document.addEventListener('keydown', tabKeyHandler);
             }
 
             async init() {
