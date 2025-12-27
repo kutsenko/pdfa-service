@@ -333,6 +333,13 @@ class JobRepository:
         )
 
         jobs_data = await cursor.to_list(length=limit)
+
+        # Performance optimization: Add events_count, remove events array
+        # This significantly reduces response size for job lists (20 jobs × 10 events = 200 events = ~50KB)
+        for job_data in jobs_data:
+            job_data["events_count"] = len(job_data.get("events", []))
+            job_data.pop("events", None)
+
         return [JobDocument(**job_data) for job_data in jobs_data]
 
     async def get_job_stats(self, user_id: str) -> dict[str, Any]:

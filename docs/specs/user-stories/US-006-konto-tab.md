@@ -10,13 +10,6 @@
 ## User Story
 
 ```
-Als pdfa-service Benutzer
-möchte ich auf dem Konto-Tab Informationen zu meinem Account und Einstellungen finden,
-um mein Profil einzusehen, Standard-Parameter zu konfigurieren und meinen Account zu verwalten.
-```
-
-**English**:
-```
 As a pdfa-service user
 I want to view my account information and settings on the Konto tab
 So that I can see my profile, configure default parameters, and manage my account
