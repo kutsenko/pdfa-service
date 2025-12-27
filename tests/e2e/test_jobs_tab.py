@@ -1,4 +1,4 @@
-"""End-to-end tests for the Aufträge (Jobs) Tab using Playwright.
+"""End-to-end tests for the Jobs (Jobs) Tab using Playwright.
 
 These tests verify the complete Jobs tab functionality based on US-007:
 - Job list display with status, filename, duration, size, events
@@ -40,8 +40,8 @@ class TestJobListDisplay:
         page_with_server.goto("http://localhost:8001")
         page_with_server.wait_for_load_state("networkidle")
 
-        # Aufträge tab button should exist
-        tab_btn = page_with_server.locator("#tab-auftraege-btn")
+        # Jobs tab button should exist
+        tab_btn = page_with_server.locator("#tab-jobs-btn")
         expect(tab_btn).to_be_visible()
         expect(tab_btn).to_be_enabled()
 
@@ -51,7 +51,7 @@ class TestJobListDisplay:
         page_with_server.wait_for_load_state("networkidle")
 
         # Click Jobs tab
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
 
         # Should show loading or content
         # (Loading might be too fast to catch, so we check for either state)
@@ -68,7 +68,7 @@ class TestJobListDisplay:
         page_with_server.goto("http://localhost:8001")
         page_with_server.wait_for_load_state("networkidle")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)  # Wait for API call
 
         # Should show empty state OR table with rows
@@ -81,7 +81,7 @@ class TestJobListDisplay:
     def test_should_display_jobs_table_with_columns(self, page_with_server: Page):
         """Jobs table should have all required columns."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Table should exist
@@ -111,7 +111,7 @@ class TestJobListDisplay:
     def test_should_display_status_badges_with_colors(self, page_with_server: Page):
         """Status badges should have appropriate colors."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Check if any status badges exist
@@ -149,7 +149,7 @@ class TestJobFiltering:
     def test_should_display_filter_buttons(self, page_with_server: Page):
         """All filter buttons should be visible."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(500)
 
         # Check all filter buttons exist
@@ -165,7 +165,7 @@ class TestJobFiltering:
     def test_all_filter_should_be_active_by_default(self, page_with_server: Page):
         """'All' filter button should be active by default."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(500)
 
         all_btn = page_with_server.locator('button[data-status="all"]')
@@ -175,7 +175,7 @@ class TestJobFiltering:
     def test_should_switch_active_filter_on_click(self, page_with_server: Page):
         """Clicking filter button should make it active."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(500)
 
         # Click 'Completed' filter
@@ -195,7 +195,7 @@ class TestJobFiltering:
     def test_should_filter_jobs_by_status(self, page_with_server: Page):
         """Filtering should show only jobs with selected status."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Click 'Failed' filter
@@ -226,7 +226,7 @@ class TestJobPagination:
     def test_should_display_pagination_controls(self, page_with_server: Page):
         """Pagination controls should be visible."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Pagination navigation should exist
@@ -240,7 +240,7 @@ class TestJobPagination:
     ):
         """Previous button should be disabled when on first page."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         prev_btn = page_with_server.locator("#jobsPrevBtn")
@@ -249,7 +249,7 @@ class TestJobPagination:
     def test_should_display_page_info(self, page_with_server: Page):
         """Page info should display current range."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         page_info = page_with_server.locator("#jobsPageInfo")
@@ -261,7 +261,7 @@ class TestJobPagination:
     def test_keyboard_navigation_should_work(self, page_with_server: Page):
         """Arrow keys should navigate pages."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Try pressing right arrow (next page)
@@ -283,7 +283,7 @@ class TestJobEventExpansion:
     def test_events_column_should_show_event_count(self, page_with_server: Page):
         """Events column should display event count or '0 events'."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         rows = page_with_server.locator("tr.job-row")
@@ -303,7 +303,7 @@ class TestJobEventExpansion:
     ):
         """Expand button should be visible for jobs with events."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         rows = page_with_server.locator("tr.job-row")
@@ -317,7 +317,7 @@ class TestJobEventExpansion:
     ):
         """Clicking expand button should show event details row."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         expand_btns = page_with_server.locator(".expand-btn")
@@ -333,7 +333,7 @@ class TestJobEventExpansion:
     def test_escape_key_should_collapse_expanded_job(self, page_with_server: Page):
         """Pressing Escape should collapse expanded job."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         expand_btns = page_with_server.locator(".expand-btn")
@@ -364,7 +364,7 @@ class TestJobActions:
     ):
         """Completed jobs should have a download button."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Filter to completed jobs
@@ -380,7 +380,7 @@ class TestJobActions:
     def test_should_display_retry_button_for_failed_jobs(self, page_with_server: Page):
         """Failed jobs should have a retry button."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Filter to failed jobs
@@ -396,7 +396,7 @@ class TestJobActions:
     def test_retry_button_should_switch_to_converter_tab(self, page_with_server: Page):
         """Clicking retry should switch to converter tab."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Filter to failed jobs
@@ -427,7 +427,7 @@ class TestInternationalization:
         page_with_server.goto("http://localhost:8001/en")
         page_with_server.wait_for_load_state("networkidle")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Check English headings
@@ -448,12 +448,12 @@ class TestInternationalization:
         page_with_server.goto("http://localhost:8001/de")
         page_with_server.wait_for_load_state("networkidle")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Check German headings
         expect(page_with_server.locator('h2[data-i18n="jobs.title"]')).to_contain_text(
-            "Aufträge"
+            "Jobs"
         )
 
         # Check filter buttons
@@ -469,7 +469,7 @@ class TestInternationalization:
         page_with_server.goto("http://localhost:8001/es")
         page_with_server.wait_for_load_state("networkidle")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Check Spanish headings
@@ -487,7 +487,7 @@ class TestInternationalization:
         page_with_server.goto("http://localhost:8001/fr")
         page_with_server.wait_for_load_state("networkidle")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Check French headings
@@ -517,7 +517,7 @@ class TestResponsiveDesign:
         page_with_server.set_viewport_size({"width": 1920, "height": 1080})
         page_with_server.goto("http://localhost:8001")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # All columns should be visible
@@ -533,7 +533,7 @@ class TestResponsiveDesign:
         page_with_server.set_viewport_size({"width": 768, "height": 1024})
         page_with_server.goto("http://localhost:8001")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Size column should be hidden (has .hide-mobile class)
@@ -546,7 +546,7 @@ class TestResponsiveDesign:
         page_with_server.set_viewport_size({"width": 375, "height": 667})
         page_with_server.goto("http://localhost:8001")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Table should exist (CSS changes layout, not DOM)
@@ -560,7 +560,7 @@ class TestResponsiveDesign:
         page_with_server.set_viewport_size({"width": 375, "height": 667})
         page_with_server.goto("http://localhost:8001")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Check if action buttons exist
@@ -586,7 +586,7 @@ class TestDarkMode:
         page_with_server.emulate_media(color_scheme="dark")
         page_with_server.goto("http://localhost:8001")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Check table has dark background
@@ -612,7 +612,7 @@ class TestDarkMode:
         page_with_server.emulate_media(color_scheme="dark")
         page_with_server.goto("http://localhost:8001")
 
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         # Check if badges exist and have color
@@ -638,7 +638,7 @@ class TestAccessibility:
     def test_filter_buttons_should_have_aria_pressed(self, page_with_server: Page):
         """Filter buttons should have aria-pressed attribute."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         all_btn = page_with_server.locator('button[data-status="all"]')
@@ -651,7 +651,7 @@ class TestAccessibility:
     def test_table_should_have_proper_roles(self, page_with_server: Page):
         """Table should have proper ARIA roles."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         table = page_with_server.locator(".jobs-table")
@@ -661,7 +661,7 @@ class TestAccessibility:
     def test_pagination_should_have_aria_labels(self, page_with_server: Page):
         """Pagination buttons should have aria-label."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         prev_btn = page_with_server.locator("#jobsPrevBtn")
@@ -676,7 +676,7 @@ class TestAccessibility:
     def test_page_info_should_have_aria_live(self, page_with_server: Page):
         """Page info should have aria-live for screen readers."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         page_info = page_with_server.locator("#jobsPageInfo")
@@ -686,7 +686,7 @@ class TestAccessibility:
     def test_jobs_should_be_keyboard_navigable(self, page_with_server: Page):
         """Job rows should be keyboard accessible."""
         page_with_server.goto("http://localhost:8001")
-        page_with_server.click("#tab-auftraege-btn")
+        page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(1000)
 
         rows = page_with_server.locator("tr.job-row")

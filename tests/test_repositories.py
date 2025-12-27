@@ -659,7 +659,7 @@ class TestJobRepositoryEvents:
 
     @pytest.mark.asyncio
     async def test_get_user_jobs_returns_events(self, mock_mongodb):
-        """Should return events_count but not events array (performance optimization)."""
+        """Should return events_count but not events array (perf optimization)."""
         repo = JobRepository()
 
         mock_cursor = AsyncMock()

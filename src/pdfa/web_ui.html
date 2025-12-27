@@ -1729,11 +1729,11 @@
         }
 
         /* Section Styling */
-        .konto-section {
+        .account-section {
             margin-bottom: 40px;
         }
 
-        .konto-section h2 {
+        .account-section h2 {
             font-size: 24px;
             color: #333;
             margin-bottom: 20px;
@@ -1741,27 +1741,27 @@
         }
 
         /* Card Grid */
-        .konto-grid {
+        .account-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
         }
 
-        .konto-card {
+        .account-card {
             background: #f9fafb;
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .konto-card h3 {
+        .account-card h3 {
             font-size: 18px;
             color: #111827;
             margin-bottom: 16px;
             font-weight: 600;
         }
 
-        .konto-card-full {
+        .account-card-full {
             grid-column: 1 / -1;
         }
 
@@ -2091,7 +2091,7 @@
                 overflow-x: hidden;
             }
 
-            .konto-grid {
+            .account-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -2111,12 +2111,12 @@
             }
 
             /* Prevent horizontal overflow */
-            #tab-konto {
+            #tab-account {
                 max-width: 100vw;
                 overflow-x: hidden;
             }
 
-            .konto-card {
+            .account-card {
                 max-width: 100%;
                 overflow-x: hidden;
                 word-wrap: break-word;
@@ -2137,27 +2137,27 @@
 
         /* Tablet Responsive */
         @media (min-width: 601px) and (max-width: 800px) {
-            .konto-grid {
+            .account-grid {
                 gap: 16px;
             }
 
-            .konto-card {
+            .account-card {
                 padding: 20px;
             }
         }
 
         /* Dark Mode */
         @media (prefers-color-scheme: dark) {
-            .konto-section h2 {
+            .account-section h2 {
                 color: #e5e7eb;
             }
 
-            .konto-card {
+            .account-card {
                 background: #1f2937;
                 color: #e5e7eb;
             }
 
-            .konto-card h3 {
+            .account-card h3 {
                 color: #f3f4f6;
             }
 
@@ -2265,27 +2265,27 @@
                     data-i18n="tabs.kamera">
                 Kamera
             </button>
-            <button id="tab-auftraege-btn"
+            <button id="tab-jobs-btn"
                     class="tab-button"
                     role="tab"
                     aria-selected="false"
-                    aria-controls="tab-auftraege"
+                    aria-controls="tab-jobs"
                     data-i18n="tabs.auftraege">
                 Aufträge
             </button>
-            <button id="tab-konto-btn"
+            <button id="tab-account-btn"
                     class="tab-button"
                     role="tab"
                     aria-selected="false"
-                    aria-controls="tab-konto"
+                    aria-controls="tab-account"
                     data-i18n="tabs.konto">
                 Konto
             </button>
-            <button id="tab-dokumentation-btn"
+            <button id="tab-documentation-btn"
                     class="tab-button"
                     role="tab"
                     aria-selected="false"
-                    aria-controls="tab-dokumentation"
+                    aria-controls="tab-documentation"
                     data-i18n="tabs.dokumentation">
                 Dokumentation
             </button>
@@ -2533,10 +2533,10 @@
         </div>
 
         <!-- Aufträge Tab (placeholder) -->
-        <div id="tab-auftraege"
+        <div id="tab-jobs"
              class="tab-panel"
              role="tabpanel"
-             aria-labelledby="tab-auftraege-btn"
+             aria-labelledby="tab-jobs-btn"
              hidden>
             <!-- Header with Filter -->
             <div class="jobs-header">
@@ -2609,37 +2609,37 @@
         </div>
 
         <!-- Konto Tab -->
-        <div id="tab-konto"
+        <div id="tab-account"
              class="tab-panel"
              role="tabpanel"
-             aria-labelledby="tab-konto-btn"
+             aria-labelledby="tab-account-btn"
              hidden>
 
             <!-- Loading State -->
-            <div id="kontoLoading" class="loading-state">
+            <div id="accountLoading" class="loading-state">
                 <div class="spinner"></div>
                 <p data-i18n="konto.loading">Loading account information...</p>
             </div>
 
             <!-- Error State -->
-            <div id="kontoError" class="error-state" style="display: none;">
+            <div id="accountError" class="error-state" style="display: none;">
                 <p data-i18n="konto.error">Failed to load account information</p>
-                <button id="kontoRetryBtn" class="btn-retry" data-i18n="konto.retry">Retry</button>
+                <button id="accountRetryBtn" class="btn-retry" data-i18n="konto.retry">Retry</button>
             </div>
 
             <!-- Main Content -->
-            <div id="kontoContent" style="display: none;">
+            <div id="accountContent" style="display: none;">
 
                 <!-- Account Information Section -->
-                <section class="konto-section">
+                <section class="account-section">
                     <h2 data-i18n="konto.accountInfo">Account Information</h2>
 
-                    <div class="konto-grid">
+                    <div class="account-grid">
                         <!-- Profile Card -->
-                        <div class="konto-card">
+                        <div class="account-card">
                             <h3 data-i18n="konto.profile">Profile</h3>
                             <div class="profile-info">
-                                <img id="kontoProfilePicture"
+                                <img id="accountProfilePicture"
                                      class="profile-picture-large"
                                      src=""
                                      alt="Profile"
@@ -2647,58 +2647,58 @@
                                 <div class="profile-details">
                                     <div class="info-row">
                                         <span class="info-label" data-i18n="konto.name">Name:</span>
-                                        <span id="kontoName" class="info-value">-</span>
+                                        <span id="accountName" class="info-value">-</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label" data-i18n="konto.email">Email:</span>
-                                        <span id="kontoEmail" class="info-value">-</span>
+                                        <span id="accountEmail" class="info-value">-</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label" data-i18n="konto.userId">User ID:</span>
-                                        <span id="kontoUserId" class="info-value">-</span>
+                                        <span id="accountUserId" class="info-value">-</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Login Stats Card -->
-                        <div class="konto-card">
+                        <div class="account-card">
                             <h3 data-i18n="konto.loginStats">Login Statistics</h3>
                             <div class="stats-grid">
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.accountCreated">Account Created:</span>
-                                    <span id="kontoCreatedAt" class="stat-value">-</span>
+                                    <span id="accountCreatedAt" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.lastLogin">Last Login:</span>
-                                    <span id="kontoLastLogin" class="stat-value">-</span>
+                                    <span id="accountLastLogin" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.totalLogins">Total Logins:</span>
-                                    <span id="kontoLoginCount" class="stat-value">-</span>
+                                    <span id="accountLoginCount" class="stat-value">-</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Job Stats Card -->
-                        <div class="konto-card">
+                        <div class="account-card">
                             <h3 data-i18n="konto.jobStats">Conversion Statistics</h3>
                             <div class="stats-grid">
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.totalJobs">Total Jobs:</span>
-                                    <span id="kontoTotalJobs" class="stat-value">-</span>
+                                    <span id="accountTotalJobs" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.successRate">Success Rate:</span>
-                                    <span id="kontoSuccessRate" class="stat-value">-</span>
+                                    <span id="accountSuccessRate" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.avgDuration">Avg Duration:</span>
-                                    <span id="kontoAvgDuration" class="stat-value">-</span>
+                                    <span id="accountAvgDuration" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.dataProcessed">Data Processed:</span>
-                                    <span id="kontoDataProcessed" class="stat-value">-</span>
+                                    <span id="accountDataProcessed" class="stat-value">-</span>
                                 </div>
                             </div>
                         </div>
@@ -2706,7 +2706,7 @@
                         <!-- Activity Log Card -->
                         <div class="konto-card konto-card-full">
                             <h3 data-i18n="konto.recentActivity">Recent Activity</h3>
-                            <div id="kontoActivityLog" class="activity-log">
+                            <div id="accountActivityLog" class="activity-log">
                                 <!-- Populated by JavaScript -->
                             </div>
                         </div>
@@ -2714,10 +2714,10 @@
                 </section>
 
                 <!-- Settings Section -->
-                <section class="konto-section">
+                <section class="account-section">
                     <h2 data-i18n="konto.settings">Settings</h2>
 
-                    <div class="konto-card">
+                    <div class="account-card">
                         <h3 data-i18n="konto.defaultParams">Default Conversion Parameters</h3>
                         <p class="settings-description" data-i18n="konto.defaultParamsDesc">
                             These settings will be automatically applied when you open the converter.
@@ -2847,10 +2847,10 @@
         </dialog>
 
         <!-- Dokumentation Tab (placeholder) -->
-        <div id="tab-dokumentation"
+        <div id="tab-documentation"
              class="tab-panel"
              role="tabpanel"
-             aria-labelledby="tab-dokumentation-btn"
+             aria-labelledby="tab-documentation-btn"
              hidden>
             <div class="placeholder-content">
                 <div class="icon" aria-hidden="true">📖</div>
@@ -5931,7 +5931,7 @@
              */
             async init() {
                 // Bind event listeners
-                document.getElementById('kontoRetryBtn')?.addEventListener('click', () => {
+                document.getElementById('accountRetryBtn')?.addEventListener('click', () => {
                     this.loadAccountData();
                 });
 
@@ -6021,27 +6021,27 @@
              * Show loading state
              */
             showLoading() {
-                document.getElementById('kontoLoading').style.display = 'block';
-                document.getElementById('kontoError').style.display = 'none';
-                document.getElementById('kontoContent').style.display = 'none';
+                document.getElementById('accountLoading').style.display = 'block';
+                document.getElementById('accountError').style.display = 'none';
+                document.getElementById('accountContent').style.display = 'none';
             }
 
             /**
              * Show error state
              */
             showError() {
-                document.getElementById('kontoLoading').style.display = 'none';
-                document.getElementById('kontoError').style.display = 'block';
-                document.getElementById('kontoContent').style.display = 'none';
+                document.getElementById('accountLoading').style.display = 'none';
+                document.getElementById('accountError').style.display = 'block';
+                document.getElementById('accountContent').style.display = 'none';
             }
 
             /**
              * Render all account data
              */
             renderAccountData() {
-                document.getElementById('kontoLoading').style.display = 'none';
-                document.getElementById('kontoError').style.display = 'none';
-                document.getElementById('kontoContent').style.display = 'block';
+                document.getElementById('accountLoading').style.display = 'none';
+                document.getElementById('accountError').style.display = 'none';
+                document.getElementById('accountContent').style.display = 'block';
 
                 // Render profile
                 this.renderProfile();
@@ -6068,11 +6068,11 @@
             renderProfile() {
                 const user = this.profileData.user;
 
-                document.getElementById('kontoName').textContent = user.name || '-';
-                document.getElementById('kontoEmail').textContent = user.email || '-';
-                document.getElementById('kontoUserId').textContent = user.user_id || '-';
+                document.getElementById('accountName').textContent = user.name || '-';
+                document.getElementById('accountEmail').textContent = user.email || '-';
+                document.getElementById('accountUserId').textContent = user.user_id || '-';
 
-                const picture = document.getElementById('kontoProfilePicture');
+                const picture = document.getElementById('accountProfilePicture');
                 if (user.picture) {
                     picture.src = user.picture;
                     picture.style.display = 'block';
@@ -6089,19 +6089,19 @@
 
                 if (stats.created_at) {
                     const created = new Date(stats.created_at);
-                    document.getElementById('kontoCreatedAt').textContent = created.toLocaleDateString(currentLang);
+                    document.getElementById('accountCreatedAt').textContent = created.toLocaleDateString(currentLang);
                 } else {
-                    document.getElementById('kontoCreatedAt').textContent = '-';
+                    document.getElementById('accountCreatedAt').textContent = '-';
                 }
 
                 if (stats.last_login_at) {
                     const lastLogin = new Date(stats.last_login_at);
-                    document.getElementById('kontoLastLogin').textContent = lastLogin.toLocaleString(currentLang);
+                    document.getElementById('accountLastLogin').textContent = lastLogin.toLocaleString(currentLang);
                 } else {
-                    document.getElementById('kontoLastLogin').textContent = '-';
+                    document.getElementById('accountLastLogin').textContent = '-';
                 }
 
-                document.getElementById('kontoLoginCount').textContent = stats.login_count || '-';
+                document.getElementById('accountLoginCount').textContent = stats.login_count || '-';
             }
 
             /**
@@ -6110,27 +6110,27 @@
             renderJobStats() {
                 const stats = this.profileData.job_stats;
 
-                document.getElementById('kontoTotalJobs').textContent = stats.total_jobs || 0;
+                document.getElementById('accountTotalJobs').textContent = stats.total_jobs || 0;
 
                 if (stats.total_jobs > 0) {
                     const successRate = ((stats.completed_jobs / stats.total_jobs) * 100).toFixed(1);
-                    document.getElementById('kontoSuccessRate').textContent = `${successRate}%`;
+                    document.getElementById('accountSuccessRate').textContent = `${successRate}%`;
                 } else {
-                    document.getElementById('kontoSuccessRate').textContent = '-';
+                    document.getElementById('accountSuccessRate').textContent = '-';
                 }
 
                 if (stats.avg_duration_seconds) {
                     const avgMin = (stats.avg_duration_seconds / 60).toFixed(1);
-                    document.getElementById('kontoAvgDuration').textContent = `${avgMin} min`;
+                    document.getElementById('accountAvgDuration').textContent = `${avgMin} min`;
                 } else {
-                    document.getElementById('kontoAvgDuration').textContent = '-';
+                    document.getElementById('accountAvgDuration').textContent = '-';
                 }
 
                 if (stats.total_input_bytes || stats.total_output_bytes) {
                     const totalMB = ((stats.total_input_bytes + stats.total_output_bytes) / 1024 / 1024).toFixed(1);
-                    document.getElementById('kontoDataProcessed').textContent = `${totalMB} MB`;
+                    document.getElementById('accountDataProcessed').textContent = `${totalMB} MB`;
                 } else {
-                    document.getElementById('kontoDataProcessed').textContent = '-';
+                    document.getElementById('accountDataProcessed').textContent = '-';
                 }
             }
 
@@ -6138,7 +6138,7 @@
              * Render activity log
              */
             renderActivityLog() {
-                const container = document.getElementById('kontoActivityLog');
+                const container = document.getElementById('accountActivityLog');
                 container.innerHTML = '';
 
                 const activities = this.profileData.recent_activity || [];
@@ -6420,7 +6420,7 @@
 
                 // Keyboard shortcuts
                 document.addEventListener('keydown', (e) => {
-                    if (!document.getElementById('tab-auftraege').hasAttribute('hidden')) {
+                    if (!document.getElementById('tab-jobs').hasAttribute('hidden')) {
                         if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.metaKey) {
                             e.preventDefault();
                             this.previousPage();
@@ -6437,7 +6437,7 @@
                 });
 
                 // Tab activation listener
-                const auftraegeBtn = document.getElementById('tab-auftraege-btn');
+                const auftraegeBtn = document.getElementById('tab-jobs-btn');
                 if (auftraegeBtn) {
                     auftraegeBtn.addEventListener('click', () => {
                         this.onTabActivated();
@@ -6889,7 +6889,7 @@
                 if (!window.ws || window.ws.readyState !== WebSocket.OPEN) {
                     console.log('[Jobs] Starting polling (WebSocket unavailable)');
                     this.pollingInterval = setInterval(() => {
-                        if (!document.getElementById('tab-auftraege').hasAttribute('hidden')) {
+                        if (!document.getElementById('tab-jobs').hasAttribute('hidden')) {
                             this.loadJobs();
                         }
                     }, 5000); // Poll every 5 seconds
@@ -6978,7 +6978,7 @@
         // Tab visibility observer for Jobs Tab
         const jobsTabObserver = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
-                if (mutation.target.id === 'tab-auftraege') {
+                if (mutation.target.id === 'tab-jobs') {
                     if (mutation.target.hasAttribute('hidden')) {
                         jobsManager.onTabDeactivated();
                     } else {
@@ -6988,9 +6988,9 @@
             });
         });
 
-        const auftraegeTab = document.getElementById('tab-auftraege');
-        if (auftraegeTab) {
-            jobsTabObserver.observe(auftraegeTab, {
+        const jobsTab = document.getElementById('tab-jobs');
+        if (jobsTab) {
+            jobsTabObserver.observe(jobsTab, {
                 attributes: true,
                 attributeFilter: ['hidden']
             });
@@ -7027,11 +7027,11 @@
                 jobsManager.init();
 
                 // Load account data when Konto tab is activated
-                const kontoTab = document.getElementById('tab-konto-btn');
+                const kontoTab = document.getElementById('tab-account-btn');
                 kontoTab?.addEventListener('click', () => {
                     // Load data when tab becomes active
                     setTimeout(() => {
-                        if (!document.getElementById('tab-konto').hidden) {
+                        if (!document.getElementById('tab-account').hidden) {
                             accountManager.loadAccountData();
 
                             // Apply preferences to converter form when switching back
