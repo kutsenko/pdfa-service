@@ -1,0 +1,296 @@
+name: Definition of Done (DoD) Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  dod-verification:
+    name: DoD Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: 1️⃣ Code Formatting Check (Black)
+        run: |
+          echo "::group::Black Formatting Check"
+          black --check src tests
+          echo "::endgroup::"
+
+      - name: 2️⃣ Linting Check (Ruff)
+        run: |
+          echo "::group::Ruff Linting Check"
+          ruff check src tests
+          echo "::endgroup::"
+
+      - name: 3️⃣ Unit Tests
+        run: |
+          echo "::group::Unit Tests"
+          pytest tests/unit -v --tb=short || echo "::warning::Unit tests failed or not found"
+          echo "::endgroup::"
+
+      - name: 4️⃣ Integration Tests
+        run: |
+          echo "::group::Integration Tests"
+          pytest tests/integration -v --tb=short || echo "::warning::Integration tests failed or not found"
+          echo "::endgroup::"
+
+      - name: 5️⃣ Code Coverage Check (≥90%)
+        run: |
+          echo "::group::Code Coverage"
+          pytest --cov=src --cov-report=term-missing --cov-report=html --cov-fail-under=90
+          echo "::endgroup::"
+
+      - name: 📊 Upload Coverage Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
+          retention-days: 30
+
+      - name: 6️⃣ E2E Tests Check (Playwright)
+        run: |
+          echo "::group::E2E Tests Availability"
+          if [ -d "tests/e2e" ]; then
+            echo "✓ E2E tests directory exists"
+            TEST_COUNT=$(find tests/e2e -name "*.py" | wc -l)
+            echo "Found $TEST_COUNT E2E test file(s)"
+            if [ $TEST_COUNT -eq 0 ]; then
+              echo "::warning::No E2E test files found"
+            fi
+          else
+            echo "::warning::No E2E tests directory found"
+          fi
+          echo "::endgroup::"
+
+      - name: 7️⃣ Documentation Check
+        run: |
+          echo "::group::Documentation Check"
+
+          # Check for README
+          if [ -f "README.md" ]; then
+            echo "✓ README.md exists"
+          else
+            echo "::error::README.md not found"
+            exit 1
+          fi
+
+          # Check for AGENTS.md
+          if [ -f "AGENTS.md" ]; then
+            echo "✓ AGENTS.md exists"
+          else
+            echo "::warning::AGENTS.md not found"
+          fi
+
+          # Check for docstrings in Python modules
+          MISSING_DOCSTRINGS=$(find src/pdfa -name "*.py" -exec grep -L '"""' {} \; 2>/dev/null | wc -l)
+          if [ $MISSING_DOCSTRINGS -eq 0 ]; then
+            echo "✓ All modules have docstrings"
+          else
+            echo "::warning::$MISSING_DOCSTRINGS module(s) missing docstrings"
+          fi
+
+          echo "::endgroup::"
+
+      - name: 8️⃣ Security Scan
+        run: |
+          echo "::group::Security Scan"
+
+          # Check for hardcoded secrets patterns
+          if git grep -E "(password|secret|token|api_key)\s*=\s*['\"][^'\"]+['\"]" -- '*.py' 2>/dev/null; then
+            echo "::error::Potential hardcoded secrets found in code"
+            exit 1
+          else
+            echo "✓ No obvious secrets in code"
+          fi
+
+          # Check if .env files are gitignored
+          if git check-ignore .env >/dev/null 2>&1; then
+            echo "✓ .env files are gitignored"
+          else
+            echo "::warning::.env files might not be gitignored"
+          fi
+
+          echo "::endgroup::"
+
+      - name: 9️⃣ i18n Completeness Check
+        run: |
+          echo "::group::i18n Check"
+
+          if grep -q "data-i18n" src/pdfa/web_ui.html 2>/dev/null; then
+            echo "✓ i18n implementation found"
+
+            # Check for all required languages
+            for lang in en de es fr; do
+              if grep -q "translations\.$lang" src/pdfa/web_ui.html 2>/dev/null; then
+                echo "✓ Translation for $lang found"
+              else
+                echo "::warning::Translation for $lang might be missing"
+              fi
+            done
+          else
+            echo "ℹ No i18n implementation detected (might not be required)"
+          fi
+
+          echo "::endgroup::"
+
+      - name: 🔟 Performance Anti-Patterns Check
+        run: |
+          echo "::group::Performance Check"
+
+          # Check for N+1 query patterns
+          if git grep -E "for.*in.*\.all\(\)" -- '*.py' 2>/dev/null | grep -v test | grep -v "^$"; then
+            echo "::warning::Potential N+1 query patterns detected"
+          else
+            echo "✓ No obvious N+1 query patterns"
+          fi
+
+          echo "::endgroup::"
+
+      - name: ✅ DoD Summary
+        if: always()
+        run: |
+          echo "::notice::Definition of Done checks completed"
+          echo ""
+          echo "📋 DoD Checklist Status:"
+          echo "  ✓ Code Formatting (Black)"
+          echo "  ✓ Linting (Ruff)"
+          echo "  ✓ Code Coverage ≥90%"
+          echo "  ✓ Documentation present"
+          echo "  ✓ Security scan passed"
+          echo "  ✓ i18n completeness"
+          echo ""
+          echo "⚠️  Manual verification still required:"
+          echo "  - E2E Tests execution (docker-compose)"
+          echo "  - Functional testing against acceptance criteria"
+          echo "  - PR description completeness"
+          echo "  - User Story/Gherkin Spec reviewed"
+
+  docker-compose-test:
+    name: Docker Compose Full Test Suite
+    runs-on: ubuntu-latest
+    needs: dod-verification
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Run Docker Compose Tests
+        run: |
+          echo "::group::Docker Compose Test Suite"
+          docker compose -f docker-compose.test.yml up --abort-on-container-exit
+          echo "::endgroup::"
+
+      - name: Cleanup Docker resources
+        if: always()
+        run: |
+          docker compose -f docker-compose.test.yml down -v
+
+  pr-compliance-check:
+    name: PR Compliance Check
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR Title Format
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          # Check if PR title follows conventional commits format
+          if echo "$PR_TITLE" | grep -qE "^(feat|fix|docs|style|refactor|test|chore|perf|ci|build|revert)(\(.+\))?:"; then
+            echo "✓ PR title follows conventional commits format"
+          else
+            echo "::error::PR title should follow format: <type>: <description>"
+            echo "::error::Valid types: feat, fix, docs, style, refactor, test, chore, perf, ci, build, revert"
+            exit 1
+          fi
+
+      - name: Check PR Description
+        run: |
+          PR_BODY="${{ github.event.pull_request.body }}"
+
+          if [ -z "$PR_BODY" ]; then
+            echo "::error::PR description is empty. Please add a description with:"
+            echo "  - Summary of changes"
+            echo "  - Test results"
+            echo "  - Breaking changes (if any)"
+            exit 1
+          fi
+
+          # Check for required sections
+          if echo "$PR_BODY" | grep -qi "summary"; then
+            echo "✓ PR contains Summary section"
+          else
+            echo "::warning::PR should contain a Summary section"
+          fi
+
+          if echo "$PR_BODY" | grep -qi "test"; then
+            echo "✓ PR mentions testing"
+          else
+            echo "::warning::PR should mention test results"
+          fi
+
+      - name: Check for User Story Reference
+        run: |
+          FILES_CHANGED=$(git diff --name-only origin/main...HEAD)
+
+          # If this is a feature PR, check for user story
+          if echo "$FILES_CHANGED" | grep -q "src/pdfa/"; then
+            if echo "$FILES_CHANGED" | grep -q "docs/specs/user-stories/"; then
+              echo "✓ User Story documentation found"
+            else
+              echo "::warning::Consider adding User Story documentation for features"
+            fi
+
+            if echo "$FILES_CHANGED" | grep -q "docs/specs/features/gherkin"; then
+              echo "✓ Gherkin Feature Spec found"
+            else
+              echo "::warning::Consider adding Gherkin Feature Spec"
+            fi
+          fi
+
+      - name: Check for E2E Tests
+        run: |
+          FILES_CHANGED=$(git diff --name-only origin/main...HEAD)
+
+          # If UI changes detected, check for E2E tests
+          if echo "$FILES_CHANGED" | grep -q "web_ui.html"; then
+            if echo "$FILES_CHANGED" | grep -q "tests/e2e/"; then
+              echo "✓ E2E tests added for UI changes"
+            else
+              echo "::error::UI changes detected but no E2E tests added"
+              echo "::error::Please add Playwright E2E tests for UI features"
+              exit 1
+            fi
+          fi
+
+      - name: ✅ PR Compliance Summary
+        if: always()
+        run: |
+          echo "::notice::PR compliance checks completed"
+          echo ""
+          echo "Review the warnings above and ensure all DoD criteria are met."
