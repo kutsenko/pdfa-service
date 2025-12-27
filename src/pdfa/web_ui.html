@@ -1556,6 +1556,15 @@
 
         /* Mobile Responsive */
         @media (max-width: 600px) {
+            body {
+                overflow-x: hidden;
+            }
+
+            .container {
+                max-width: 100vw;
+                overflow-x: hidden;
+            }
+
             .konto-grid {
                 grid-template-columns: 1fr;
             }
@@ -1573,6 +1582,30 @@
 
             .stat-item {
                 flex-direction: column;
+            }
+
+            /* Prevent horizontal overflow */
+            #tab-konto {
+                max-width: 100vw;
+                overflow-x: hidden;
+            }
+
+            .konto-card {
+                max-width: 100%;
+                overflow-x: hidden;
+                word-wrap: break-word;
+            }
+
+            .info-value,
+            .stat-value {
+                word-break: break-all;
+                overflow-wrap: break-word;
+                max-width: 100%;
+            }
+
+            .activity-log {
+                max-width: 100%;
+                overflow-x: hidden;
             }
         }
 
@@ -5508,7 +5541,8 @@
                 const disabledMsg = document.getElementById('deleteDisabledMessage');
 
                 // Disable deletion for local user (auth disabled)
-                if (!authManager.authEnabled || authManager.user.user_id === 'local-default') {
+                const userId = this.profileData?.user?.user_id || '';
+                if (!authManager.authEnabled || userId === 'local-default') {
                     deleteBtn.style.display = 'none';
                     disabledMsg.style.display = 'block';
                 } else {
