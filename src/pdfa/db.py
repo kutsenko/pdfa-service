@@ -227,6 +227,11 @@ async def ensure_indexes() -> None:
         [("last_login_at", -1), ("login_count", -1)], name="idx_login_stats"
     )
 
+    # User preferences collection indexes
+    await db.user_preferences.create_index(
+        [("user_id", 1)], unique=True, name="idx_user_id"
+    )
+
     # Jobs collection indexes
     await db.jobs.create_index([("job_id", 1)], unique=True, name="idx_job_id")
     await db.jobs.create_index(
@@ -268,5 +273,5 @@ async def ensure_indexes() -> None:
 
     logger.info(
         "MongoDB indexes created: "
-        "users (3), jobs (5), oauth_states (2), audit_logs (4)"
+        "users (3), user_preferences (1), jobs (5), oauth_states (2), audit_logs (4)"
     )

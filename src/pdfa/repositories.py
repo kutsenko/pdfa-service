@@ -24,6 +24,7 @@ from pdfa.models import (
     JobEvent,
     OAuthStateDocument,
     UserDocument,
+    UserPreferencesDocument,
 )
 
 logger = logging.getLogger(__name__)
@@ -121,6 +122,94 @@ class UserRepository:
         if user_data:
             return UserDocument(**user_data)
         return None
+
+
+class UserPreferencesRepository:
+    """Repository for user preferences collection operations.
+
+    Provides methods for creating, updating, and querying user preferences
+    for default conversion parameters.
+
+    """
+
+    async def get_preferences(self, user_id: str) -> UserPreferencesDocument | None:
+        """Get user preferences by user_id.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            UserPreferencesDocument if found, None otherwise
+
+        Example:
+            prefs = await user_prefs_repo.get_preferences("google_123")
+            if prefs:
+                print(f"Default PDF type: {prefs.default_pdfa_level}")
+
+        """
+        db = get_db()
+        doc = await db.user_preferences.find_one({"user_id": user_id})
+        return UserPreferencesDocument(**doc) if doc else None
+
+    async def create_or_update_preferences(
+        self, prefs: UserPreferencesDocument
+    ) -> UserPreferencesDocument:
+        """Create or update user preferences.
+
+        Performs an upsert operation: if preferences exist for this user,
+        they are updated. Otherwise, new preferences are created.
+
+        Args:
+            prefs: Preferences document to save
+
+        Returns:
+            Updated preferences document
+
+        Example:
+            prefs = UserPreferencesDocument(
+                user_id="google_123",
+                default_pdfa_level="standard",
+                default_ocr_language="eng"
+            )
+            updated = await user_prefs_repo.create_or_update_preferences(prefs)
+
+        """
+        db = get_db()
+        prefs.updated_at = datetime.utcnow()
+
+        await db.user_preferences.update_one(
+            {"user_id": prefs.user_id}, {"$set": prefs.model_dump()}, upsert=True
+        )
+
+        logger.debug(
+            f"User preferences updated: user_id={prefs.user_id}, "
+            f"pdfa_level={prefs.default_pdfa_level}"
+        )
+        return prefs
+
+    async def delete_preferences(self, user_id: str) -> bool:
+        """Delete user preferences.
+
+        Args:
+            user_id: User identifier
+
+        Returns:
+            True if deleted, False if not found
+
+        Example:
+            deleted = await user_prefs_repo.delete_preferences("google_123")
+            if deleted:
+                print("Preferences removed successfully")
+
+        """
+        db = get_db()
+        result = await db.user_preferences.delete_one({"user_id": user_id})
+        deleted = result.deleted_count > 0
+
+        if deleted:
+            logger.debug(f"User preferences deleted: user_id={user_id}")
+
+        return deleted
 
 
 class JobRepository:
