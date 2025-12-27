@@ -264,6 +264,60 @@ else
     print_success "No obvious N+1 query patterns"
 fi
 
+# 9. Accessibility Checks
+print_header "9. ACCESSIBILITY CHECKS (a11y)"
+
+# Check for ARIA labels in HTML
+print_info "Checking for ARIA attributes in HTML..."
+if grep -r "aria-label\|role=" src/pdfa/web_ui.html >/dev/null 2>&1; then
+    print_success "ARIA attributes found in HTML"
+else
+    print_warning "No ARIA attributes found in HTML"
+fi
+
+# Check for semantic HTML elements
+print_info "Checking for semantic HTML elements..."
+SEMANTIC_COUNT=$(grep -E "<(nav|main|section|article|aside|header|footer)" src/pdfa/web_ui.html 2>/dev/null | wc -l)
+if [[ $SEMANTIC_COUNT -gt 0 ]]; then
+    print_success "Semantic HTML elements found ($SEMANTIC_COUNT instances)"
+else
+    print_warning "No semantic HTML5 elements found"
+fi
+
+# Check for alt attributes on images
+print_info "Checking for alt attributes on images..."
+IMG_COUNT=$(grep -c "<img" src/pdfa/web_ui.html 2>/dev/null || echo "0")
+IMG_ALT_COUNT=$(grep -c 'alt=' src/pdfa/web_ui.html 2>/dev/null || echo "0")
+
+if [[ $IMG_COUNT -eq 0 ]]; then
+    print_info "No images found in HTML"
+elif [[ $IMG_ALT_COUNT -ge $IMG_COUNT ]]; then
+    print_success "All images have alt attributes"
+else
+    print_warning "$((IMG_COUNT - IMG_ALT_COUNT)) image(s) missing alt attributes"
+fi
+
+# Check for proper form labels
+print_info "Checking for form labels..."
+INPUT_COUNT=$(grep -c "<input" src/pdfa/web_ui.html 2>/dev/null || echo "0")
+LABEL_COUNT=$(grep -c "<label" src/pdfa/web_ui.html 2>/dev/null || echo "0")
+
+if [[ $INPUT_COUNT -eq 0 ]]; then
+    print_info "No form inputs found"
+elif [[ $LABEL_COUNT -gt 0 ]]; then
+    print_success "Form labels present ($LABEL_COUNT labels for $INPUT_COUNT inputs)"
+else
+    print_failure "Form inputs without labels detected"
+fi
+
+# Check for prefers-reduced-motion support
+print_info "Checking for prefers-reduced-motion support..."
+if grep -q "prefers-reduced-motion" src/pdfa/web_ui.html 2>/dev/null; then
+    print_success "prefers-reduced-motion media query found"
+else
+    print_warning "prefers-reduced-motion support not detected"
+fi
+
 # Summary
 print_header "SUMMARY"
 

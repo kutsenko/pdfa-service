@@ -233,14 +233,83 @@ Dieses Dokument definiert die Kriterien, die erfüllt sein müssen, damit ein Fe
   - Keine unlesbaren Texte
 
 ### 7.2 Accessibility (a11y)
-- [ ] **ARIA-Labels vorhanden**
-  - Buttons, Links, Inputs haben Labels
-  - role-Attribute korrekt gesetzt
-  - Keyboard-Navigation funktioniert
+
+**WCAG 2.1 Level AA Compliance erforderlich**
+
+- [ ] **ARIA-Labels und Semantik**
+  - Alle interaktiven Elemente haben aussagekräftige Labels
+  - Buttons, Links, Inputs haben `aria-label` oder sichtbaren Text
+  - `role`-Attribute korrekt gesetzt (button, navigation, dialog, etc.)
+  - `aria-describedby` für zusätzliche Kontext-Informationen
+  - `aria-live` für dynamische Inhalte (Loading-States, Fehler)
+  - `aria-expanded`, `aria-controls` für Accordion/Dropdown-Elemente
+  - `aria-invalid` und `aria-errormessage` für Formularvalidierung
 
 - [ ] **Semantic HTML verwendet**
-  - Korrekte HTML5-Elemente (`<nav>`, `<main>`, `<section>`)
-  - Heading-Hierarchie korrekt (h1 → h2 → h3)
+  - Korrekte HTML5-Elemente (`<nav>`, `<main>`, `<section>`, `<article>`, `<aside>`)
+  - Heading-Hierarchie korrekt (h1 → h2 → h3, keine Ebenen überspringen)
+  - `<button>` für Aktionen, `<a>` für Navigation
+  - `<form>` mit `<label>` für alle Eingabefelder
+  - Listen verwenden `<ul>`, `<ol>`, `<dl>` (nicht div-Pseudo-Listen)
+
+- [ ] **Keyboard-Navigation**
+  - Alle Funktionen per Tastatur erreichbar (keine Maus erforderlich)
+  - Tab-Reihenfolge logisch (`tabindex` richtig gesetzt)
+  - `Enter` und `Space` lösen Button-Aktionen aus
+  - `Escape` schließt Modals/Dialoge
+  - Fokus-Indikator sichtbar (`:focus-visible` Styles)
+  - Fokus-Falle in Modals (Focus Trap implementiert)
+  - Skip-Links für Hauptinhalt vorhanden
+
+- [ ] **Farbkontrast (WCAG AA)**
+  - Text-zu-Hintergrund Kontrast ≥ 4.5:1 (normaler Text)
+  - Text-zu-Hintergrund Kontrast ≥ 3:1 (großer Text ≥18pt)
+  - UI-Komponenten Kontrast ≥ 3:1 (Icons, Buttons)
+  - Fokus-Indikator Kontrast ≥ 3:1
+  - Keine Informationen nur durch Farbe vermittelt
+
+- [ ] **Screen Reader Kompatibilität**
+  - Getestet mit NVDA (Windows) oder VoiceOver (macOS)
+  - Alle Formularfelder korrekt angekündigt
+  - Fehlermeldungen werden vorgelesen
+  - Bildschirmleser-freundliche Error Messages
+  - Versteckte Inhalte mit `aria-hidden="true"` oder `hidden`
+  - Dekorative Bilder mit `alt=""` (nicht `alt="image"`)
+
+- [ ] **Formular-Accessibility**
+  - Jedes `<input>` hat zugehöriges `<label>` (via `for`/`id` oder implicit)
+  - Pflichtfelder mit `required` und `aria-required="true"`
+  - Fehlermeldungen mit `aria-invalid` und `aria-describedby`
+  - Autocomplete-Attribute gesetzt (email, name, tel, etc.)
+  - Gruppierte Inputs mit `<fieldset>` und `<legend>`
+  - Inline-Validierung zugänglich (nicht nur visuell)
+
+- [ ] **Interaktive Elemente**
+  - Mindestgröße 44×44px für Touch-Targets (mobil)
+  - Genügend Abstand zwischen klickbaren Elementen (≥8px)
+  - Hover- und Focus-States deutlich erkennbar
+  - Disabled-States visuell und per Attribut (`disabled`, `aria-disabled`)
+  - Loading-States mit `aria-busy="true"` und Spinner
+
+- [ ] **Multimedia & Animationen**
+  - Videos haben Untertitel (falls vorhanden)
+  - Autoplay vermieden oder mit Pause-Button
+  - `prefers-reduced-motion` respektiert (keine Animationen für Motion-Sensitive Users)
+  - Gif-Animationen pausierbar
+  - Zeitlimits vermeidbar/verlängerbar
+
+- [ ] **Mobile Accessibility**
+  - Pinch-to-Zoom nicht deaktiviert
+  - Viewport Meta-Tag korrekt (`user-scalable=yes`)
+  - Touch-Targets groß genug (≥44px)
+  - Orientierung nicht gesperrt (Portrait/Landscape)
+
+- [ ] **Accessibility Testing Tools**
+  - Axe DevTools: Keine kritischen Violations
+  - Lighthouse Accessibility Score: ≥90
+  - WAVE Browser Extension: Keine Errors
+  - Keyboard-only Navigation: Manuell getestet
+  - Screen Reader: Stichproben-Test durchgeführt
 
 ---
 
@@ -400,6 +469,9 @@ pytest --cov=src --cov-report=term-missing --cov-fail-under=90
 - Integration Tests
 - E2E Tests (Playwright)
 - Security Scan (Bandit)
+- i18n Completeness Check
+- Accessibility (a11y) Check
+- Performance Anti-Patterns Check
 ```
 
 **Pre-Push Script:**
@@ -457,6 +529,13 @@ docker compose -f docker-compose.test.yml up --abort-on-container-exit
 □ User Story + Gherkin Spec vorhanden
 □ E2E Tests geschrieben (Playwright)
 □ docker-compose Tests bestanden
+□ Accessibility (a11y) geprüft:
+  □ ARIA-Labels vorhanden
+  □ Semantic HTML verwendet
+  □ Keyboard-Navigation funktioniert
+  □ Farbkontrast WCAG AA (≥4.5:1)
+  □ Alt-Texte für Bilder
+  □ Form Labels korrekt
 □ README.md aktualisiert (falls nötig)
 □ Commit Messages aussagekräftig
 ```

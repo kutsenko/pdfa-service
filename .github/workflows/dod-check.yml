@@ -163,6 +163,59 @@ jobs:
 
           echo "::endgroup::"
 
+      - name: 1️⃣1️⃣ Accessibility (a11y) Check
+        run: |
+          echo "::group::Accessibility Check"
+
+          # Check for ARIA attributes
+          if grep -q "aria-label\|role=" src/pdfa/web_ui.html 2>/dev/null; then
+            echo "✓ ARIA attributes found in HTML"
+          else
+            echo "::warning::No ARIA attributes found in HTML"
+          fi
+
+          # Check for semantic HTML
+          SEMANTIC_COUNT=$(grep -cE "<(nav|main|section|article|aside|header|footer)" src/pdfa/web_ui.html 2>/dev/null || echo "0")
+          if [ $SEMANTIC_COUNT -gt 0 ]; then
+            echo "✓ Semantic HTML elements found ($SEMANTIC_COUNT instances)"
+          else
+            echo "::warning::No semantic HTML5 elements found"
+          fi
+
+          # Check for alt attributes on images
+          IMG_COUNT=$(grep -c "<img" src/pdfa/web_ui.html 2>/dev/null || echo "0")
+          IMG_ALT_COUNT=$(grep -c 'alt=' src/pdfa/web_ui.html 2>/dev/null || echo "0")
+
+          if [ $IMG_COUNT -eq 0 ]; then
+            echo "ℹ No images found in HTML"
+          elif [ $IMG_ALT_COUNT -ge $IMG_COUNT ]; then
+            echo "✓ All images have alt attributes"
+          else
+            echo "::warning::$((IMG_COUNT - IMG_ALT_COUNT)) image(s) missing alt attributes"
+          fi
+
+          # Check for form labels
+          INPUT_COUNT=$(grep -c "<input" src/pdfa/web_ui.html 2>/dev/null || echo "0")
+          LABEL_COUNT=$(grep -c "<label" src/pdfa/web_ui.html 2>/dev/null || echo "0")
+
+          if [ $INPUT_COUNT -eq 0 ]; then
+            echo "ℹ No form inputs found"
+          elif [ $LABEL_COUNT -gt 0 ]; then
+            echo "✓ Form labels present ($LABEL_COUNT labels for $INPUT_COUNT inputs)"
+          else
+            echo "::error::Form inputs without labels detected"
+            exit 1
+          fi
+
+          # Check for prefers-reduced-motion support
+          if grep -q "prefers-reduced-motion" src/pdfa/web_ui.html 2>/dev/null; then
+            echo "✓ prefers-reduced-motion media query found"
+          else
+            echo "::warning::prefers-reduced-motion support not detected"
+          fi
+
+          echo "::endgroup::"
+
       - name: ✅ DoD Summary
         if: always()
         run: |
@@ -175,10 +228,12 @@ jobs:
           echo "  ✓ Documentation present"
           echo "  ✓ Security scan passed"
           echo "  ✓ i18n completeness"
+          echo "  ✓ Accessibility (a11y) checked"
           echo ""
           echo "⚠️  Manual verification still required:"
           echo "  - E2E Tests execution (docker-compose)"
           echo "  - Functional testing against acceptance criteria"
+          echo "  - Accessibility testing (Screen Reader, Keyboard Navigation)"
           echo "  - PR description completeness"
           echo "  - User Story/Gherkin Spec reviewed"
 
