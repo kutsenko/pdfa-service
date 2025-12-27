@@ -1156,6 +1156,495 @@
                 color: #6b7280;
             }
         }
+
+        /* ================================================== */
+        /* Konto Tab Styles                                   */
+        /* ================================================== */
+
+        /* Loading and Error States */
+        .loading-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #dc2626;
+        }
+
+        .btn-retry {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-retry:hover {
+            background: #5568d3;
+        }
+
+        /* Section Styling */
+        .konto-section {
+            margin-bottom: 40px;
+        }
+
+        .konto-section h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        /* Card Grid */
+        .konto-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .konto-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .konto-card h3 {
+            font-size: 18px;
+            color: #111827;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .konto-card-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Profile Info */
+        .profile-info {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .profile-picture-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .profile-details {
+            flex: 1;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+
+        .info-value {
+            color: #111827;
+            word-break: break-all;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            font-weight: 500;
+            color: #6b7280;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* Activity Log */
+        .activity-log {
+            max-height: 400px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .activity-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 3px solid #9ca3af;
+        }
+
+        .activity-item.user_login {
+            border-left-color: #10b981;
+        }
+
+        .activity-item.auth_failure {
+            border-left-color: #dc2626;
+        }
+
+        .activity-icon {
+            font-size: 20px;
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-type {
+            font-weight: 600;
+            color: #111827;
+            font-size: 14px;
+        }
+
+        .activity-time {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .activity-details {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-top: 4px;
+        }
+
+        /* Settings Form */
+        .settings-description {
+            color: #6b7280;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .preferences-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+        .status-message.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Buttons */
+        .btn-save {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-save:hover {
+            background: #5568d3;
+        }
+
+        .btn-reset {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-reset:hover {
+            background: #d1d5db;
+        }
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+        /* Danger Zone */
+        .danger-zone {
+            border: 2px solid #fecaca;
+            border-radius: 12px;
+            padding: 24px;
+            background: #fef2f2;
+        }
+
+        .danger-zone h2 {
+            color: #dc2626;
+        }
+
+        .danger-card {
+            background: white;
+            border: 1px solid #fecaca;
+        }
+
+        .danger-warning {
+            color: #991b1b;
+            margin-bottom: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-danger:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        /* Confirmation Modal */
+        .confirm-modal {
+            border: none;
+            border-radius: 12px;
+            padding: 0;
+            max-width: 500px;
+            width: 90vw;
+        }
+
+        .confirm-modal::backdrop {
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            padding: 0;
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #111827;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close-btn:hover {
+            color: #111827;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        .email-confirm-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            margin: 12px 0;
+        }
+
+        .email-confirm-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .error-text {
+            color: #dc2626;
+            font-size: 14px;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 600px) {
+            .konto-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-info {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+
+            .info-row {
+                flex-direction: column;
+                text-align: left;
+            }
+
+            .stat-item {
+                flex-direction: column;
+            }
+        }
+
+        /* Tablet Responsive */
+        @media (min-width: 601px) and (max-width: 800px) {
+            .konto-grid {
+                gap: 16px;
+            }
+
+            .konto-card {
+                padding: 20px;
+            }
+        }
+
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            .konto-section h2 {
+                color: #e5e7eb;
+            }
+
+            .konto-card {
+                background: #1f2937;
+                color: #e5e7eb;
+            }
+
+            .konto-card h3 {
+                color: #f3f4f6;
+            }
+
+            .info-value,
+            .stat-value,
+            .activity-type {
+                color: #f3f4f6;
+            }
+
+            .stat-item,
+            .activity-item {
+                background: #111827;
+            }
+
+            .danger-zone {
+                background: #7f1d1d;
+                border-color: #991b1b;
+            }
+
+            .danger-card {
+                background: #991b1b;
+                border-color: #b91c1c;
+            }
+
+            .modal-content {
+                background: #1f2937;
+            }
+
+            .modal-header {
+                border-bottom-color: #374151;
+            }
+
+            .modal-header h2 {
+                color: #f3f4f6;
+            }
+
+            .modal-footer {
+                border-top-color: #374151;
+            }
+
+            .email-confirm-input {
+                background: #111827;
+                border-color: #374151;
+                color: #f3f4f6;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1497,18 +1986,243 @@
             </div>
         </div>
 
-        <!-- Konto Tab (placeholder) -->
+        <!-- Konto Tab -->
         <div id="tab-konto"
              class="tab-panel"
              role="tabpanel"
              aria-labelledby="tab-konto-btn"
              hidden>
-            <div class="placeholder-content">
-                <div class="icon" aria-hidden="true">👤</div>
-                <h2 data-i18n="placeholder.konto.title">Account Settings</h2>
-                <p data-i18n="placeholder.konto.description">Coming soon: Manage your account preferences and settings</p>
+
+            <!-- Loading State -->
+            <div id="kontoLoading" class="loading-state">
+                <div class="spinner"></div>
+                <p data-i18n="konto.loading">Loading account information...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="kontoError" class="error-state" style="display: none;">
+                <p data-i18n="konto.error">Failed to load account information</p>
+                <button id="kontoRetryBtn" class="btn-retry" data-i18n="konto.retry">Retry</button>
+            </div>
+
+            <!-- Main Content -->
+            <div id="kontoContent" style="display: none;">
+
+                <!-- Account Information Section -->
+                <section class="konto-section">
+                    <h2 data-i18n="konto.accountInfo">Account Information</h2>
+
+                    <div class="konto-grid">
+                        <!-- Profile Card -->
+                        <div class="konto-card">
+                            <h3 data-i18n="konto.profile">Profile</h3>
+                            <div class="profile-info">
+                                <img id="kontoProfilePicture"
+                                     class="profile-picture-large"
+                                     src=""
+                                     alt="Profile"
+                                     style="display: none;">
+                                <div class="profile-details">
+                                    <div class="info-row">
+                                        <span class="info-label" data-i18n="konto.name">Name:</span>
+                                        <span id="kontoName" class="info-value">-</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label" data-i18n="konto.email">Email:</span>
+                                        <span id="kontoEmail" class="info-value">-</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label" data-i18n="konto.userId">User ID:</span>
+                                        <span id="kontoUserId" class="info-value">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Login Stats Card -->
+                        <div class="konto-card">
+                            <h3 data-i18n="konto.loginStats">Login Statistics</h3>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="stat-label" data-i18n="konto.accountCreated">Account Created:</span>
+                                    <span id="kontoCreatedAt" class="stat-value">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label" data-i18n="konto.lastLogin">Last Login:</span>
+                                    <span id="kontoLastLogin" class="stat-value">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label" data-i18n="konto.totalLogins">Total Logins:</span>
+                                    <span id="kontoLoginCount" class="stat-value">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Job Stats Card -->
+                        <div class="konto-card">
+                            <h3 data-i18n="konto.jobStats">Conversion Statistics</h3>
+                            <div class="stats-grid">
+                                <div class="stat-item">
+                                    <span class="stat-label" data-i18n="konto.totalJobs">Total Jobs:</span>
+                                    <span id="kontoTotalJobs" class="stat-value">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label" data-i18n="konto.successRate">Success Rate:</span>
+                                    <span id="kontoSuccessRate" class="stat-value">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label" data-i18n="konto.avgDuration">Avg Duration:</span>
+                                    <span id="kontoAvgDuration" class="stat-value">-</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label" data-i18n="konto.dataProcessed">Data Processed:</span>
+                                    <span id="kontoDataProcessed" class="stat-value">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Activity Log Card -->
+                        <div class="konto-card konto-card-full">
+                            <h3 data-i18n="konto.recentActivity">Recent Activity</h3>
+                            <div id="kontoActivityLog" class="activity-log">
+                                <!-- Populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section class="konto-section">
+                    <h2 data-i18n="konto.settings">Settings</h2>
+
+                    <div class="konto-card">
+                        <h3 data-i18n="konto.defaultParams">Default Conversion Parameters</h3>
+                        <p class="settings-description" data-i18n="konto.defaultParamsDesc">
+                            These settings will be automatically applied when you open the converter.
+                        </p>
+
+                        <form id="preferencesForm" class="preferences-form">
+                            <div class="form-group">
+                                <label for="prefPdfaLevel" data-i18n="form.pdfType">PDF Type</label>
+                                <select id="prefPdfaLevel" name="default_pdfa_level">
+                                    <option value="standard" data-i18n="pdf.standard">Standard PDF</option>
+                                    <option value="1">PDF/A-1</option>
+                                    <option value="2">PDF/A-2</option>
+                                    <option value="3">PDF/A-3</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prefOcrLanguage" data-i18n="form.ocrLanguage">OCR Language</label>
+                                <select id="prefOcrLanguage" name="default_ocr_language">
+                                    <option value="eng" data-i18n="ocr.english">English</option>
+                                    <option value="deu" data-i18n="ocr.german">Deutsch</option>
+                                    <option value="deu+eng" data-i18n="ocr.germanEnglish">Deutsch + English</option>
+                                    <option value="fra" data-i18n="ocr.french">Français</option>
+                                    <option value="fra+eng" data-i18n="ocr.frenchEnglish">Français + English</option>
+                                    <option value="spa" data-i18n="ocr.spanish">Español</option>
+                                    <option value="spa+eng" data-i18n="ocr.spanishEnglish">Español + English</option>
+                                    <option value="ita" data-i18n="ocr.italian">Italiano</option>
+                                    <option value="ita+eng" data-i18n="ocr.italianEnglish">Italiano + English</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="prefCompression" data-i18n="form.compressionProfile">Compression</label>
+                                <select id="prefCompression" name="default_compression_profile">
+                                    <option value="balanced" data-i18n="compression.balanced">Balanced</option>
+                                    <option value="quality" data-i18n="compression.quality">High Quality</option>
+                                    <option value="aggressive" data-i18n="compression.aggressive">Aggressive</option>
+                                    <option value="minimal" data-i18n="compression.minimal">Minimal Size</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="prefOcrEnabled" name="default_ocr_enabled" checked>
+                                    <span data-i18n="form.enableOcr">Enable OCR</span>
+                                </label>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="checkbox-label">
+                                    <input type="checkbox" id="prefSkipTagged" name="default_skip_ocr_on_tagged" checked>
+                                    <span data-i18n="form.skipOcrOnTagged">Skip OCR for tagged PDFs</span>
+                                </label>
+                            </div>
+
+                            <div class="button-group">
+                                <button type="submit" class="btn-save" data-i18n="konto.savePreferences">
+                                    Save Preferences
+                                </button>
+                                <button type="button" id="resetPreferencesBtn" class="btn-reset" data-i18n="konto.resetDefaults">
+                                    Reset to Defaults
+                                </button>
+                            </div>
+
+                            <div id="preferenceStatus" class="status-message" style="display: none;"></div>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- Danger Zone Section -->
+                <section class="konto-section danger-zone">
+                    <h2 data-i18n="konto.dangerZone">Danger Zone</h2>
+
+                    <div class="konto-card danger-card">
+                        <h3 data-i18n="konto.deleteAccount">Delete Account</h3>
+                        <p class="danger-warning" data-i18n="konto.deleteWarning">
+                            ⚠️ This action cannot be undone. This will permanently delete your account,
+                            all conversion jobs, activity logs, and preferences.
+                        </p>
+                        <button id="deleteAccountBtn" class="btn-danger" data-i18n="konto.deleteAccountBtn">
+                            Delete My Account
+                        </button>
+                        <div id="deleteDisabledMessage" style="display: none;">
+                            <p data-i18n="konto.deleteDisabled">
+                                Account deletion is not available in local mode.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
             </div>
         </div>
+
+        <!-- Delete Account Confirmation Modal -->
+        <dialog id="deleteAccountModal" class="confirm-modal" aria-labelledby="deleteModalTitle">
+            <div class="modal-content">
+                <header class="modal-header">
+                    <h2 id="deleteModalTitle" data-i18n="konto.confirmDelete">Confirm Account Deletion</h2>
+                    <button id="deleteModalCloseBtn" class="modal-close-btn" type="button">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </header>
+
+                <div class="modal-body">
+                    <p data-i18n="konto.confirmDeleteDesc">
+                        To confirm deletion, please type your email address below:
+                    </p>
+                    <input type="email"
+                           id="deleteEmailInput"
+                           class="email-confirm-input"
+                           placeholder="your.email@example.com"
+                           autocomplete="off">
+                    <p class="error-text" id="deleteEmailError" style="display: none;" data-i18n="konto.emailMismatch">
+                        Email does not match
+                    </p>
+                </div>
+
+                <footer class="modal-footer">
+                    <button id="cancelDeleteBtn" class="btn-secondary" data-i18n="konto.cancel">
+                        Cancel
+                    </button>
+                    <button id="confirmDeleteBtn" class="btn-danger" disabled data-i18n="konto.confirmDeleteBtn">
+                        Delete Account
+                    </button>
+                </footer>
+            </div>
+        </dialog>
 
         <!-- Dokumentation Tab (placeholder) -->
         <div id="tab-dokumentation"
@@ -1903,7 +2617,48 @@
                     downloadButton: '📥 Download',
                     okButton: 'OK',
                     opened: 'Dialog opened: Conversion Summary'
-                }
+                },
+                // Form labels
+                'form.pdfType': 'PDF Type',
+                'pdf.standard': 'Standard PDF',
+                // Account (Konto) tab
+                'konto.loading': 'Loading account information...',
+                'konto.error': 'Failed to load account information',
+                'konto.retry': 'Retry',
+                'konto.accountInfo': 'Account Information',
+                'konto.profile': 'Profile',
+                'konto.name': 'Name',
+                'konto.email': 'Email',
+                'konto.userId': 'User ID',
+                'konto.loginStats': 'Login Statistics',
+                'konto.accountCreated': 'Account Created',
+                'konto.lastLogin': 'Last Login',
+                'konto.totalLogins': 'Total Logins',
+                'konto.jobStats': 'Conversion Statistics',
+                'konto.totalJobs': 'Total Jobs',
+                'konto.successRate': 'Success Rate',
+                'konto.avgDuration': 'Avg Duration',
+                'konto.dataProcessed': 'Data Processed',
+                'konto.recentActivity': 'Recent Activity',
+                'konto.settings': 'Settings',
+                'konto.defaultParams': 'Default Conversion Parameters',
+                'konto.defaultParamsDesc': 'These settings will be automatically applied when you open the converter.',
+                'konto.savePreferences': 'Save Preferences',
+                'konto.resetDefaults': 'Reset to Defaults',
+                'konto.preferencesSaved': 'Preferences saved successfully',
+                'konto.preferencesSaveFailed': 'Failed to save preferences',
+                'konto.dangerZone': 'Danger Zone',
+                'konto.deleteAccount': 'Delete Account',
+                'konto.deleteWarning': '⚠️ This action cannot be undone. This will permanently delete your account, all conversion jobs, activity logs, and preferences.',
+                'konto.deleteAccountBtn': 'Delete My Account',
+                'konto.deleteDisabled': 'Account deletion is not available in local mode.',
+                'konto.confirmDelete': 'Confirm Account Deletion',
+                'konto.confirmDeleteDesc': 'To confirm deletion, please type your email address below:',
+                'konto.emailMismatch': 'Email does not match',
+                'konto.cancel': 'Cancel',
+                'konto.confirmDeleteBtn': 'Delete Account',
+                'konto.accountDeleted': 'Account deleted successfully. You will be logged out.',
+                'konto.deleteFailed': 'Failed to delete account'
             },
             de: {
                 'page.title': 'PDF/A Konverter - Testoberfläche',
@@ -2093,7 +2848,48 @@
                     downloadButton: '📥 Herunterladen',
                     okButton: 'OK',
                     opened: 'Dialog geöffnet: Konvertierungs-Zusammenfassung'
-                }
+                },
+                // Formular-Labels
+                'form.pdfType': 'PDF-Typ',
+                'pdf.standard': 'Standard-PDF',
+                // Konto-Tab
+                'konto.loading': 'Lade Konto-Informationen...',
+                'konto.error': 'Fehler beim Laden der Konto-Informationen',
+                'konto.retry': 'Erneut versuchen',
+                'konto.accountInfo': 'Konto-Informationen',
+                'konto.profile': 'Profil',
+                'konto.name': 'Name',
+                'konto.email': 'E-Mail',
+                'konto.userId': 'Benutzer-ID',
+                'konto.loginStats': 'Login-Statistiken',
+                'konto.accountCreated': 'Konto erstellt',
+                'konto.lastLogin': 'Letzter Login',
+                'konto.totalLogins': 'Gesamte Logins',
+                'konto.jobStats': 'Konvertierungsstatistiken',
+                'konto.totalJobs': 'Gesamte Jobs',
+                'konto.successRate': 'Erfolgsrate',
+                'konto.avgDuration': 'Durchschn. Dauer',
+                'konto.dataProcessed': 'Verarbeitete Daten',
+                'konto.recentActivity': 'Letzte Aktivitäten',
+                'konto.settings': 'Einstellungen',
+                'konto.defaultParams': 'Standard-Konvertierungsparameter',
+                'konto.defaultParamsDesc': 'Diese Einstellungen werden automatisch angewendet, wenn Sie den Konverter öffnen.',
+                'konto.savePreferences': 'Einstellungen speichern',
+                'konto.resetDefaults': 'Auf Standard zurücksetzen',
+                'konto.preferencesSaved': 'Einstellungen erfolgreich gespeichert',
+                'konto.preferencesSaveFailed': 'Fehler beim Speichern der Einstellungen',
+                'konto.dangerZone': 'Gefahrenbereich',
+                'konto.deleteAccount': 'Konto löschen',
+                'konto.deleteWarning': '⚠️ Diese Aktion kann nicht rückgängig gemacht werden. Ihr Konto, alle Konvertierungsjobs, Aktivitätsprotokolle und Einstellungen werden dauerhaft gelöscht.',
+                'konto.deleteAccountBtn': 'Mein Konto löschen',
+                'konto.deleteDisabled': 'Konto-Löschung ist im lokalen Modus nicht verfügbar.',
+                'konto.confirmDelete': 'Konto-Löschung bestätigen',
+                'konto.confirmDeleteDesc': 'Zur Bestätigung geben Sie bitte Ihre E-Mail-Adresse ein:',
+                'konto.emailMismatch': 'E-Mail stimmt nicht überein',
+                'konto.cancel': 'Abbrechen',
+                'konto.confirmDeleteBtn': 'Konto löschen',
+                'konto.accountDeleted': 'Konto erfolgreich gelöscht. Sie werden abgemeldet.',
+                'konto.deleteFailed': 'Fehler beim Löschen des Kontos'
             },
             es: {
                 'page.title': 'Convertidor PDF/A - Interfaz de Prueba',
@@ -2283,7 +3079,48 @@
                     downloadButton: '📥 Descargar',
                     okButton: 'OK',
                     opened: 'Diálogo abierto: Resumen de Conversión'
-                }
+                },
+                // Etiquetas de formulario
+                'form.pdfType': 'Tipo de PDF',
+                'pdf.standard': 'PDF Estándar',
+                // Pestaña Cuenta (Konto)
+                'konto.loading': 'Cargando información de cuenta...',
+                'konto.error': 'Error al cargar información de cuenta',
+                'konto.retry': 'Reintentar',
+                'konto.accountInfo': 'Información de Cuenta',
+                'konto.profile': 'Perfil',
+                'konto.name': 'Nombre',
+                'konto.email': 'Correo',
+                'konto.userId': 'ID de Usuario',
+                'konto.loginStats': 'Estadísticas de Inicio de Sesión',
+                'konto.accountCreated': 'Cuenta Creada',
+                'konto.lastLogin': 'Último Inicio de Sesión',
+                'konto.totalLogins': 'Total de Inicios',
+                'konto.jobStats': 'Estadísticas de Conversión',
+                'konto.totalJobs': 'Total de Trabajos',
+                'konto.successRate': 'Tasa de Éxito',
+                'konto.avgDuration': 'Duración Promedio',
+                'konto.dataProcessed': 'Datos Procesados',
+                'konto.recentActivity': 'Actividad Reciente',
+                'konto.settings': 'Configuración',
+                'konto.defaultParams': 'Parámetros de Conversión Predeterminados',
+                'konto.defaultParamsDesc': 'Estas configuraciones se aplicarán automáticamente al abrir el convertidor.',
+                'konto.savePreferences': 'Guardar Preferencias',
+                'konto.resetDefaults': 'Restablecer Predeterminados',
+                'konto.preferencesSaved': 'Preferencias guardadas exitosamente',
+                'konto.preferencesSaveFailed': 'Error al guardar preferencias',
+                'konto.dangerZone': 'Zona de Peligro',
+                'konto.deleteAccount': 'Eliminar Cuenta',
+                'konto.deleteWarning': '⚠️ Esta acción no se puede deshacer. Eliminará permanentemente su cuenta, todos los trabajos de conversión, registros de actividad y preferencias.',
+                'konto.deleteAccountBtn': 'Eliminar Mi Cuenta',
+                'konto.deleteDisabled': 'La eliminación de cuenta no está disponible en modo local.',
+                'konto.confirmDelete': 'Confirmar Eliminación de Cuenta',
+                'konto.confirmDeleteDesc': 'Para confirmar la eliminación, escriba su dirección de correo electrónico:',
+                'konto.emailMismatch': 'El correo no coincide',
+                'konto.cancel': 'Cancelar',
+                'konto.confirmDeleteBtn': 'Eliminar Cuenta',
+                'konto.accountDeleted': 'Cuenta eliminada exitosamente. Será desconectado.',
+                'konto.deleteFailed': 'Error al eliminar cuenta'
             },
             fr: {
                 'page.title': 'Convertisseur PDF/A - Interface de Test',
@@ -2473,7 +3310,48 @@
                     downloadButton: '📥 Télécharger',
                     okButton: 'OK',
                     opened: 'Dialogue ouvert: Résumé de Conversion'
-                }
+                },
+                // Étiquettes de formulaire
+                'form.pdfType': 'Type de PDF',
+                'pdf.standard': 'PDF Standard',
+                // Onglet Compte (Konto)
+                'konto.loading': 'Chargement des informations de compte...',
+                'konto.error': 'Échec du chargement des informations de compte',
+                'konto.retry': 'Réessayer',
+                'konto.accountInfo': 'Informations de Compte',
+                'konto.profile': 'Profil',
+                'konto.name': 'Nom',
+                'konto.email': 'E-mail',
+                'konto.userId': 'ID Utilisateur',
+                'konto.loginStats': 'Statistiques de Connexion',
+                'konto.accountCreated': 'Compte Créé',
+                'konto.lastLogin': 'Dernière Connexion',
+                'konto.totalLogins': 'Total de Connexions',
+                'konto.jobStats': 'Statistiques de Conversion',
+                'konto.totalJobs': 'Total de Tâches',
+                'konto.successRate': 'Taux de Réussite',
+                'konto.avgDuration': 'Durée Moyenne',
+                'konto.dataProcessed': 'Données Traitées',
+                'konto.recentActivity': 'Activité Récente',
+                'konto.settings': 'Paramètres',
+                'konto.defaultParams': 'Paramètres de Conversion par Défaut',
+                'konto.defaultParamsDesc': 'Ces paramètres seront appliqués automatiquement lors de l\'ouverture du convertisseur.',
+                'konto.savePreferences': 'Enregistrer les Préférences',
+                'konto.resetDefaults': 'Réinitialiser aux Valeurs par Défaut',
+                'konto.preferencesSaved': 'Préférences enregistrées avec succès',
+                'konto.preferencesSaveFailed': 'Échec de l\'enregistrement des préférences',
+                'konto.dangerZone': 'Zone Dangereuse',
+                'konto.deleteAccount': 'Supprimer le Compte',
+                'konto.deleteWarning': '⚠️ Cette action est irréversible. Cela supprimera définitivement votre compte, tous les travaux de conversion, journaux d\'activité et préférences.',
+                'konto.deleteAccountBtn': 'Supprimer Mon Compte',
+                'konto.deleteDisabled': 'La suppression de compte n\'est pas disponible en mode local.',
+                'konto.confirmDelete': 'Confirmer la Suppression du Compte',
+                'konto.confirmDeleteDesc': 'Pour confirmer la suppression, veuillez taper votre adresse e-mail ci-dessous :',
+                'konto.emailMismatch': 'L\'e-mail ne correspond pas',
+                'konto.cancel': 'Annuler',
+                'konto.confirmDeleteBtn': 'Supprimer le Compte',
+                'konto.accountDeleted': 'Compte supprimé avec succès. Vous serez déconnecté.',
+                'konto.deleteFailed': 'Échec de la suppression du compte'
             }
         };
 
@@ -4255,6 +5133,467 @@
         }
 
         // ============================================================================
+        // Account (Konto) Tab Manager
+        // ============================================================================
+
+        class AccountManager {
+            constructor() {
+                this.profileData = null;
+                this.preferences = null;
+                this.lastFetchTime = 0;
+                this.cacheDuration = 30000; // 30 seconds
+            }
+
+            /**
+             * Initialize account tab
+             */
+            async init() {
+                // Bind event listeners
+                document.getElementById('kontoRetryBtn')?.addEventListener('click', () => {
+                    this.loadAccountData();
+                });
+
+                document.getElementById('preferencesForm')?.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.savePreferences();
+                });
+
+                document.getElementById('resetPreferencesBtn')?.addEventListener('click', () => {
+                    this.resetPreferences();
+                });
+
+                document.getElementById('deleteAccountBtn')?.addEventListener('click', () => {
+                    this.showDeleteConfirmation();
+                });
+
+                // Delete modal listeners
+                const deleteModal = document.getElementById('deleteAccountModal');
+                document.getElementById('deleteModalCloseBtn')?.addEventListener('click', () => {
+                    deleteModal?.close();
+                });
+
+                document.getElementById('cancelDeleteBtn')?.addEventListener('click', () => {
+                    deleteModal?.close();
+                });
+
+                document.getElementById('deleteEmailInput')?.addEventListener('input', (e) => {
+                    this.validateDeleteEmail(e.target.value);
+                });
+
+                document.getElementById('confirmDeleteBtn')?.addEventListener('click', () => {
+                    this.deleteAccount();
+                });
+
+                console.log('[Account] Account manager initialized');
+            }
+
+            /**
+             * Load all account data
+             */
+            async loadAccountData() {
+                const now = Date.now();
+
+                // Check cache
+                if (this.profileData && (now - this.lastFetchTime) < this.cacheDuration) {
+                    console.log('[Account] Using cached data');
+                    this.renderAccountData();
+                    return;
+                }
+
+                // Show loading state
+                this.showLoading();
+
+                try {
+                    // Fetch profile data
+                    const profileResponse = await fetch('/api/v1/user/profile', {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (!profileResponse.ok) {
+                        throw new Error('Failed to fetch profile');
+                    }
+
+                    this.profileData = await profileResponse.json();
+
+                    // Fetch preferences
+                    const prefsResponse = await fetch('/api/v1/user/preferences', {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (!prefsResponse.ok) {
+                        throw new Error('Failed to fetch preferences');
+                    }
+
+                    this.preferences = await prefsResponse.json();
+
+                    this.lastFetchTime = now;
+                    this.renderAccountData();
+
+                } catch (error) {
+                    console.error('[Account] Failed to load data:', error);
+                    this.showError();
+                }
+            }
+
+            /**
+             * Show loading state
+             */
+            showLoading() {
+                document.getElementById('kontoLoading').style.display = 'block';
+                document.getElementById('kontoError').style.display = 'none';
+                document.getElementById('kontoContent').style.display = 'none';
+            }
+
+            /**
+             * Show error state
+             */
+            showError() {
+                document.getElementById('kontoLoading').style.display = 'none';
+                document.getElementById('kontoError').style.display = 'block';
+                document.getElementById('kontoContent').style.display = 'none';
+            }
+
+            /**
+             * Render all account data
+             */
+            renderAccountData() {
+                document.getElementById('kontoLoading').style.display = 'none';
+                document.getElementById('kontoError').style.display = 'none';
+                document.getElementById('kontoContent').style.display = 'block';
+
+                // Render profile
+                this.renderProfile();
+
+                // Render login stats
+                this.renderLoginStats();
+
+                // Render job stats
+                this.renderJobStats();
+
+                // Render activity log
+                this.renderActivityLog();
+
+                // Render preferences form
+                this.renderPreferences();
+
+                // Handle delete button visibility
+                this.handleDeleteButton();
+            }
+
+            /**
+             * Render profile information
+             */
+            renderProfile() {
+                const user = this.profileData.user;
+
+                document.getElementById('kontoName').textContent = user.name || '-';
+                document.getElementById('kontoEmail').textContent = user.email || '-';
+                document.getElementById('kontoUserId').textContent = user.user_id || '-';
+
+                const picture = document.getElementById('kontoProfilePicture');
+                if (user.picture) {
+                    picture.src = user.picture;
+                    picture.style.display = 'block';
+                } else {
+                    picture.style.display = 'none';
+                }
+            }
+
+            /**
+             * Render login statistics
+             */
+            renderLoginStats() {
+                const stats = this.profileData.login_stats;
+
+                if (stats.created_at) {
+                    const created = new Date(stats.created_at);
+                    document.getElementById('kontoCreatedAt').textContent = created.toLocaleDateString(currentLang);
+                } else {
+                    document.getElementById('kontoCreatedAt').textContent = '-';
+                }
+
+                if (stats.last_login_at) {
+                    const lastLogin = new Date(stats.last_login_at);
+                    document.getElementById('kontoLastLogin').textContent = lastLogin.toLocaleString(currentLang);
+                } else {
+                    document.getElementById('kontoLastLogin').textContent = '-';
+                }
+
+                document.getElementById('kontoLoginCount').textContent = stats.login_count || '-';
+            }
+
+            /**
+             * Render job statistics
+             */
+            renderJobStats() {
+                const stats = this.profileData.job_stats;
+
+                document.getElementById('kontoTotalJobs').textContent = stats.total_jobs || 0;
+
+                if (stats.total_jobs > 0) {
+                    const successRate = ((stats.completed_jobs / stats.total_jobs) * 100).toFixed(1);
+                    document.getElementById('kontoSuccessRate').textContent = `${successRate}%`;
+                } else {
+                    document.getElementById('kontoSuccessRate').textContent = '-';
+                }
+
+                if (stats.avg_duration_seconds) {
+                    const avgMin = (stats.avg_duration_seconds / 60).toFixed(1);
+                    document.getElementById('kontoAvgDuration').textContent = `${avgMin} min`;
+                } else {
+                    document.getElementById('kontoAvgDuration').textContent = '-';
+                }
+
+                if (stats.total_input_bytes || stats.total_output_bytes) {
+                    const totalMB = ((stats.total_input_bytes + stats.total_output_bytes) / 1024 / 1024).toFixed(1);
+                    document.getElementById('kontoDataProcessed').textContent = `${totalMB} MB`;
+                } else {
+                    document.getElementById('kontoDataProcessed').textContent = '-';
+                }
+            }
+
+            /**
+             * Render activity log
+             */
+            renderActivityLog() {
+                const container = document.getElementById('kontoActivityLog');
+                container.innerHTML = '';
+
+                const activities = this.profileData.recent_activity || [];
+
+                if (activities.length === 0) {
+                    container.innerHTML = '<p style="color: #9ca3af;">No recent activity</p>';
+                    return;
+                }
+
+                activities.forEach(activity => {
+                    const item = document.createElement('div');
+                    item.className = `activity-item ${activity.event_type}`;
+
+                    const icon = this.getActivityIcon(activity.event_type);
+                    const time = new Date(activity.timestamp);
+                    const timeStr = time.toLocaleString(currentLang);
+
+                    item.innerHTML = `
+                        <div class="activity-icon">${icon}</div>
+                        <div class="activity-content">
+                            <div class="activity-type">${activity.event_type}</div>
+                            <div class="activity-time">${timeStr}</div>
+                            <div class="activity-details">${activity.ip_address || ''}</div>
+                        </div>
+                    `;
+
+                    container.appendChild(item);
+                });
+            }
+
+            /**
+             * Get activity icon
+             */
+            getActivityIcon(eventType) {
+                const icons = {
+                    'user_login': '🔓',
+                    'user_logout': '🔒',
+                    'auth_failure': '⚠️',
+                    'job_created': '📄',
+                    'job_completed': '✅',
+                    'job_failed': '❌',
+                    'api_call': '🔌'
+                };
+                return icons[eventType] || '📝';
+            }
+
+            /**
+             * Render preferences form
+             */
+            renderPreferences() {
+                if (!this.preferences) return;
+
+                document.getElementById('prefPdfaLevel').value = this.preferences.default_pdfa_level || '2';
+                document.getElementById('prefOcrLanguage').value = this.preferences.default_ocr_language || 'deu+eng';
+                document.getElementById('prefCompression').value = this.preferences.default_compression_profile || 'balanced';
+                document.getElementById('prefOcrEnabled').checked = this.preferences.default_ocr_enabled !== false;
+                document.getElementById('prefSkipTagged').checked = this.preferences.default_skip_ocr_on_tagged !== false;
+            }
+
+            /**
+             * Save preferences
+             */
+            async savePreferences() {
+                const form = document.getElementById('preferencesForm');
+                const formData = new FormData(form);
+
+                const preferences = {
+                    default_pdfa_level: formData.get('default_pdfa_level'),
+                    default_ocr_language: formData.get('default_ocr_language'),
+                    default_compression_profile: formData.get('default_compression_profile'),
+                    default_ocr_enabled: document.getElementById('prefOcrEnabled').checked,
+                    default_skip_ocr_on_tagged: document.getElementById('prefSkipTagged').checked
+                };
+
+                try {
+                    const response = await fetch('/api/v1/user/preferences', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...authManager.getAuthHeaders()
+                        },
+                        body: JSON.stringify(preferences)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to save preferences');
+                    }
+
+                    this.preferences = await response.json();
+                    this.showStatus('success', t('konto.preferencesSaved'));
+
+                    // Apply to converter form
+                    this.applyPreferencesToConverterForm();
+
+                } catch (error) {
+                    console.error('[Account] Failed to save preferences:', error);
+                    this.showStatus('error', t('konto.preferencesSaveFailed'));
+                }
+            }
+
+            /**
+             * Reset preferences to defaults
+             */
+            resetPreferences() {
+                document.getElementById('prefPdfaLevel').value = '2';
+                document.getElementById('prefOcrLanguage').value = 'deu+eng';
+                document.getElementById('prefCompression').value = 'balanced';
+                document.getElementById('prefOcrEnabled').checked = true;
+                document.getElementById('prefSkipTagged').checked = true;
+            }
+
+            /**
+             * Apply preferences to converter form
+             */
+            applyPreferencesToConverterForm() {
+                if (!this.preferences) return;
+
+                const converterForm = document.getElementById('converterForm');
+                if (!converterForm) return;
+
+                converterForm.querySelector('#pdfa_level').value = this.preferences.default_pdfa_level;
+                converterForm.querySelector('#language').value = this.preferences.default_ocr_language;
+                converterForm.querySelector('#compression_profile').value = this.preferences.default_compression_profile;
+                converterForm.querySelector('#ocr_enabled').checked = this.preferences.default_ocr_enabled;
+                converterForm.querySelector('#skip_ocr_on_tagged_pdfs').checked = this.preferences.default_skip_ocr_on_tagged;
+
+                console.log('[Account] Preferences applied to converter form');
+            }
+
+            /**
+             * Show status message
+             */
+            showStatus(type, message) {
+                const status = document.getElementById('preferenceStatus');
+                status.className = `status-message ${type}`;
+                status.textContent = message;
+                status.style.display = 'block';
+
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
+            }
+
+            /**
+             * Handle delete button visibility
+             */
+            handleDeleteButton() {
+                const deleteBtn = document.getElementById('deleteAccountBtn');
+                const disabledMsg = document.getElementById('deleteDisabledMessage');
+
+                // Disable deletion for local user (auth disabled)
+                if (!authManager.authEnabled || authManager.user.user_id === 'local-default') {
+                    deleteBtn.style.display = 'none';
+                    disabledMsg.style.display = 'block';
+                } else {
+                    deleteBtn.style.display = 'block';
+                    disabledMsg.style.display = 'none';
+                }
+            }
+
+            /**
+             * Show delete confirmation modal
+             */
+            showDeleteConfirmation() {
+                const modal = document.getElementById('deleteAccountModal');
+                const emailInput = document.getElementById('deleteEmailInput');
+                const confirmBtn = document.getElementById('confirmDeleteBtn');
+
+                emailInput.value = '';
+                confirmBtn.disabled = true;
+                document.getElementById('deleteEmailError').style.display = 'none';
+
+                modal.showModal();
+            }
+
+            /**
+             * Validate delete email input
+             */
+            validateDeleteEmail(input) {
+                const userEmail = this.profileData?.user?.email || '';
+                const confirmBtn = document.getElementById('confirmDeleteBtn');
+                const errorText = document.getElementById('deleteEmailError');
+
+                if (input === userEmail) {
+                    confirmBtn.disabled = false;
+                    errorText.style.display = 'none';
+                } else {
+                    confirmBtn.disabled = true;
+                    if (input.length > 0) {
+                        errorText.style.display = 'block';
+                    } else {
+                        errorText.style.display = 'none';
+                    }
+                }
+            }
+
+            /**
+             * Delete account
+             */
+            async deleteAccount() {
+                const emailInput = document.getElementById('deleteEmailInput').value;
+
+                try {
+                    const response = await fetch('/api/v1/user/account', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            ...authManager.getAuthHeaders()
+                        },
+                        body: JSON.stringify({ email_confirmation: emailInput })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.detail || 'Failed to delete account');
+                    }
+
+                    // Close modal
+                    document.getElementById('deleteAccountModal').close();
+
+                    // Show success message
+                    alert(t('konto.accountDeleted'));
+
+                    // Logout
+                    authManager.logout();
+
+                } catch (error) {
+                    console.error('[Account] Failed to delete account:', error);
+                    alert(t('konto.deleteFailed') + ': ' + error.message);
+                }
+            }
+        }
+
+        // Global account manager instance
+        const accountManager = new AccountManager();
+
+        // ============================================================================
         // Authentication Initialization
         // ============================================================================
 
@@ -4277,6 +5616,27 @@
 
                 // Initialize tab navigation
                 initTabNavigation();
+
+                // Initialize account manager
+                accountManager.init();
+
+                // Load account data when Konto tab is activated
+                const kontoTab = document.getElementById('tab-konto-btn');
+                kontoTab?.addEventListener('click', () => {
+                    // Load data when tab becomes active
+                    setTimeout(() => {
+                        if (!document.getElementById('tab-konto').hidden) {
+                            accountManager.loadAccountData();
+
+                            // Apply preferences to converter form when switching back
+                            setTimeout(() => {
+                                if (accountManager.preferences) {
+                                    accountManager.applyPreferencesToConverterForm();
+                                }
+                            }, 100);
+                        }
+                    }, 50);
+                });
 
                 // Bind login button
                 const loginBtn = document.getElementById('googleLoginBtn');
