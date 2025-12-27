@@ -25,6 +25,32 @@ auth_config: AuthConfig | None = None
 # This enables distributed deployments with multiple service instances
 
 
+def get_client_ip(request: Request) -> str:
+    """Extract client IP address from request.
+
+    Checks X-Forwarded-For header first (for requests behind proxy),
+    then falls back to direct client IP.
+
+    Args:
+        request: FastAPI/Starlette request object
+
+    Returns:
+        Client IP address or "unknown" if unavailable
+    """
+    # Check X-Forwarded-For header (for reverse proxy/load balancer)
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        # X-Forwarded-For can contain multiple IPs (client, proxy1, proxy2, ...)
+        # The first one is the original client IP
+        return forwarded_for.split(",")[0].strip()
+
+    # Fall back to direct client IP
+    if request.client:
+        return request.client.host
+
+    return "unknown"
+
+
 def create_jwt_token(user: User, config: AuthConfig) -> str:
     """Create a JWT token for authenticated user.
 
@@ -211,7 +237,7 @@ class GoogleOAuthClient:
         state_doc = OAuthStateDocument(
             state=state,
             created_at=datetime.utcnow(),
-            ip_address=request.client.host if request.client else "unknown",
+            ip_address=get_client_ip(request),
             user_agent=request.headers.get("user-agent"),
         )
         await oauth_repo.create_state(state_doc)
@@ -360,7 +386,7 @@ class GoogleOAuthClient:
                     event_type="auth_failure",
                     user_id=None,
                     timestamp=datetime.utcnow(),
-                    ip_address=request.client.host if request.client else "unknown",
+                    ip_address=get_client_ip(request),
                     user_agent=request.headers.get("user-agent"),
                     details={"reason": "invalid_state", "state": state[:16] + "..."},
                 )
@@ -401,7 +427,7 @@ class GoogleOAuthClient:
                     event_type="user_login",
                     user_id=user.user_id,
                     timestamp=datetime.utcnow(),
-                    ip_address=request.client.host if request.client else "unknown",
+                    ip_address=get_client_ip(request),
                     user_agent=request.headers.get("user-agent"),
                     details={"email": user.email, "method": "google_oauth"},
                 )

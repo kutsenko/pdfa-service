@@ -528,6 +528,7 @@ async def update_user_preferences(
 
 @app.delete("/api/v1/user/account")
 async def delete_user_account(
+    request: Request,
     body: dict[str, str],
     current_user: User = Depends(get_current_user),
 ):
@@ -539,7 +540,9 @@ async def delete_user_account(
     This endpoint is disabled when authentication is disabled (returns 403).
 
     Args:
+        request: FastAPI request object
         body: Dictionary containing email_confirmation field
+        current_user: Authenticated user
 
     Returns:
         Success message
@@ -548,6 +551,7 @@ async def delete_user_account(
         HTTPException: 400 if email doesn't match, 403 if auth disabled
 
     """
+    from pdfa.auth import get_client_ip
     from pdfa.repositories import AuditLogRepository
 
     # Verify email confirmation
@@ -589,7 +593,7 @@ async def delete_user_account(
             event_type="user_logout",  # Closest available event type
             user_id=current_user.user_id,
             timestamp=datetime.utcnow(),
-            ip_address="",
+            ip_address=get_client_ip(request),
             details={"reason": "account_deleted"},
         )
     )
