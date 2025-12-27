@@ -1,5 +1,4 @@
-"""
-End-to-end tests for the Konto (Account) Tab using Playwright.
+"""End-to-end tests for the Konto (Account) Tab using Playwright.
 
 These tests verify the complete Konto tab functionality based on US-006:
 - Account information display
@@ -23,7 +22,6 @@ from __future__ import annotations
 
 import pytest
 from playwright.sync_api import Page, expect
-
 
 # =============================================================================
 # Account Information Display Tests
@@ -356,7 +354,8 @@ class TestResponsiveDesign:
         # Check no horizontal scroll
         has_h_scroll = page.evaluate(
             """
-            () => document.documentElement.scrollWidth > document.documentElement.clientWidth
+            () => document.documentElement.scrollWidth >
+                  document.documentElement.clientWidth
         """
         )
 

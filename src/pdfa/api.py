@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Literal
+from typing import Any, Literal
 from urllib.parse import quote
 
 from fastapi import (
@@ -503,6 +503,7 @@ async def update_user_preferences(
 
     Args:
         preferences: Dictionary with preference fields
+        current_user: Authenticated user (injected by FastAPI)
 
     Returns:
         Updated UserPreferencesDocument
@@ -563,8 +564,6 @@ async def delete_user_account(
         )
 
     # Initialize repositories
-    user_repo = UserRepository()
-    job_repo = JobRepository()
     user_prefs_repo = UserPreferencesRepository()
     audit_repo = AuditLogRepository()
 
