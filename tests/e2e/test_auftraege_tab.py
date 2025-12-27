@@ -25,7 +25,6 @@ Requirements:
 
 from __future__ import annotations
 
-import pytest
 from playwright.sync_api import Page, expect
 
 # =============================================================================
@@ -74,7 +73,6 @@ class TestJobListDisplay:
 
         # Should show empty state OR table with rows
         empty_state = page_with_server.locator("#jobsEmpty")
-        table_body = page_with_server.locator("#jobsTableBody")
 
         # Check if empty state is shown
         if empty_state.is_visible():
@@ -129,7 +127,13 @@ class TestJobListDisplay:
             # Verify badge has a status class (completed, failed, processing, etc.)
             has_status = any(
                 status in class_attr
-                for status in ["completed", "failed", "processing", "queued", "cancelled"]
+                for status in [
+                    "completed",
+                    "failed",
+                    "processing",
+                    "queued",
+                    "cancelled",
+                ]
             )
             assert has_status, f"Badge should have status class, got: {class_attr}"
 
@@ -149,15 +153,11 @@ class TestJobFiltering:
         page_with_server.wait_for_timeout(500)
 
         # Check all filter buttons exist
-        expect(
-            page_with_server.locator('button[data-status="all"]')
-        ).to_be_visible()
+        expect(page_with_server.locator('button[data-status="all"]')).to_be_visible()
         expect(
             page_with_server.locator('button[data-status="completed"]')
         ).to_be_visible()
-        expect(
-            page_with_server.locator('button[data-status="failed"]')
-        ).to_be_visible()
+        expect(page_with_server.locator('button[data-status="failed"]')).to_be_visible()
         expect(
             page_with_server.locator('button[data-status="processing"]')
         ).to_be_visible()
@@ -256,9 +256,7 @@ class TestJobPagination:
         text = page_info.inner_text()
 
         # Should contain pagination info (e.g., "1-20 of 50 jobs" or "No jobs")
-        assert (
-            len(text) > 0
-        ), "Page info should contain text"
+        assert len(text) > 0, "Page info should contain text"
 
     def test_keyboard_navigation_should_work(self, page_with_server: Page):
         """Arrow keys should navigate pages."""
@@ -311,8 +309,8 @@ class TestJobEventExpansion:
         rows = page_with_server.locator("tr.job-row")
         if rows.count() > 0:
             # Check if any row has an expand button
-            expand_btns = page_with_server.locator(".expand-btn")
             # At least structure should exist (even if no events yet)
+            pass
 
     def test_clicking_expand_should_show_event_details_row(
         self, page_with_server: Page
@@ -329,8 +327,8 @@ class TestJobEventExpansion:
             page_with_server.wait_for_timeout(1000)  # Wait for events to load
 
             # Check if events row appeared
-            events_rows = page_with_server.locator("tr.job-events-row")
-            # Should have at least tried to load (might show "No events" or actual events)
+            # Should have at least tried to load
+            # (might show "No events" or actual events)
 
     def test_escape_key_should_collapse_expanded_job(self, page_with_server: Page):
         """Pressing Escape should collapse expanded job."""
@@ -376,12 +374,10 @@ class TestJobActions:
         rows = page_with_server.locator("tr.job-row")
         if rows.count() > 0:
             # First completed job should have download button
-            download_btns = page_with_server.locator(".download-btn")
             # Structure should exist (even if no completed jobs yet)
+            pass
 
-    def test_should_display_retry_button_for_failed_jobs(
-        self, page_with_server: Page
-    ):
+    def test_should_display_retry_button_for_failed_jobs(self, page_with_server: Page):
         """Failed jobs should have a retry button."""
         page_with_server.goto("http://localhost:8001")
         page_with_server.click("#tab-auftraege-btn")
@@ -394,12 +390,10 @@ class TestJobActions:
         rows = page_with_server.locator("tr.job-row")
         if rows.count() > 0:
             # First failed job should have retry button
-            retry_btns = page_with_server.locator(".retry-btn")
             # Structure should exist (even if no failed jobs yet)
+            pass
 
-    def test_retry_button_should_switch_to_converter_tab(
-        self, page_with_server: Page
-    ):
+    def test_retry_button_should_switch_to_converter_tab(self, page_with_server: Page):
         """Clicking retry should switch to converter tab."""
         page_with_server.goto("http://localhost:8001")
         page_with_server.click("#tab-auftraege-btn")
@@ -437,9 +431,9 @@ class TestInternationalization:
         page_with_server.wait_for_timeout(1000)
 
         # Check English headings
-        expect(
-            page_with_server.locator('h2[data-i18n="jobs.title"]')
-        ).to_contain_text("Job History")
+        expect(page_with_server.locator('h2[data-i18n="jobs.title"]')).to_contain_text(
+            "Job History"
+        )
 
         # Check filter buttons
         expect(
@@ -458,9 +452,9 @@ class TestInternationalization:
         page_with_server.wait_for_timeout(1000)
 
         # Check German headings
-        expect(
-            page_with_server.locator('h2[data-i18n="jobs.title"]')
-        ).to_contain_text("Aufträge")
+        expect(page_with_server.locator('h2[data-i18n="jobs.title"]')).to_contain_text(
+            "Aufträge"
+        )
 
         # Check filter buttons
         expect(
@@ -479,9 +473,9 @@ class TestInternationalization:
         page_with_server.wait_for_timeout(1000)
 
         # Check Spanish headings
-        expect(
-            page_with_server.locator('h2[data-i18n="jobs.title"]')
-        ).to_contain_text("Historial de Trabajos")
+        expect(page_with_server.locator('h2[data-i18n="jobs.title"]')).to_contain_text(
+            "Historial de Trabajos"
+        )
 
         # Check filter buttons
         expect(
@@ -497,9 +491,9 @@ class TestInternationalization:
         page_with_server.wait_for_timeout(1000)
 
         # Check French headings
-        expect(
-            page_with_server.locator('h2[data-i18n="jobs.title"]')
-        ).to_contain_text("Historique des Tâches")
+        expect(page_with_server.locator('h2[data-i18n="jobs.title"]')).to_contain_text(
+            "Historique des Tâches"
+        )
 
         # Check filter buttons
         expect(
@@ -543,10 +537,9 @@ class TestResponsiveDesign:
         page_with_server.wait_for_timeout(1000)
 
         # Size column should be hidden (has .hide-mobile class)
-        size_col = page_with_server.locator('th[data-i18n="jobs.table.size"]')
         # Check if it has display: none or is not visible
-        is_visible = size_col.is_visible()
-        # On tablet, size column might still be visible, only hidden on mobile (<600px)
+        # On tablet, size column might still be visible
+        # only hidden on mobile (<600px)
 
     def test_should_use_card_layout_on_mobile(self, page_with_server: Page):
         """Mobile layout should use card-based layout."""
