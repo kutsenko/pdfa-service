@@ -36,6 +36,7 @@ def get_client_ip(request: Request) -> str:
 
     Returns:
         Client IP address or "unknown" if unavailable
+
     """
     # Check X-Forwarded-For header (for reverse proxy/load balancer)
     forwarded_for = request.headers.get("x-forwarded-for")
