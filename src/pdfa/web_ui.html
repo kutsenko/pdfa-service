@@ -1978,6 +1978,171 @@
             cursor: pointer;
         }
 
+        /* Accessibility Controls */
+        .accessibility-controls {
+            background: #f0f9ff;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .accessibility-controls h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .accessibility-controls h4::before {
+            content: "♿";
+            font-size: 24px;
+        }
+
+        .a11y-controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .a11y-controls-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        .a11y-controls-grid label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .help-text {
+            font-size: 13px;
+            color: #6b7280;
+            margin-top: 4px;
+            font-style: italic;
+            line-height: 1.4;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #d1d5db;
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            background: #2563eb;
+            transform: scale(1.1);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3b82f6;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            background: #2563eb;
+            transform: scale(1.1);
+        }
+
+        /* Edge Detection Status */
+        .edge-status {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .edge-status.success {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+            animation: pulse-success 2s ease-in-out infinite;
+        }
+
+        .edge-status.warning {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+
+        .edge-status .status-icon {
+            font-size: 24px;
+        }
+
+        @keyframes pulse-success {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            }
+        }
+
+        /* Loading Indicator */
+        .a11y-loading {
+            margin-top: 16px;
+            padding: 12px;
+            background: #fef3c7;
+            border: 1px solid #fbbf24;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #92400e;
+        }
+
+        .spinner-small {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fbbf24;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Mobile responsive for accessibility controls */
+        @media (max-width: 600px) {
+            .a11y-controls-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
         /* Image Editor */
         .image-editor {
             margin-bottom: 30px;
@@ -2953,6 +3118,13 @@
                  aria-live="assertive"
                  aria-atomic="true"></div>
 
+            <!-- ARIA Live Region for Accessibility Announcements -->
+            <div id="srAnnouncements"
+                 role="status"
+                 aria-live="polite"
+                 aria-atomic="true"
+                 style="position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden;"></div>
+
             <!-- Progress Container (WebSocket) -->
             <div class="progress-container"
                  id="progressContainer"
@@ -3253,6 +3425,59 @@
                                 <span data-i18n="form.enableOcr">Enable OCR</span>
                             </label>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Accessibility Controls -->
+                <div class="accessibility-controls" id="cameraA11yControls">
+                    <h4 data-i18n="camera.a11y.title">Accessibility Assistance</h4>
+
+                    <div class="a11y-controls-grid">
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableA11yAssistance" name="a11y_enabled">
+                                <span data-i18n="camera.a11y.enable">Enable audio guidance</span>
+                            </label>
+                            <p class="help-text" data-i18n="camera.a11y.helpText">
+                                Provides audio feedback for document edge detection
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="a11yVolume" data-i18n="camera.a11y.volume">Volume</label>
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <input type="range" id="a11yVolume" min="0" max="100" value="80" class="slider" style="flex: 1;">
+                                <span id="a11yVolumeValue" style="min-width: 45px; font-weight: 600; color: #3b82f6;">80%</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableAutoCapture" name="auto_capture_enabled" checked>
+                                <span data-i18n="camera.a11y.enableAutoCapture">Enable automatic capture</span>
+                            </label>
+                            <p class="help-text" data-i18n="camera.a11y.autoCaptureHelp">
+                                Automatically takes photo after 2 seconds when document is centered
+                            </p>
+                        </div>
+
+                        <div class="form-group">
+                            <button id="testA11yAudioBtn" class="btn btn-secondary" data-i18n="camera.a11y.test">
+                                Test Audio
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Status Indicator -->
+                    <div id="edgeDetectionStatus" class="edge-status" hidden>
+                        <span class="status-icon">📄</span>
+                        <span id="edgeStatusText" data-i18n="camera.a11y.statusReady">Ready to scan</span>
+                    </div>
+
+                    <!-- Loading Indicator (shown while loading jscanify) -->
+                    <div id="a11yLoadingIndicator" class="a11y-loading" hidden>
+                        <span class="spinner-small"></span>
+                        <span data-i18n="camera.a11y.loading">Loading accessibility features...</span>
                     </div>
                 </div>
 
@@ -3897,6 +4122,29 @@
                 'camera.pages.clear': 'Clear All',
                 'camera.pages.submit': 'Convert to PDF/A',
                 'camera.settings.title': 'Conversion Settings',
+                // Accessibility translations
+                'camera.a11y.title': 'Accessibility Assistance',
+                'camera.a11y.enable': 'Enable audio guidance',
+                'camera.a11y.helpText': 'Provides audio feedback for document edge detection',
+                'camera.a11y.volume': 'Volume',
+                'camera.a11y.test': 'Test Audio',
+                'camera.a11y.testAnnouncement': 'Audio test. If you can hear this, audio is working.',
+                'camera.a11y.loading': 'Loading accessibility features...',
+                'camera.a11y.statusReady': 'Ready to scan',
+                'camera.a11y.edgesDetected': 'Document edges detected. Hold steady.',
+                'camera.a11y.edgesLost': 'Edges lost. Adjust camera position.',
+                'camera.a11y.moveLeft': 'Move camera left',
+                'camera.a11y.moveRight': 'Move camera right',
+                'camera.a11y.moveUp': 'Move camera up',
+                'camera.a11y.moveDown': 'Move camera down',
+                'camera.a11y.moveCloser': 'Move closer to document',
+                'camera.a11y.moveFarther': 'Move farther from document',
+                'camera.a11y.enabled': 'Camera assistance enabled',
+                'camera.a11y.disabled': 'Camera assistance disabled',
+                'camera.a11y.enableAutoCapture': 'Enable automatic capture',
+                'camera.a11y.autoCaptureHelp': 'Automatically takes photo after 2 seconds when document is centered',
+                'camera.a11y.holdSteady': 'Hold camera steady',
+                'camera.a11y.photoCaptured': 'Photo captured',
                 'camera.edit.rotation': 'Rotation',
                 'camera.edit.rotateLeft': '↺ 90° Left',
                 'camera.edit.rotateRight': '↻ 90° Right',
@@ -4196,6 +4444,29 @@
                 'camera.pages.clear': 'Alle löschen',
                 'camera.pages.submit': 'In PDF/A konvertieren',
                 'camera.settings.title': 'Konvertierungseinstellungen',
+                // Barrierefreiheits-Übersetzungen
+                'camera.a11y.title': 'Barrierefreiheits-Unterstützung',
+                'camera.a11y.enable': 'Audio-Führung aktivieren',
+                'camera.a11y.helpText': 'Bietet akustisches Feedback zur Dokumentenerkennung',
+                'camera.a11y.volume': 'Lautstärke',
+                'camera.a11y.test': 'Audio testen',
+                'camera.a11y.testAnnouncement': 'Audiotest. Wenn Sie dies hören können, funktioniert Audio.',
+                'camera.a11y.loading': 'Lade Barrierefreiheits-Funktionen...',
+                'camera.a11y.statusReady': 'Bereit zum Scannen',
+                'camera.a11y.edgesDetected': 'Dokumentränder erkannt. Halten Sie ruhig.',
+                'camera.a11y.edgesLost': 'Ränder verloren. Kameraposition anpassen.',
+                'camera.a11y.moveLeft': 'Kamera nach links bewegen',
+                'camera.a11y.moveRight': 'Kamera nach rechts bewegen',
+                'camera.a11y.moveUp': 'Kamera nach oben bewegen',
+                'camera.a11y.moveDown': 'Kamera nach unten bewegen',
+                'camera.a11y.moveCloser': 'Näher ans Dokument',
+                'camera.a11y.moveFarther': 'Weiter weg vom Dokument',
+                'camera.a11y.enabled': 'Kamera-Unterstützung aktiviert',
+                'camera.a11y.disabled': 'Kamera-Unterstützung deaktiviert',
+                'camera.a11y.enableAutoCapture': 'Automatische Aufnahme aktivieren',
+                'camera.a11y.autoCaptureHelp': 'Nimmt automatisch ein Foto nach 2 Sekunden auf, wenn das Dokument zentriert ist',
+                'camera.a11y.holdSteady': 'Kamera ruhig halten',
+                'camera.a11y.photoCaptured': 'Foto aufgenommen',
                 'camera.edit.rotation': 'Drehung',
                 'camera.edit.rotateLeft': '↺ 90° Links',
                 'camera.edit.rotateRight': '↻ 90° Rechts',
@@ -4495,6 +4766,29 @@
                 'camera.pages.clear': 'Borrar Todo',
                 'camera.pages.submit': 'Convertir a PDF/A',
                 'camera.settings.title': 'Configuración de Conversión',
+                // Traducciones de accesibilidad
+                'camera.a11y.title': 'Asistencia de Accesibilidad',
+                'camera.a11y.enable': 'Activar guía de audio',
+                'camera.a11y.helpText': 'Proporciona retroalimentación de audio para detección de bordes',
+                'camera.a11y.volume': 'Volumen',
+                'camera.a11y.test': 'Probar Audio',
+                'camera.a11y.testAnnouncement': 'Prueba de audio. Si puede oír esto, el audio funciona.',
+                'camera.a11y.loading': 'Cargando funciones de accesibilidad...',
+                'camera.a11y.statusReady': 'Listo para escanear',
+                'camera.a11y.edgesDetected': 'Bordes del documento detectados. Mantenga firme.',
+                'camera.a11y.edgesLost': 'Bordes perdidos. Ajuste la posición de la cámara.',
+                'camera.a11y.moveLeft': 'Mueva la cámara hacia la izquierda',
+                'camera.a11y.moveRight': 'Mueva la cámara hacia la derecha',
+                'camera.a11y.moveUp': 'Mueva la cámara hacia arriba',
+                'camera.a11y.moveDown': 'Mueva la cámara hacia abajo',
+                'camera.a11y.moveCloser': 'Acérquese al documento',
+                'camera.a11y.moveFarther': 'Aléjese del documento',
+                'camera.a11y.enabled': 'Asistencia de cámara activada',
+                'camera.a11y.disabled': 'Asistencia de cámara desactivada',
+                'camera.a11y.enableAutoCapture': 'Activar captura automática',
+                'camera.a11y.autoCaptureHelp': 'Toma una foto automáticamente después de 2 segundos cuando el documento está centrado',
+                'camera.a11y.holdSteady': 'Mantenga la cámara firme',
+                'camera.a11y.photoCaptured': 'Foto capturada',
                 'camera.edit.rotation': 'Rotación',
                 'camera.edit.rotateLeft': '↺ 90° Izquierda',
                 'camera.edit.rotateRight': '↻ 90° Derecha',
@@ -4794,6 +5088,29 @@
                 'camera.pages.clear': 'Tout Effacer',
                 'camera.pages.submit': 'Convertir en PDF/A',
                 'camera.settings.title': 'Paramètres de Conversion',
+                // Traductions d'accessibilité
+                'camera.a11y.title': 'Assistance d\'Accessibilité',
+                'camera.a11y.enable': 'Activer le guidage audio',
+                'camera.a11y.helpText': 'Fournit un retour audio pour la détection des bords',
+                'camera.a11y.volume': 'Volume',
+                'camera.a11y.test': 'Tester l\'Audio',
+                'camera.a11y.testAnnouncement': 'Test audio. Si vous pouvez entendre ceci, l\'audio fonctionne.',
+                'camera.a11y.loading': 'Chargement des fonctionnalités d\'accessibilité...',
+                'camera.a11y.statusReady': 'Prêt à numériser',
+                'camera.a11y.edgesDetected': 'Bords du document détectés. Tenez fermement.',
+                'camera.a11y.edgesLost': 'Bords perdus. Ajustez la position de la caméra.',
+                'camera.a11y.moveLeft': 'Déplacez la caméra vers la gauche',
+                'camera.a11y.moveRight': 'Déplacez la caméra vers la droite',
+                'camera.a11y.moveUp': 'Déplacez la caméra vers le haut',
+                'camera.a11y.moveDown': 'Déplacez la caméra vers le bas',
+                'camera.a11y.moveCloser': 'Rapprochez-vous du document',
+                'camera.a11y.moveFarther': 'Éloignez-vous du document',
+                'camera.a11y.enabled': 'Assistance caméra activée',
+                'camera.a11y.disabled': 'Assistance caméra désactivée',
+                'camera.a11y.enableAutoCapture': 'Activer la capture automatique',
+                'camera.a11y.autoCaptureHelp': 'Prend automatiquement une photo après 2 secondes lorsque le document est centré',
+                'camera.a11y.holdSteady': 'Tenez la caméra fermement',
+                'camera.a11y.photoCaptured': 'Photo capturée',
                 'camera.edit.rotation': 'Rotation',
                 'camera.edit.rotateLeft': '↺ 90° Gauche',
                 'camera.edit.rotateRight': '↻ 90° Droite',
@@ -8197,6 +8514,10 @@
                 // Setup event listeners
                 this.setupEventListeners();
 
+                // Initialize accessibility assistant
+                this.a11yAssistant = new AccessibleCameraAssistant(this);
+                await this.a11yAssistant.init();
+
                 console.log('[Camera] CameraManager initialized');
             }
 
@@ -8343,6 +8664,11 @@
 
                     console.log('[Camera] Camera started successfully');
 
+                    // Start accessibility analysis if enabled
+                    if (this.a11yAssistant && this.a11yAssistant.enabled) {
+                        this.a11yAssistant.startAnalysis();
+                    }
+
                     // Update UI
                     document.getElementById('startCameraBtn').hidden = true;
                     document.getElementById('stopCameraBtn').hidden = false;
@@ -8360,6 +8686,11 @@
 
             stopCamera() {
                 console.log('[Camera] Stopping camera...');
+
+                // Stop accessibility analysis
+                if (this.a11yAssistant && this.a11yAssistant.enabled) {
+                    this.a11yAssistant.stopAnalysis();
+                }
 
                 if (this.stream) {
                     this.stream.getTracks().forEach(track => track.stop());
@@ -8755,6 +9086,669 @@
                 } else {
                     console.error('[Camera] WebSocket not connected');
                     alert('Connection error. Please ensure you are connected.');
+                }
+            }
+        }
+
+        // ============================================================================
+        // Accessible Camera Assistant Class
+        // ============================================================================
+
+        /**
+         * AccessibleCameraAssistant provides audio guidance for blind and low-vision users
+         * when capturing documents with the camera.
+         *
+         * Features:
+         * - Real-time document edge detection using jscanify
+         * - Audio tone feedback (pitch varies with confidence)
+         * - Voice announcements for guidance
+         * - Auto-detection of screen readers
+         * - Manual controls (toggle, volume, test)
+         * - Auto-capture when document is stable
+         */
+        class AccessibleCameraAssistant {
+            constructor(cameraManager) {
+                this.cameraManager = cameraManager;
+                this.enabled = false;
+                this.screenReaderDetected = false;
+                this.volume = 0.8; // 80% default volume
+
+                // Audio components
+                this.audioContext = null;
+                this.oscillator = null;
+                this.gainNode = null;
+
+                // Speech synthesis
+                this.synth = window.speechSynthesis;
+                this.currentLang = 'en-US';
+
+                // Detection state
+                this.lastEdgeConfidence = 0;
+                this.lastAnnouncementTime = 0;
+                this.announcementThrottle = 2000; // Min 2s between announcements
+
+                // Frame processing
+                this.analysisCanvas = null;
+                this.analysisCtx = null;
+                this.processingFrame = false;
+                this.analysisLoopId = null;
+
+                // jscanify scanner
+                this.scanner = null;
+
+                // Auto-capture state
+                this.autoCaptureEnabled = true;
+                this.stableFrameCount = 0;
+                this.stableThreshold = 10; // 10 frames (~1 second at 10 FPS)
+                this.captureCountdown = null;
+                this.isCountingDown = false;
+
+                console.log('[A11y] AccessibleCameraAssistant created');
+            }
+
+            async init() {
+                console.log('[A11y] Initializing AccessibleCameraAssistant');
+
+                // Detect screen reader
+                this.screenReaderDetected = this.detectScreenReader();
+
+                // Auto-enable if screen reader detected
+                const checkbox = document.getElementById('enableA11yAssistance');
+                if (this.screenReaderDetected && checkbox) {
+                    console.log('[A11y] Screen reader detected, auto-enabling assistance');
+                    checkbox.checked = true;
+                    await this.enable();
+                }
+
+                // Setup UI controls
+                this.setupControls();
+
+                console.log('[A11y] Initialization complete');
+            }
+
+            detectScreenReader() {
+                // Method 1: Check for prefers-reduced-motion (common with assistive tech)
+                const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+                // Method 2: Check if user has interacted with ARIA live regions
+                const liveRegion = document.getElementById('srAnnouncements');
+                const hasAriaActivity = liveRegion && liveRegion.textContent.trim().length > 0;
+
+                // Method 3: Check for high contrast mode (Windows Narrator, NVDA)
+                const highContrast = window.matchMedia('(-ms-high-contrast: active)').matches;
+
+                // Heuristic: any of these suggest screen reader use
+                const detected = prefersReducedMotion || hasAriaActivity || highContrast;
+                console.log('[A11y] Screen reader detection:', {
+                    prefersReducedMotion,
+                    hasAriaActivity,
+                    highContrast,
+                    detected
+                });
+
+                return detected;
+            }
+
+            setupControls() {
+                // Enable/disable toggle
+                const checkbox = document.getElementById('enableA11yAssistance');
+                if (checkbox) {
+                    checkbox.addEventListener('change', async (e) => {
+                        if (e.target.checked) {
+                            await this.enable();
+                        } else {
+                            this.disable();
+                        }
+                    });
+                }
+
+                // Volume slider
+                const volumeSlider = document.getElementById('a11yVolume');
+                const volumeValue = document.getElementById('a11yVolumeValue');
+                if (volumeSlider && volumeValue) {
+                    volumeSlider.addEventListener('input', (e) => {
+                        const value = parseInt(e.target.value);
+                        this.volume = value / 100;
+                        volumeValue.textContent = `${value}%`;
+                        console.log('[A11y] Volume set to', this.volume);
+                    });
+                }
+
+                // Test audio button
+                const testBtn = document.getElementById('testA11yAudioBtn');
+                if (testBtn) {
+                    testBtn.addEventListener('click', () => {
+                        this.testAudio();
+                    });
+                }
+
+                // Auto-capture toggle
+                const autoCaptureCheckbox = document.getElementById('enableAutoCapture');
+                if (autoCaptureCheckbox) {
+                    autoCaptureCheckbox.addEventListener('change', (e) => {
+                        this.autoCaptureEnabled = e.target.checked;
+                        console.log('[A11y] Auto-capture', this.autoCaptureEnabled ? 'enabled' : 'disabled');
+                    });
+                }
+            }
+
+            async enable() {
+                if (this.enabled) return;
+
+                console.log('[A11y] Enabling camera assistance');
+
+                try {
+                    // Show loading indicator
+                    const loadingIndicator = document.getElementById('a11yLoadingIndicator');
+                    if (loadingIndicator) {
+                        loadingIndicator.hidden = false;
+                    }
+
+                    // Initialize audio context
+                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    this.oscillator = this.audioContext.createOscillator();
+                    this.gainNode = this.audioContext.createGain();
+                    this.oscillator.connect(this.gainNode);
+                    this.gainNode.connect(this.audioContext.destination);
+                    this.oscillator.start();
+                    this.gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+
+                    // Create analysis canvas
+                    this.analysisCanvas = document.createElement('canvas');
+                    this.analysisCtx = this.analysisCanvas.getContext('2d');
+
+                    // Load edge detection library (jscanify)
+                    await this.loadEdgeDetectionLibrary();
+
+                    // Hide loading indicator
+                    if (loadingIndicator) {
+                        loadingIndicator.hidden = true;
+                    }
+
+                    // Start frame analysis loop
+                    this.startAnalysis();
+
+                    this.enabled = true;
+                    this.announce(this.translate('camera.a11y.enabled'));
+
+                    console.log('[A11y] Camera assistance enabled');
+                } catch (error) {
+                    console.error('[A11y] Failed to enable assistance:', error);
+                    alert('Failed to enable accessibility assistance. Please check your browser compatibility.');
+
+                    // Reset checkbox
+                    const checkbox = document.getElementById('enableA11yAssistance');
+                    if (checkbox) {
+                        checkbox.checked = false;
+                    }
+
+                    // Hide loading indicator
+                    const loadingIndicator = document.getElementById('a11yLoadingIndicator');
+                    if (loadingIndicator) {
+                        loadingIndicator.hidden = true;
+                    }
+                }
+            }
+
+            disable() {
+                if (!this.enabled) return;
+
+                console.log('[A11y] Disabling camera assistance');
+
+                this.stopAnalysis();
+
+                if (this.audioContext) {
+                    this.audioContext.close();
+                    this.audioContext = null;
+                    this.oscillator = null;
+                    this.gainNode = null;
+                }
+
+                this.enabled = false;
+                this.announce(this.translate('camera.a11y.disabled'));
+
+                // Hide status indicator
+                const statusEl = document.getElementById('edgeDetectionStatus');
+                if (statusEl) {
+                    statusEl.hidden = true;
+                }
+
+                console.log('[A11y] Camera assistance disabled');
+            }
+
+            async loadEdgeDetectionLibrary() {
+                console.log('[A11y] Loading jscanify library');
+
+                return new Promise((resolve, reject) => {
+                    // Check if already loaded
+                    if (window.jscanify) {
+                        this.scanner = new window.jscanify();
+                        console.log('[A11y] jscanify already loaded');
+                        resolve();
+                        return;
+                    }
+
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/jscanify@1.2.0/dist/jscanify.min.js';
+                    script.onload = () => {
+                        if (window.jscanify) {
+                            this.scanner = new window.jscanify();
+                            console.log('[A11y] jscanify loaded successfully');
+                            resolve();
+                        } else {
+                            reject(new Error('jscanify not found after loading'));
+                        }
+                    };
+                    script.onerror = () => {
+                        console.error('[A11y] Failed to load jscanify');
+                        reject(new Error('Failed to load edge detection library'));
+                    };
+                    document.head.appendChild(script);
+                });
+            }
+
+            startAnalysis() {
+                if (!this.enabled || this.analysisLoopId) return;
+
+                console.log('[A11y] Starting frame analysis');
+
+                const processFrame = async () => {
+                    if (!this.enabled) {
+                        this.analysisLoopId = null;
+                        return;
+                    }
+
+                    if (!this.processingFrame) {
+                        this.processingFrame = true;
+
+                        try {
+                            await this.analyzeFrame();
+                        } catch (error) {
+                            console.error('[A11y] Error analyzing frame:', error);
+                        }
+
+                        this.processingFrame = false;
+                    }
+
+                    // Continue loop at ~10 FPS (100ms delay)
+                    setTimeout(() => {
+                        this.analysisLoopId = requestAnimationFrame(processFrame);
+                    }, 100);
+                };
+
+                processFrame();
+            }
+
+            stopAnalysis() {
+                if (this.analysisLoopId) {
+                    cancelAnimationFrame(this.analysisLoopId);
+                    this.analysisLoopId = null;
+                }
+                this.processingFrame = false;
+                this.cancelAutoCapture();
+                console.log('[A11y] Stopped frame analysis');
+            }
+
+            async analyzeFrame() {
+                // Get current video element
+                const video = this.cameraManager.videoElement;
+                if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+                    return;
+                }
+
+                if (!this.scanner) {
+                    return;
+                }
+
+                // Draw to analysis canvas (downscale for performance)
+                const scale = 0.5; // Process at 50% resolution
+                this.analysisCanvas.width = video.videoWidth * scale;
+                this.analysisCanvas.height = video.videoHeight * scale;
+                this.analysisCtx.drawImage(video, 0, 0,
+                    this.analysisCanvas.width,
+                    this.analysisCanvas.height);
+
+                // Get image data
+                const imageData = this.analysisCtx.getImageData(0, 0,
+                    this.analysisCanvas.width,
+                    this.analysisCanvas.height);
+
+                // Detect document edges
+                const result = this.scanner.findPaperContour(imageData);
+
+                // Calculate confidence (0-1)
+                const confidence = this.calculateConfidence(result);
+
+                // Provide feedback based on confidence
+                this.provideFeedback(confidence, result);
+
+                // Update last confidence
+                this.lastEdgeConfidence = confidence;
+            }
+
+            calculateConfidence(result) {
+                if (!result || !result.success || !result.corners) return 0;
+
+                const corners = result.corners;
+                if (corners.length !== 4) return 0;
+
+                // Calculate area of detected document
+                const area = this.calculatePolygonArea(corners);
+                const canvasArea = this.analysisCanvas.width * this.analysisCanvas.height;
+                const areaRatio = area / canvasArea;
+
+                // Good document should fill 20-80% of frame
+                let confidence = 0;
+                if (areaRatio > 0.2 && areaRatio < 0.8) {
+                    confidence = Math.min(1.0, areaRatio / 0.5); // Peak at 50% coverage
+                }
+
+                return confidence;
+            }
+
+            calculatePolygonArea(corners) {
+                let area = 0;
+                for (let i = 0; i < corners.length; i++) {
+                    const j = (i + 1) % corners.length;
+                    area += corners[i].x * corners[j].y;
+                    area -= corners[j].x * corners[i].y;
+                }
+                return Math.abs(area / 2);
+            }
+
+            provideFeedback(confidence, result) {
+                const threshold = 0.6; // 60% confidence to announce "edges detected"
+
+                if (confidence >= threshold && this.lastEdgeConfidence < threshold) {
+                    // Transition: edges not detected → edges detected
+                    this.playSuccessTone();
+                    this.announce(this.translate('camera.a11y.edgesDetected'));
+                    this.showVisualIndicator('success');
+                    this.stableFrameCount = 0; // Reset stability counter
+
+                } else if (confidence < threshold && this.lastEdgeConfidence >= threshold) {
+                    // Transition: edges detected → edges lost
+                    this.playWarningTone();
+                    this.announce(this.translate('camera.a11y.edgesLost'));
+                    this.showVisualIndicator('warning');
+                    this.stableFrameCount = 0; // Reset
+                    this.cancelAutoCapture(); // Cancel any pending capture
+
+                } else if (confidence >= threshold) {
+                    // Continuous good state
+                    this.playContinuousFeedbackTone(confidence);
+
+                    // Check if document is well-centered
+                    const isCentered = this.isDocumentCentered(result);
+
+                    if (isCentered) {
+                        this.stableFrameCount++;
+
+                        // If stable for required frames, initiate auto-capture
+                        if (this.stableFrameCount >= this.stableThreshold &&
+                            !this.isCountingDown &&
+                            this.autoCaptureEnabled) {
+                            this.initiateAutoCapture();
+                        }
+                    } else {
+                        // Reset if document moves
+                        if (this.stableFrameCount > 0) {
+                            this.stableFrameCount = 0;
+                            this.cancelAutoCapture();
+                        }
+                        // Provide positional guidance (throttled)
+                        this.providePositionalGuidance(result);
+                    }
+                }
+            }
+
+            isDocumentCentered(result) {
+                if (!result || !result.corners) return false;
+
+                const corners = result.corners;
+                const canvas = this.analysisCanvas;
+
+                // Calculate center of detected document
+                const docCenterX = corners.reduce((sum, c) => sum + c.x, 0) / 4;
+                const docCenterY = corners.reduce((sum, c) => sum + c.y, 0) / 4;
+
+                // Calculate center of canvas
+                const canvasCenterX = canvas.width / 2;
+                const canvasCenterY = canvas.height / 2;
+
+                // Calculate offset
+                const offsetX = Math.abs(docCenterX - canvasCenterX);
+                const offsetY = Math.abs(docCenterY - canvasCenterY);
+
+                // Document is centered if within 30 pixels of center
+                const centerThreshold = 30;
+                return offsetX < centerThreshold && offsetY < centerThreshold;
+            }
+
+            initiateAutoCapture() {
+                if (this.isCountingDown) return; // Already counting down
+
+                console.log('[A11y] Initiating auto-capture countdown');
+                this.isCountingDown = true;
+
+                // Announce to hold steady
+                this.announce(this.translate('camera.a11y.holdSteady'));
+                this.playTone(440, 200); // A4 note for "get ready"
+
+                // Start 2-second countdown
+                let countdown = 2;
+
+                const countdownInterval = setInterval(() => {
+                    if (countdown > 0) {
+                        // Beep for each second
+                        this.playTone(523, 100); // C5 - short beep
+                        this.announce(countdown.toString()); // "2", "1"
+                        countdown--;
+                    } else {
+                        clearInterval(countdownInterval);
+
+                        // Capture!
+                        this.performAutoCapture();
+                    }
+                }, 1000); // Every 1 second
+
+                // Store interval ID so we can cancel if needed
+                this.captureCountdown = countdownInterval;
+            }
+
+            async performAutoCapture() {
+                console.log('[A11y] Auto-capturing photo');
+
+                // Play capture sound (camera shutter simulation)
+                this.playTone(880, 50); // High A5
+                setTimeout(() => this.playTone(440, 50), 60); // Lower A4
+
+                // Announce capture
+                this.announce(this.translate('camera.a11y.photoCaptured'));
+
+                // Trigger the actual camera capture
+                if (this.cameraManager && typeof this.cameraManager.capturePhoto === 'function') {
+                    this.cameraManager.capturePhoto();
+                }
+
+                // Reset state
+                this.isCountingDown = false;
+                this.stableFrameCount = 0;
+                this.captureCountdown = null;
+
+                // Visual feedback
+                this.showVisualIndicator('success');
+            }
+
+            cancelAutoCapture() {
+                if (this.captureCountdown) {
+                    clearInterval(this.captureCountdown);
+                    this.captureCountdown = null;
+                    this.isCountingDown = false;
+                    console.log('[A11y] Auto-capture cancelled');
+                }
+            }
+
+            providePositionalGuidance(result) {
+                if (!result || !result.corners) return;
+
+                const now = Date.now();
+                // Only provide guidance every 3 seconds
+                if (now - this.lastAnnouncementTime < 3000) return;
+
+                const corners = result.corners;
+                const canvas = this.analysisCanvas;
+
+                // Calculate center of detected document
+                const docCenterX = corners.reduce((sum, c) => sum + c.x, 0) / 4;
+                const docCenterY = corners.reduce((sum, c) => sum + c.y, 0) / 4;
+
+                // Calculate center of canvas
+                const canvasCenterX = canvas.width / 2;
+                const canvasCenterY = canvas.height / 2;
+
+                // Calculate offset
+                const offsetX = docCenterX - canvasCenterX;
+                const offsetY = docCenterY - canvasCenterY;
+                const threshold = 50; // pixels
+
+                // Provide directional guidance
+                if (Math.abs(offsetX) > threshold) {
+                    const direction = offsetX > 0 ? 'Left' : 'Right';
+                    this.announce(this.translate(`camera.a11y.move${direction}`));
+                    return; // Only one guidance at a time
+                }
+
+                if (Math.abs(offsetY) > threshold) {
+                    const direction = offsetY > 0 ? 'Up' : 'Down';
+                    this.announce(this.translate(`camera.a11y.move${direction}`));
+                }
+            }
+
+            playTone(frequency, duration = 200) {
+                if (!this.audioContext || !this.enabled) return;
+
+                const now = this.audioContext.currentTime;
+
+                // Set frequency
+                this.oscillator.frequency.setValueAtTime(frequency, now);
+
+                // Fade in
+                this.gainNode.gain.cancelScheduledValues(now);
+                this.gainNode.gain.setValueAtTime(0, now);
+                this.gainNode.gain.linearRampToValueAtTime(this.volume * 0.3, now + 0.01);
+
+                // Fade out
+                this.gainNode.gain.linearRampToValueAtTime(0, now + (duration / 1000));
+            }
+
+            playSuccessTone() {
+                // Ascending notes for "edges detected"
+                this.playTone(523, 100); // C5
+                setTimeout(() => this.playTone(659, 100), 120); // E5
+                setTimeout(() => this.playTone(784, 100), 240); // G5
+            }
+
+            playWarningTone() {
+                // Descending notes for "edges lost"
+                this.playTone(784, 100); // G5
+                setTimeout(() => this.playTone(659, 100), 120); // E5
+                setTimeout(() => this.playTone(523, 100), 240); // C5
+            }
+
+            playContinuousFeedbackTone(confidence) {
+                // Map confidence (0-1) to frequency (200-800 Hz)
+                // Higher confidence = higher pitch
+                const minFreq = 200;
+                const maxFreq = 800;
+                const frequency = minFreq + (confidence * (maxFreq - minFreq));
+
+                this.playTone(frequency, 100);
+            }
+
+            testAudio() {
+                console.log('[A11y] Testing audio');
+
+                // Play success tone
+                this.playSuccessTone();
+
+                // Announce test message
+                setTimeout(() => {
+                    this.announce(this.translate('camera.a11y.testAnnouncement') || 'Audio test. If you can hear this, audio is working.');
+                }, 500);
+            }
+
+            announce(text, priority = 'polite') {
+                if (!this.enabled && priority !== 'force') return;
+
+                // Throttle announcements (prevent spam)
+                const now = Date.now();
+                if (priority !== 'force' && now - this.lastAnnouncementTime < this.announcementThrottle) {
+                    return;
+                }
+                this.lastAnnouncementTime = now;
+
+                // Update ARIA live region (for screen readers)
+                const liveRegion = document.getElementById('srAnnouncements');
+                if (liveRegion) {
+                    liveRegion.textContent = text;
+                }
+
+                // Also use Web Speech API (for all users)
+                if (this.synth) {
+                    // Cancel any ongoing speech
+                    this.synth.cancel();
+
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.lang = this.getLangCode();
+                    utterance.volume = this.volume;
+                    utterance.rate = 1.2; // Slightly faster
+
+                    this.synth.speak(utterance);
+                }
+
+                console.log('[A11y] Announced:', text);
+            }
+
+            getLangCode() {
+                // Map UI language to speech synthesis language codes
+                const langMap = {
+                    'en': 'en-US',
+                    'de': 'de-DE',
+                    'es': 'es-ES',
+                    'fr': 'fr-FR'
+                };
+                return langMap[window.currentLang] || 'en-US';
+            }
+
+            translate(key) {
+                // Use existing i18n infrastructure
+                const translations = window.translations && window.translations[window.currentLang];
+                if (!translations) return key;
+
+                // Navigate nested keys (e.g., "camera.a11y.edgesDetected")
+                const keys = key.split('.');
+                let value = translations;
+                for (const k of keys) {
+                    value = value[k];
+                    if (!value) return key;
+                }
+                return value;
+            }
+
+            showVisualIndicator(type) {
+                // For low-vision users (complementary to audio)
+                const statusEl = document.getElementById('edgeDetectionStatus');
+                if (!statusEl) return;
+
+                statusEl.hidden = false;
+                statusEl.className = `edge-status ${type}`;
+
+                const textEl = document.getElementById('edgeStatusText');
+                if (textEl) {
+                    textEl.textContent = type === 'success'
+                        ? this.translate('camera.a11y.edgesDetected')
+                        : this.translate('camera.a11y.edgesLost');
                 }
             }
         }
