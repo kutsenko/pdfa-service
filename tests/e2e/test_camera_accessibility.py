@@ -7,7 +7,7 @@ from playwright.sync_api import Page, expect
 
 
 def activate_camera_tab(page: Page):
-    """Helper function to activate camera tab and wait for it to be visible."""
+    """Activate camera tab and wait for it to be visible."""
     camera_tab_btn = page.locator("#tab-kamera-btn")
     camera_tab_btn.click()
     page.wait_for_timeout(
@@ -127,7 +127,7 @@ class TestAccessibilityControlsUI:
         page = page_with_server
         page.goto("http://localhost:8001/")
 
-        # Use .first to get the first matching element (there's one in the converter form)
+        # Use .first to get the first matching element
         live_region = page.locator("#srAnnouncements").first
         expect(live_region).to_be_attached()
         expect(live_region).to_have_attribute("role", "status")

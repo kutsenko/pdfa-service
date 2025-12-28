@@ -207,8 +207,7 @@ class TestAccessibility:
 
 @pytest.mark.skip(reason="Camera access requires user permission and hardware")
 class TestCameraFunctionality:
-    """
-    Tests for actual camera functionality.
+    """Tests for actual camera functionality.
 
     Note: These tests are skipped because:
     1. Camera access requires user permission (getUserMedia)
