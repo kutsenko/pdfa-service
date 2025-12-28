@@ -47,7 +47,7 @@ from pdfa.format_converter import (
     is_image_file,
     is_office_document,
 )
-from pdfa.image_converter import convert_image_to_pdf
+from pdfa.image_converter import convert_image_to_pdf, convert_images_to_pdf
 from pdfa.job_manager import get_job_manager
 from pdfa.logging_config import configure_logging, get_logger
 from pdfa.models import UserDocument, UserPreferencesDocument
@@ -983,18 +983,28 @@ async def process_conversion_job(job_id: str) -> None:
 
             start_time = time.time()
 
-            await asyncio.to_thread(convert_image_to_pdf, job.input_path, pdf_path)
+            # Multi-image mode: combine multiple images into single PDF
+            if job.input_paths and len(job.input_paths) > 1:
+                logger.info(f"Multi-image job detected: {len(job.input_paths)} images")
+                await asyncio.to_thread(
+                    convert_images_to_pdf, job.input_paths, pdf_path
+                )
+            else:
+                # Single-image mode (backward compatibility)
+                await asyncio.to_thread(convert_image_to_pdf, job.input_path, pdf_path)
 
             conversion_time = time.time() - start_time
 
             # Log format conversion event
+            num_images = len(job.input_paths) if job.input_paths else 1
             await async_event_callback(
                 "format_conversion",
                 source_format=job.filename.rsplit(".", 1)[-1].lower(),
                 target_format="pdf",
                 conversion_required=True,
-                converter="image_to_pdf",
+                converter="multi_image_to_pdf" if num_images > 1 else "image_to_pdf",
                 conversion_time_seconds=conversion_time,
+                num_images=num_images,
             )
         else:
             # Direct PDF - no conversion needed
@@ -1117,14 +1127,27 @@ async def websocket_endpoint(websocket: WebSocket):
                 message = parse_client_message(message_data)
 
                 if isinstance(message, SubmitJobMessage):
-                    # Create new job
-                    file_data = message.get_file_bytes()
-                    job = job_manager.create_job(
-                        filename=message.filename,
-                        file_data=file_data,
-                        config=message.config or {},
-                        user_id=current_user.user_id if current_user else None,
-                    )
+                    # Create new job (supports both single-file and multi-file modes)
+                    if message.multi_file_mode:
+                        # Multi-file mode: multiple images to single PDF
+                        files_data = message.get_files_bytes()
+                        job = job_manager.create_job(
+                            filename="",  # Not used in multi-file mode
+                            file_data=b"",  # Not used in multi-file mode
+                            config=message.config or {},
+                            user_id=current_user.user_id if current_user else None,
+                            filenames=message.filenames,
+                            files_data=files_data,
+                        )
+                    else:
+                        # Single-file mode (backward compatibility)
+                        file_data = message.get_file_bytes()
+                        job = job_manager.create_job(
+                            filename=message.filename,
+                            file_data=file_data,
+                            config=message.config or {},
+                            user_id=current_user.user_id if current_user else None,
+                        )
                     current_job_id = job.job_id
 
                     # Register WebSocket for this job
