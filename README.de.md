@@ -25,7 +25,7 @@ Kommandozeilen-Tool und REST-API zur Konvertierung von PDF-, Office-, OpenDocume
 
 ## Anforderungen
 
-- **Python 3.11+**
+- **Python 3.13+**
 - **LibreOffice** (für Office-Dokumentkonvertierung)
 - **OCRmyPDF-Laufzeitabhängigkeiten**: Tesseract-OCR, Ghostscript und qpdf für PDF-Verarbeitung
 
@@ -50,7 +50,7 @@ sudo apt install python3-venv python3-pip \
 Installieren Sie die Systemabhängigkeiten mit DNF:
 
 ```bash
-sudo dnf install python3.11+ python3-pip \
+sudo dnf install python3.13+ python3-pip \
   libreoffice-calc libreoffice-impress \
   tesseract tesseract-langpack-deu tesseract-langpack-eng \
   ghostscript qpdf
@@ -94,7 +94,7 @@ Die Standardinstallation umfasst Englisch (`eng`) und Deutsch (`deu`) OCR-Unters
 Nach der Installation überprüfen Sie, ob alle Abhängigkeiten verfügbar sind:
 
 ```bash
-# Python-Version überprüfen (3.11+)
+# Python-Version überprüfen (3.13+)
 python3 --version
 
 # Tesseract OCR überprüfen

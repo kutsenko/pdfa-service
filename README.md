@@ -25,7 +25,7 @@ Command-line tool and REST API that converts PDF, Office, OpenDocument, and imag
 
 ## Requirements
 
-- **Python 3.11+**
+- **Python 3.13+**
 - **LibreOffice** (for Office document conversion)
 - **OCRmyPDF runtime dependencies**: Tesseract OCR, Ghostscript, and qpdf for PDF processing
 
@@ -50,7 +50,7 @@ sudo apt install python3-venv python3-pip \
 Install the system dependencies using DNF:
 
 ```bash
-sudo dnf install python3.11+ python3-pip \
+sudo dnf install python3.13+ python3-pip \
   libreoffice-calc libreoffice-impress \
   tesseract tesseract-langpack-deu tesseract-langpack-eng \
   ghostscript qpdf
@@ -94,7 +94,7 @@ The default installation includes English (`eng`) and German (`deu`) OCR support
 After installation, verify that all dependencies are available:
 
 ```bash
-# Check Python version (3.11+)
+# Check Python version (3.13+)
 python3 --version
 
 # Verify Tesseract OCR

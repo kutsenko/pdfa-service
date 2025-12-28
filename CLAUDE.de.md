@@ -59,7 +59,7 @@ uvicorn pdfa.api:app --port 8000   # API lokal ausführen
 2. **Konfiguration als Argumente**: Konfiguration als Funktionsparameter übergeben, nicht als Globals
 3. **Gemeinsame Fehlerbehandlung**: Konsistente Fehlerübersetzung über Schnittstellen hinweg
 4. **Tests zuerst**: Zuerst Tests mit gemockten Abhängigkeiten schreiben, dann implementieren
-5. **Type Hints**: Python 3.11+ Type Hints überall verwenden
+5. **Type Hints**: Python 3.13+ Type Hints überall verwenden
 
 ## System-Setup
 

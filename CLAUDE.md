@@ -59,7 +59,7 @@ uvicorn pdfa.api:app --port 8000   # Run API locally
 2. **Configuration as Arguments**: Pass config as function parameters, not globals
 3. **Shared Error Handling**: Consistent error translation across interfaces
 4. **Tests First**: Write tests with mocked dependencies before implementing
-5. **Type Hints**: Use Python 3.11+ type hints throughout
+5. **Type Hints**: Use Python 3.13+ type hints throughout
 
 ## System Setup
 

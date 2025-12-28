@@ -24,7 +24,7 @@ See [`README.md`](README.md) for user-facing documentation and [`ARCHITECTURE.md
 
 ### General Standards
 
-- **Python Version**: Python 3.11+ required
+- **Python Version**: Python 3.13+ required
 - **Code Style**: Follow PEP 8 conventions and [python.org best practices](https://www.python.org/dev/peps/)
 - **Code Formatting**: Use `black` with 88-character line length
 - **Linting**: Use `ruff` to check:
@@ -51,7 +51,7 @@ See [`README.md`](README.md) for user-facing documentation and [`ARCHITECTURE.md
 
 ### Type Hints
 
-- Use Python 3.11+ type hints throughout the codebase
+- Use Python 3.13+ type hints throughout the codebase
 - Use `Literal` types for configuration: `PdfaLevel = Literal["1", "2", "3"]`
 - Use `pathlib.Path` for file path handling
 - Maintain type coverage for IDE support and code clarity
@@ -73,7 +73,7 @@ black --check src tests
 ```
 
 - **Line length**: 88 characters (Black default)
-- **Target Python version**: 3.11+
+- **Target Python version**: 3.13+
 - Black formatting is **non-negotiable** - all code must pass Black formatting
 
 ### Linting with Ruff
