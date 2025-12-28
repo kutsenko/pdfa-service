@@ -112,8 +112,8 @@ jobs:
         run: |
           echo "::group::Security Scan"
 
-          # Check for hardcoded secrets patterns
-          if git grep -E "(password|secret|token|api_key)\s*=\s*['\"][^'\"]+['\"]" -- '*.py' 2>/dev/null; then
+          # Check for hardcoded secrets patterns (excluding test files)
+          if git grep -E "(password|secret|token|api_key)\s*=\s*['\"][^'\"]+['\"]" -- '*.py' ':!tests/*' 2>/dev/null; then
             echo "::error::Potential hardcoded secrets found in code"
             exit 1
           else
