@@ -1851,6 +1851,11 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
+        .page-thumbnail.dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
         .page-thumbnail img {
             width: 100%;
             height: auto;
@@ -1908,6 +1913,175 @@
 
         .staging-actions .btn {
             min-width: 140px;
+        }
+
+        /* Image Editor */
+        .image-editor {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .editor-container {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+        }
+
+        .editor-canvas-wrapper {
+            flex: 1;
+            min-width: 300px;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            max-height: 600px;
+        }
+
+        .edit-canvas {
+            max-width: 100%;
+            max-height: 600px;
+            display: block;
+        }
+
+        .editing-tools {
+            flex: 0 0 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .tool-group {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .tool-group h4 {
+            margin: 0 0 12px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-tool {
+            flex: 1;
+            padding: 10px 16px;
+            font-size: 14px;
+            background: #f0f2ff;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+
+        .btn-tool:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-tool:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .tool-group label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            margin-bottom: 16px;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            background: #764ba2;
+            transform: scale(1.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            background: #764ba2;
+            transform: scale(1.2);
+        }
+
+        .tool-hint {
+            font-size: 12px;
+            color: #999;
+            margin: 8px 0 0 0;
+            font-style: italic;
+        }
+
+        .editor-actions {
+            display: flex;
+            gap: 12px;
+            flex-direction: column;
+        }
+
+        .btn-large {
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* Mobile Responsive - Image Editor */
+        @media (max-width: 768px) {
+            .editor-container {
+                flex-direction: column;
+            }
+
+            .editing-tools {
+                flex: 1;
+            }
+
+            .editor-actions {
+                flex-direction: row;
+            }
+
+            .editor-actions .btn {
+                flex: 1;
+            }
         }
 
         /* Mobile Responsive - Camera Tab */
@@ -2877,9 +3051,84 @@
                 </div>
             </div>
 
-            <!-- Image Editor (initially hidden, will be implemented in Phase 3) -->
+            <!-- Image Editor (initially hidden) -->
             <div id="imageEditor" class="image-editor" hidden>
-                <!-- Editor UI to be implemented in Phase 3 -->
+                <div class="editor-container">
+                    <div class="editor-canvas-wrapper">
+                        <canvas id="editCanvas" class="edit-canvas"></canvas>
+                    </div>
+
+                    <div class="editing-tools">
+                        <div class="tool-group">
+                            <h4 data-i18n="camera.edit.rotation">Rotation</h4>
+                            <div class="button-group">
+                                <button id="rotateLeftBtn"
+                                        class="btn btn-tool"
+                                        data-i18n="camera.edit.rotateLeft">
+                                    ↺ 90° Left
+                                </button>
+                                <button id="rotateRightBtn"
+                                        class="btn btn-tool"
+                                        data-i18n="camera.edit.rotateRight">
+                                    ↻ 90° Right
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="tool-group">
+                            <h4 data-i18n="camera.edit.adjustments">Adjustments</h4>
+
+                            <label for="brightnessSlider">
+                                <span data-i18n="camera.edit.brightness">Brightness</span>:
+                                <span id="brightnessValue">0</span>
+                            </label>
+                            <input type="range"
+                                   id="brightnessSlider"
+                                   class="slider"
+                                   min="-100"
+                                   max="100"
+                                   value="0"
+                                   step="5">
+
+                            <label for="contrastSlider">
+                                <span data-i18n="camera.edit.contrast">Contrast</span>:
+                                <span id="contrastValue">0</span>
+                            </label>
+                            <input type="range"
+                                   id="contrastSlider"
+                                   class="slider"
+                                   min="-100"
+                                   max="100"
+                                   value="0"
+                                   step="5">
+                        </div>
+
+                        <div class="tool-group">
+                            <h4 data-i18n="camera.edit.crop">Crop</h4>
+                            <button id="cropBtn"
+                                    class="btn btn-tool"
+                                    data-i18n="camera.edit.cropButton">
+                                ✂️ Crop (Coming Soon)
+                            </button>
+                            <p class="tool-hint" data-i18n="camera.edit.cropHint">
+                                Drag on canvas to select area
+                            </p>
+                        </div>
+
+                        <div class="editor-actions">
+                            <button id="acceptEditBtn"
+                                    class="btn btn-primary btn-large"
+                                    data-i18n="camera.edit.accept">
+                                ✓ Accept
+                            </button>
+                            <button id="cancelEditBtn"
+                                    class="btn btn-secondary btn-large"
+                                    data-i18n="camera.edit.retake">
+                                ✗ Retake
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Page Staging Area -->
@@ -3525,6 +3774,30 @@
                 // Placeholder content
                 'placeholder.kamera.title': 'Camera Scanner',
                 'placeholder.kamera.description': 'Coming soon: Upload documents directly from your camera or scanner',
+                // Camera Tab translations
+                'camera.start': 'Start Camera',
+                'camera.stop': 'Stop Camera',
+                'camera.capture': 'Capture',
+                'camera.switch': 'Switch Camera',
+                'camera.selectCamera': 'Select Camera:',
+                'camera.pages.title': 'Pages',
+                'camera.pages.add': 'Add Page',
+                'camera.pages.clear': 'Clear All',
+                'camera.pages.submit': 'Convert to PDF/A',
+                'camera.edit.rotation': 'Rotation',
+                'camera.edit.rotateLeft': '↺ 90° Left',
+                'camera.edit.rotateRight': '↻ 90° Right',
+                'camera.edit.adjustments': 'Adjustments',
+                'camera.edit.brightness': 'Brightness',
+                'camera.edit.contrast': 'Contrast',
+                'camera.edit.crop': 'Crop',
+                'camera.edit.cropButton': '✂️ Crop (Coming Soon)',
+                'camera.edit.cropHint': 'Drag on canvas to select area',
+                'camera.edit.accept': '✓ Accept',
+                'camera.edit.retake': '✗ Retake',
+                'camera.errors.noCamera': 'No camera found',
+                'camera.errors.permissionDenied': 'Camera permission denied',
+                'camera.errors.noPages': 'Please capture at least one page',
                 'placeholder.auftraege.title': 'Job History',
                 'placeholder.auftraege.description': 'Coming soon: View and manage your conversion history',
                 'placeholder.konto.title': 'Account Settings',
@@ -3799,6 +4072,30 @@
                 // Platzhalter-Inhalte
                 'placeholder.kamera.title': 'Kamera-Scanner',
                 'placeholder.kamera.description': 'Demnächst: Dokumente direkt von Ihrer Kamera oder Ihrem Scanner hochladen',
+                // Kamera-Tab-Übersetzungen
+                'camera.start': 'Kamera starten',
+                'camera.stop': 'Kamera stoppen',
+                'camera.capture': 'Aufnehmen',
+                'camera.switch': 'Kamera wechseln',
+                'camera.selectCamera': 'Kamera auswählen:',
+                'camera.pages.title': 'Seiten',
+                'camera.pages.add': 'Seite hinzufügen',
+                'camera.pages.clear': 'Alle löschen',
+                'camera.pages.submit': 'In PDF/A konvertieren',
+                'camera.edit.rotation': 'Drehung',
+                'camera.edit.rotateLeft': '↺ 90° Links',
+                'camera.edit.rotateRight': '↻ 90° Rechts',
+                'camera.edit.adjustments': 'Anpassungen',
+                'camera.edit.brightness': 'Helligkeit',
+                'camera.edit.contrast': 'Kontrast',
+                'camera.edit.crop': 'Zuschneiden',
+                'camera.edit.cropButton': '✂️ Zuschneiden (Demnächst)',
+                'camera.edit.cropHint': 'Ziehen Sie auf der Leinwand, um einen Bereich auszuwählen',
+                'camera.edit.accept': '✓ Übernehmen',
+                'camera.edit.retake': '✗ Erneut aufnehmen',
+                'camera.errors.noCamera': 'Keine Kamera gefunden',
+                'camera.errors.permissionDenied': 'Kamera-Berechtigung verweigert',
+                'camera.errors.noPages': 'Bitte mindestens eine Seite aufnehmen',
                 'placeholder.auftraege.title': 'Auftragsverlauf',
                 'placeholder.auftraege.description': 'Demnächst: Ihren Konvertierungsverlauf anzeigen und verwalten',
                 'placeholder.konto.title': 'Kontoeinstellungen',
@@ -4073,6 +4370,30 @@
                 // Contenido de marcador de posición
                 'placeholder.kamera.title': 'Escáner de Cámara',
                 'placeholder.kamera.description': 'Próximamente: Cargue documentos directamente desde su cámara o escáner',
+                // Traducciones de la pestaña Cámara
+                'camera.start': 'Iniciar Cámara',
+                'camera.stop': 'Detener Cámara',
+                'camera.capture': 'Capturar',
+                'camera.switch': 'Cambiar Cámara',
+                'camera.selectCamera': 'Seleccionar Cámara:',
+                'camera.pages.title': 'Páginas',
+                'camera.pages.add': 'Añadir Página',
+                'camera.pages.clear': 'Borrar Todo',
+                'camera.pages.submit': 'Convertir a PDF/A',
+                'camera.edit.rotation': 'Rotación',
+                'camera.edit.rotateLeft': '↺ 90° Izquierda',
+                'camera.edit.rotateRight': '↻ 90° Derecha',
+                'camera.edit.adjustments': 'Ajustes',
+                'camera.edit.brightness': 'Brillo',
+                'camera.edit.contrast': 'Contraste',
+                'camera.edit.crop': 'Recortar',
+                'camera.edit.cropButton': '✂️ Recortar (Próximamente)',
+                'camera.edit.cropHint': 'Arrastre en el lienzo para seleccionar área',
+                'camera.edit.accept': '✓ Aceptar',
+                'camera.edit.retake': '✗ Volver a Tomar',
+                'camera.errors.noCamera': 'No se encontró cámara',
+                'camera.errors.permissionDenied': 'Permiso de cámara denegado',
+                'camera.errors.noPages': 'Por favor, capture al menos una página',
                 'placeholder.auftraege.title': 'Historial de Trabajos',
                 'placeholder.auftraege.description': 'Próximamente: Vea y administre su historial de conversiones',
                 'placeholder.konto.title': 'Configuración de Cuenta',
@@ -4347,6 +4668,30 @@
                 // Contenu de l'espace réservé
                 'placeholder.kamera.title': 'Scanner de Caméra',
                 'placeholder.kamera.description': 'Bientôt disponible : Téléchargez des documents directement depuis votre caméra ou scanner',
+                // Traductions de l'onglet Caméra
+                'camera.start': 'Démarrer la Caméra',
+                'camera.stop': 'Arrêter la Caméra',
+                'camera.capture': 'Capturer',
+                'camera.switch': 'Changer de Caméra',
+                'camera.selectCamera': 'Sélectionner la Caméra:',
+                'camera.pages.title': 'Pages',
+                'camera.pages.add': 'Ajouter une Page',
+                'camera.pages.clear': 'Tout Effacer',
+                'camera.pages.submit': 'Convertir en PDF/A',
+                'camera.edit.rotation': 'Rotation',
+                'camera.edit.rotateLeft': '↺ 90° Gauche',
+                'camera.edit.rotateRight': '↻ 90° Droite',
+                'camera.edit.adjustments': 'Ajustements',
+                'camera.edit.brightness': 'Luminosité',
+                'camera.edit.contrast': 'Contraste',
+                'camera.edit.crop': 'Recadrer',
+                'camera.edit.cropButton': '✂️ Recadrer (Bientôt)',
+                'camera.edit.cropHint': 'Faites glisser sur le canevas pour sélectionner une zone',
+                'camera.edit.accept': '✓ Accepter',
+                'camera.edit.retake': '✗ Reprendre',
+                'camera.errors.noCamera': 'Aucune caméra trouvée',
+                'camera.errors.permissionDenied': 'Autorisation de caméra refusée',
+                'camera.errors.noPages': 'Veuillez capturer au moins une page',
                 'placeholder.auftraege.title': 'Historique des Tâches',
                 'placeholder.auftraege.description': 'Bientôt disponible : Consultez et gérez votre historique de conversion',
                 'placeholder.konto.title': 'Paramètres du Compte',
@@ -7785,6 +8130,50 @@
                 if (submitBtn) {
                     submitBtn.addEventListener('click', () => this.submitMultiPageJob());
                 }
+
+                // Image Editor - Rotate Left button
+                const rotateLeftBtn = document.getElementById('rotateLeftBtn');
+                if (rotateLeftBtn) {
+                    rotateLeftBtn.addEventListener('click', () => this.applyRotation(-90));
+                }
+
+                // Image Editor - Rotate Right button
+                const rotateRightBtn = document.getElementById('rotateRightBtn');
+                if (rotateRightBtn) {
+                    rotateRightBtn.addEventListener('click', () => this.applyRotation(90));
+                }
+
+                // Image Editor - Brightness slider
+                const brightnessSlider = document.getElementById('brightnessSlider');
+                if (brightnessSlider) {
+                    brightnessSlider.addEventListener('input', (e) => {
+                        const value = parseInt(e.target.value);
+                        document.getElementById('brightnessValue').textContent = value;
+                        this.applyBrightness(value);
+                    });
+                }
+
+                // Image Editor - Contrast slider
+                const contrastSlider = document.getElementById('contrastSlider');
+                if (contrastSlider) {
+                    contrastSlider.addEventListener('input', (e) => {
+                        const value = parseInt(e.target.value);
+                        document.getElementById('contrastValue').textContent = value;
+                        this.applyContrast(value);
+                    });
+                }
+
+                // Image Editor - Accept button
+                const acceptEditBtn = document.getElementById('acceptEditBtn');
+                if (acceptEditBtn) {
+                    acceptEditBtn.addEventListener('click', () => this.acceptEdit());
+                }
+
+                // Image Editor - Cancel/Retake button
+                const cancelEditBtn = document.getElementById('cancelEditBtn');
+                if (cancelEditBtn) {
+                    cancelEditBtn.addEventListener('click', () => this.cancelEdit());
+                }
             }
 
             async startCamera(deviceId = null) {
@@ -7881,8 +8270,143 @@
 
                 console.log('[Camera] Photo captured');
 
-                // Add directly to staging (editing will be added in Phase 3)
-                this.addPageToStaging(imageData);
+                // Open editor for adjustments
+                this.openEditor(imageData);
+            }
+
+            openEditor(imageData) {
+                console.log('[Camera] Opening image editor');
+
+                // Store original image
+                this.currentEditImage = new Image();
+                this.currentEditImage.onload = () => {
+                    this.editCanvas = document.getElementById('editCanvas');
+                    this.editCtx = this.editCanvas.getContext('2d');
+
+                    // Initialize edit state
+                    this.editRotation = 0;
+                    this.editBrightness = 0;
+                    this.editContrast = 0;
+
+                    // Set canvas size
+                    this.editCanvas.width = this.currentEditImage.width;
+                    this.editCanvas.height = this.currentEditImage.height;
+
+                    // Initial draw
+                    this.redrawEditCanvas();
+
+                    // Show editor, hide camera controls
+                    document.getElementById('cameraControls').hidden = true;
+                    document.getElementById('imageEditor').hidden = false;
+
+                    // Reset sliders
+                    document.getElementById('brightnessSlider').value = 0;
+                    document.getElementById('contrastSlider').value = 0;
+                    document.getElementById('brightnessValue').textContent = '0';
+                    document.getElementById('contrastValue').textContent = '0';
+                };
+                this.currentEditImage.src = imageData;
+            }
+
+            closeEditor() {
+                console.log('[Camera] Closing image editor');
+
+                // Hide editor, show camera controls
+                document.getElementById('imageEditor').hidden = true;
+                document.getElementById('cameraControls').hidden = false;
+
+                // Clear edit state
+                this.currentEditImage = null;
+                this.editCanvas = null;
+                this.editCtx = null;
+                this.editRotation = 0;
+                this.editBrightness = 0;
+                this.editContrast = 0;
+            }
+
+            applyRotation(degrees) {
+                this.editRotation = (this.editRotation + degrees + 360) % 360;
+                console.log('[Camera] Rotation applied:', this.editRotation, 'degrees');
+                this.redrawEditCanvas();
+            }
+
+            applyBrightness(value) {
+                this.editBrightness = value;
+                console.log('[Camera] Brightness:', this.editBrightness);
+                this.redrawEditCanvas();
+            }
+
+            applyContrast(value) {
+                this.editContrast = value;
+                console.log('[Camera] Contrast:', this.editContrast);
+                this.redrawEditCanvas();
+            }
+
+            redrawEditCanvas() {
+                if (!this.editCanvas || !this.currentEditImage) return;
+
+                const ctx = this.editCtx;
+                const img = this.currentEditImage;
+
+                // Adjust canvas size for rotation
+                if (this.editRotation === 90 || this.editRotation === 270) {
+                    this.editCanvas.width = img.height;
+                    this.editCanvas.height = img.width;
+                } else {
+                    this.editCanvas.width = img.width;
+                    this.editCanvas.height = img.height;
+                }
+
+                // Clear canvas
+                ctx.clearRect(0, 0, this.editCanvas.width, this.editCanvas.height);
+
+                // Save context state
+                ctx.save();
+
+                // Apply rotation
+                if (this.editRotation !== 0) {
+                    ctx.translate(this.editCanvas.width / 2, this.editCanvas.height / 2);
+                    ctx.rotate((this.editRotation * Math.PI) / 180);
+                    ctx.translate(-img.width / 2, -img.height / 2);
+                } else {
+                    ctx.translate(0, 0);
+                }
+
+                // Apply brightness and contrast filters
+                const brightnessPercent = 100 + this.editBrightness;
+                const contrastPercent = 100 + this.editContrast;
+                ctx.filter = `brightness(${brightnessPercent}%) contrast(${contrastPercent}%)`;
+
+                // Draw image
+                ctx.drawImage(img, 0, 0);
+
+                // Restore context
+                ctx.restore();
+            }
+
+            acceptEdit() {
+                console.log('[Camera] Accepting edited image');
+
+                if (!this.editCanvas) {
+                    console.error('[Camera] No edit canvas found');
+                    return;
+                }
+
+                // Get final edited image as base64
+                const editedImageData = this.editCanvas.toDataURL('image/jpeg', 0.85);
+
+                // Add to staging
+                this.addPageToStaging(editedImageData);
+
+                // Close editor
+                this.closeEditor();
+            }
+
+            cancelEdit() {
+                console.log('[Camera] Cancelling edit, retaking photo');
+
+                // Just close editor, return to camera
+                this.closeEditor();
             }
 
             addPageToStaging(imageData) {
@@ -7910,6 +8434,7 @@
                     thumb.className = 'page-thumbnail';
                     thumb.dataset.pageId = page.id;
                     thumb.dataset.pageIndex = index;
+                    thumb.draggable = true;
 
                     thumb.innerHTML = `
                         <img src="${page.imageData}" alt="Page ${index + 1}">
@@ -7924,11 +8449,88 @@
                         this.deletePage(page.id);
                     });
 
+                    // Drag-and-drop handlers
+                    thumb.addEventListener('dragstart', (e) => this.handleDragStart(e));
+                    thumb.addEventListener('dragover', (e) => this.handleDragOver(e));
+                    thumb.addEventListener('drop', (e) => this.handleDrop(e));
+                    thumb.addEventListener('dragend', (e) => this.handleDragEnd(e));
+
                     container.appendChild(thumb);
                 });
 
                 // Update page count
                 document.getElementById('pageCount').textContent = this.stagedPages.length;
+            }
+
+            handleDragStart(e) {
+                const pageIndex = parseInt(e.currentTarget.dataset.pageIndex);
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', pageIndex);
+                e.currentTarget.classList.add('dragging');
+                console.log('[Camera] Drag start: page', pageIndex);
+            }
+
+            handleDragOver(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+
+                // Visual feedback
+                const draggingElement = document.querySelector('.dragging');
+                const afterElement = this.getDragAfterElement(e.currentTarget.parentElement, e.clientY);
+
+                if (afterElement == null) {
+                    e.currentTarget.parentElement.appendChild(draggingElement);
+                } else {
+                    e.currentTarget.parentElement.insertBefore(draggingElement, afterElement);
+                }
+            }
+
+            handleDrop(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+                const toElement = e.currentTarget;
+                const toIndex = parseInt(toElement.dataset.pageIndex);
+
+                console.log('[Camera] Drop: moving page from', fromIndex, 'to', toIndex);
+
+                if (fromIndex !== toIndex) {
+                    this.reorderPages(fromIndex, toIndex);
+                }
+            }
+
+            handleDragEnd(e) {
+                e.currentTarget.classList.remove('dragging');
+                console.log('[Camera] Drag end');
+            }
+
+            getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll('.page-thumbnail:not(.dragging)')];
+
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            reorderPages(fromIndex, toIndex) {
+                console.log('[Camera] Reordering pages:', fromIndex, '→', toIndex);
+
+                // Remove page from old position
+                const [movedPage] = this.stagedPages.splice(fromIndex, 1);
+
+                // Insert at new position
+                this.stagedPages.splice(toIndex, 0, movedPage);
+
+                // Re-render thumbnails
+                this.renderPageThumbnails();
             }
 
             deletePage(pageId) {
