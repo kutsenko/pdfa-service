@@ -61,7 +61,7 @@ Dieses Dokument definiert die Kriterien, die erfüllt sein müssen, damit ein Fe
 - [ ] **Type Hints vorhanden**
   - Alle Funktionsparameter typisiert
   - Return-Types definiert
-  - Python 3.11+ Type-Hints verwendet
+  - Python 3.13+ Type-Hints verwendet
 
 ### 2.2 Code Review
 - [ ] **Selbst-Review durchgeführt**

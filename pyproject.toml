@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "pdfa"
 version = "0.1.0"
 description = "REST and Command-line interface for converting PDFs to PDF/A using OCRmyPDF."
-requires-python = ">=3.11"
+requires-python = ">=3.13"
 readme = "README.md"
 dependencies = [
     "ocrmypdf>=16.12.0",
@@ -40,10 +40,10 @@ pdfa-cli = "pdfa.cli:main"
 
 [tool.black]
 line-length = 88
-target-version = ["py311"]
+target-version = ["py313"]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py313"
 line-length = 88
 
 [tool.ruff.lint]
