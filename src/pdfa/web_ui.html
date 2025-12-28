@@ -9253,6 +9253,20 @@
 
                     // Initialize audio context
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    // iOS Safari Fix: Resume AudioContext if suspended
+                    // On iOS, AudioContext starts in 'suspended' state and requires user interaction
+                    if (this.audioContext.state === 'suspended') {
+                        console.log('[A11y] AudioContext suspended, attempting to resume...');
+                        try {
+                            await this.audioContext.resume();
+                            console.log('[A11y] AudioContext resumed successfully');
+                        } catch (resumeError) {
+                            console.error('[A11y] Failed to resume AudioContext:', resumeError);
+                            throw new Error('iOS Safari requires user interaction to enable audio. Please try again.');
+                        }
+                    }
+
                     this.oscillator = this.audioContext.createOscillator();
                     this.gainNode = this.audioContext.createGain();
                     this.oscillator.connect(this.gainNode);
@@ -9276,12 +9290,27 @@
                     this.startAnalysis();
 
                     this.enabled = true;
-                    this.announce(this.translate('camera.a11y.enabled'));
+                    this.announce(this.translate('camera.a11y.enabled'), 'force');
 
                     console.log('[A11y] Camera assistance enabled');
                 } catch (error) {
                     console.error('[A11y] Failed to enable assistance:', error);
-                    alert('Failed to enable accessibility assistance. Please check your browser compatibility.');
+
+                    // Provide user-friendly error messages
+                    let errorMessage = 'Failed to enable accessibility assistance.';
+
+                    if (error.message && error.message.includes('user interaction')) {
+                        // iOS-specific error
+                        errorMessage = 'iOS requires user interaction to enable audio. Please tap the enable button again.';
+                    } else if (error.name === 'NotAllowedError') {
+                        errorMessage = 'Microphone/audio access denied. Please enable audio in browser settings.';
+                    } else if (error.message && error.message.includes('jscanify')) {
+                        errorMessage = 'Failed to load edge detection library. Please check your internet connection.';
+                    } else {
+                        errorMessage += ' Error: ' + (error.message || 'Unknown error');
+                    }
+
+                    alert(errorMessage);
 
                     // Reset checkbox
                     const checkbox = document.getElementById('enableA11yAssistance');
@@ -9293,6 +9322,16 @@
                     const loadingIndicator = document.getElementById('a11yLoadingIndicator');
                     if (loadingIndicator) {
                         loadingIndicator.hidden = true;
+                    }
+
+                    // Clean up audio context if it was created
+                    if (this.audioContext) {
+                        try {
+                            await this.audioContext.close();
+                        } catch (closeError) {
+                            console.error('[A11y] Error closing AudioContext:', closeError);
+                        }
+                        this.audioContext = null;
                     }
                 }
             }
@@ -9632,8 +9671,18 @@
                 }
             }
 
-            playTone(frequency, duration = 200) {
+            async playTone(frequency, duration = 200) {
                 if (!this.audioContext || !this.enabled) return;
+
+                // iOS Safari Fix: Resume AudioContext if suspended (can happen at any time)
+                if (this.audioContext.state === 'suspended') {
+                    try {
+                        await this.audioContext.resume();
+                    } catch (error) {
+                        console.error('[A11y] Failed to resume AudioContext for playTone:', error);
+                        return;
+                    }
+                }
 
                 const now = this.audioContext.currentTime;
 
