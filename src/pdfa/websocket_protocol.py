@@ -18,10 +18,15 @@ class ClientMessage:
 class SubmitJobMessage(ClientMessage):
     """Message to submit a new conversion job.
 
+    Supports both single-file and multi-file modes for multi-page documents.
+
     Attributes:
         type: Always "submit"
-        filename: Original filename
-        fileData: Base64-encoded file content
+        filename: Original filename (single-file mode)
+        fileData: Base64-encoded file content (single-file mode)
+        multi_file_mode: If True, use filenames and filesData (multi-file mode)
+        filenames: List of filenames (multi-file mode only)
+        filesData: List of base64-encoded file contents (multi-file mode only)
         config: Conversion configuration parameters
 
     """
@@ -29,6 +34,9 @@ class SubmitJobMessage(ClientMessage):
     type: Literal["submit"] = "submit"
     filename: str = ""
     fileData: str = ""  # noqa: N815 (camelCase for WebSocket protocol)
+    multi_file_mode: bool = False
+    filenames: list[str] | None = None
+    filesData: list[str] | None = None  # noqa: N815 (camelCase for WebSocket protocol)
     config: dict[str, Any] | None = None
 
     def validate(self) -> None:
@@ -38,27 +46,70 @@ class SubmitJobMessage(ClientMessage):
             ValueError: If validation fails
 
         """
-        if not self.filename:
-            raise ValueError("filename is required")
-        if not self.fileData:
-            raise ValueError("fileData is required")
         if self.config is None:
             self.config = {}
 
-        # Validate base64 encoding
-        try:
-            base64.b64decode(self.fileData, validate=True)
-        except Exception as e:
-            raise ValueError(f"Invalid base64 encoding: {e}") from e
+        if self.multi_file_mode:
+            # Multi-file mode validation
+            if not self.filenames or not self.filesData:
+                raise ValueError(
+                    "filenames and filesData are required in multi-file mode"
+                )
+            if len(self.filenames) != len(self.filesData):
+                raise ValueError("filenames and filesData must have same length")
+            if len(self.filenames) == 0:
+                raise ValueError("At least one file required in multi-file mode")
+
+            # Validate all base64 encodings
+            for i, file_data in enumerate(self.filesData):
+                try:
+                    base64.b64decode(file_data, validate=True)
+                except Exception as e:
+                    raise ValueError(
+                        f"Invalid base64 encoding for file {i}: {e}"
+                    ) from e
+        else:
+            # Single-file mode validation (backward compatibility)
+            if not self.filename:
+                raise ValueError("filename is required")
+            if not self.fileData:
+                raise ValueError("fileData is required")
+
+            # Validate base64 encoding
+            try:
+                base64.b64decode(self.fileData, validate=True)
+            except Exception as e:
+                raise ValueError(f"Invalid base64 encoding: {e}") from e
 
     def get_file_bytes(self) -> bytes:
-        """Decode and return the file content as bytes.
+        """Decode and return the file content as bytes (single-file mode).
 
         Returns:
             The decoded file content
 
+        Raises:
+            ValueError: If called in multi-file mode
+
         """
+        if self.multi_file_mode:
+            raise ValueError("Use get_files_bytes() in multi-file mode")
         return base64.b64decode(self.fileData)
+
+    def get_files_bytes(self) -> list[bytes]:
+        """Decode and return all file contents as bytes (multi-file mode).
+
+        Returns:
+            List of decoded file contents
+
+        Raises:
+            ValueError: If called in single-file mode or if filesData is None
+
+        """
+        if not self.multi_file_mode:
+            raise ValueError("Use get_file_bytes() in single-file mode")
+        if not self.filesData:
+            raise ValueError("No files data available")
+        return [base64.b64decode(file_data) for file_data in self.filesData]
 
 
 @dataclass
@@ -262,6 +313,9 @@ def parse_client_message(data: dict[str, Any]) -> ClientMessage:
         msg = SubmitJobMessage(
             filename=data.get("filename", ""),
             fileData=data.get("fileData", ""),
+            multi_file_mode=data.get("multi_file_mode", False),
+            filenames=data.get("filenames"),
+            filesData=data.get("filesData"),
             config=data.get("config"),
         )
         msg.validate()
