@@ -9242,44 +9242,74 @@
             async enable() {
                 if (this.enabled) return;
 
-                console.log('[A11y] Enabling camera assistance');
+                console.log('[A11y] ========== Starting enable() ==========');
+                console.log('[A11y] User Agent:', navigator.userAgent);
+                console.log('[A11y] Platform:', navigator.platform);
 
                 try {
                     // Show loading indicator
+                    console.log('[A11y] Step 1: Showing loading indicator');
                     const loadingIndicator = document.getElementById('a11yLoadingIndicator');
                     if (loadingIndicator) {
                         loadingIndicator.hidden = false;
                     }
 
+                    // Check AudioContext availability
+                    console.log('[A11y] Step 2: Checking AudioContext availability');
+                    if (!window.AudioContext && !window.webkitAudioContext) {
+                        throw new Error('AudioContext not supported in this browser');
+                    }
+
                     // Initialize audio context
+                    console.log('[A11y] Step 3: Creating AudioContext');
                     this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    console.log('[A11y] AudioContext created. State:', this.audioContext.state);
 
                     // iOS Safari Fix: Resume AudioContext if suspended
                     // On iOS, AudioContext starts in 'suspended' state and requires user interaction
                     if (this.audioContext.state === 'suspended') {
-                        console.log('[A11y] AudioContext suspended, attempting to resume...');
+                        console.log('[A11y] Step 4: AudioContext is suspended, attempting to resume...');
+                        console.log('[A11y] This is expected on iOS - requires user gesture');
                         try {
                             await this.audioContext.resume();
-                            console.log('[A11y] AudioContext resumed successfully');
+                            console.log('[A11y] AudioContext state after resume:', this.audioContext.state);
+
+                            if (this.audioContext.state !== 'running') {
+                                throw new Error('AudioContext failed to resume. State: ' + this.audioContext.state);
+                            }
+
+                            console.log('[A11y] ✓ AudioContext resumed successfully');
                         } catch (resumeError) {
-                            console.error('[A11y] Failed to resume AudioContext:', resumeError);
-                            throw new Error('iOS Safari requires user interaction to enable audio. Please try again.');
+                            console.error('[A11y] ✗ Failed to resume AudioContext:', resumeError);
+                            throw new Error('iOS requires user tap to enable audio. Error: ' + resumeError.message);
                         }
+                    } else {
+                        console.log('[A11y] Step 4: AudioContext already running (state:', this.audioContext.state + ')');
                     }
 
+                    // Create oscillator and gain nodes
+                    console.log('[A11y] Step 5: Creating audio nodes');
                     this.oscillator = this.audioContext.createOscillator();
                     this.gainNode = this.audioContext.createGain();
                     this.oscillator.connect(this.gainNode);
                     this.gainNode.connect(this.audioContext.destination);
                     this.oscillator.start();
                     this.gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                    console.log('[A11y] ✓ Audio nodes created and started');
 
                     // Create analysis canvas
+                    console.log('[A11y] Step 6: Creating analysis canvas');
                     this.analysisCanvas = document.createElement('canvas');
                     this.analysisCtx = this.analysisCanvas.getContext('2d');
+                    if (!this.analysisCtx) {
+                        throw new Error('Failed to create canvas 2d context');
+                    }
+                    console.log('[A11y] ✓ Canvas created');
 
                     // Load edge detection library (jscanify)
+                    console.log('[A11y] Step 7: Loading jscanify library from CDN');
                     await this.loadEdgeDetectionLibrary();
+                    console.log('[A11y] ✓ jscanify library loaded');
 
                     // Hide loading indicator
                     if (loadingIndicator) {
@@ -9287,30 +9317,51 @@
                     }
 
                     // Start frame analysis loop
+                    console.log('[A11y] Step 8: Starting frame analysis');
                     this.startAnalysis();
+                    console.log('[A11y] ✓ Frame analysis started');
 
                     this.enabled = true;
+
+                    console.log('[A11y] Step 9: Announcing success');
                     this.announce(this.translate('camera.a11y.enabled'), 'force');
 
-                    console.log('[A11y] Camera assistance enabled');
+                    console.log('[A11y] ========== ✓ Camera assistance enabled successfully ==========');
                 } catch (error) {
-                    console.error('[A11y] Failed to enable assistance:', error);
+                    console.error('[A11y] ========== ✗ FAILED to enable assistance ==========');
+                    console.error('[A11y] Error name:', error.name);
+                    console.error('[A11y] Error message:', error.message);
+                    console.error('[A11y] Error stack:', error.stack);
 
                     // Provide user-friendly error messages
                     let errorMessage = 'Failed to enable accessibility assistance.';
+                    let detailedLog = '';
 
-                    if (error.message && error.message.includes('user interaction')) {
+                    if (error.message && error.message.includes('user')) {
                         // iOS-specific error
-                        errorMessage = 'iOS requires user interaction to enable audio. Please tap the enable button again.';
+                        errorMessage = 'iOS requires a direct tap to enable audio. Please tap the checkbox again.';
+                        detailedLog = 'User interaction required';
                     } else if (error.name === 'NotAllowedError') {
-                        errorMessage = 'Microphone/audio access denied. Please enable audio in browser settings.';
+                        errorMessage = 'Audio permission denied. Please check browser settings.';
+                        detailedLog = 'NotAllowedError';
                     } else if (error.message && error.message.includes('jscanify')) {
-                        errorMessage = 'Failed to load edge detection library. Please check your internet connection.';
+                        errorMessage = 'Failed to load edge detection library. Check internet connection.';
+                        detailedLog = 'jscanify CDN failed';
+                    } else if (error.message && error.message.includes('AudioContext')) {
+                        errorMessage = 'Audio system not available. Your browser may not support Web Audio API.';
+                        detailedLog = 'AudioContext not supported';
+                    } else if (error.message && error.message.includes('canvas')) {
+                        errorMessage = 'Canvas not supported. Please use a modern browser.';
+                        detailedLog = 'Canvas 2D context failed';
                     } else {
-                        errorMessage += ' Error: ' + (error.message || 'Unknown error');
+                        errorMessage = 'Initialization failed: ' + error.message;
+                        detailedLog = error.message;
                     }
 
-                    alert(errorMessage);
+                    console.error('[A11y] User-facing error:', errorMessage);
+                    console.error('[A11y] Technical detail:', detailedLog);
+
+                    alert(errorMessage + '\n\nTechnical details (for support): ' + detailedLog);
 
                     // Reset checkbox
                     const checkbox = document.getElementById('enableA11yAssistance');
@@ -9328,6 +9379,7 @@
                     if (this.audioContext) {
                         try {
                             await this.audioContext.close();
+                            console.log('[A11y] AudioContext cleaned up');
                         } catch (closeError) {
                             console.error('[A11y] Error closing AudioContext:', closeError);
                         }
