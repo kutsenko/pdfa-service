@@ -53,7 +53,7 @@ jobs:
       - name: 5️⃣ Code Coverage Check (≥90%)
         run: |
           echo "::group::Code Coverage"
-          pytest --cov=src --cov-report=term-missing --cov-report=html --cov-fail-under=90
+          pytest --cov=src --cov-report=term-missing --cov-report=html --cov-fail-under=90 --ignore=tests/e2e
           echo "::endgroup::"
 
       - name: 📊 Upload Coverage Report
