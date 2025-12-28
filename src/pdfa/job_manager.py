@@ -31,11 +31,14 @@ JobStatus = Literal["queued", "processing", "completed", "failed", "cancelled"]
 class Job:
     """A conversion job.
 
+    Supports both single-file and multi-file modes for multi-page documents.
+
     Attributes:
         job_id: Unique identifier for the job
         status: Current job status
-        filename: Original filename
-        input_path: Path to input file
+        filename: Original filename (single-file) or combined name (multi-file)
+        input_path: Path to input file (single-file mode)
+        input_paths: List of input file paths (multi-file mode)
         output_path: Path to output file (when completed)
         config: Conversion configuration
         user_id: User who created the job (None if auth disabled)
@@ -55,6 +58,7 @@ class Job:
     filename: str
     input_path: Path
     config: dict[str, Any]
+    input_paths: list[Path] | None = None  # Multi-file mode
     user_id: str | None = None
     created_at: datetime = field(default_factory=datetime.now)
     started_at: datetime | None = None
@@ -147,14 +151,20 @@ class JobManager:
         file_data: bytes,
         config: dict[str, Any],
         user_id: str | None = None,
+        filenames: list[str] | None = None,
+        files_data: list[bytes] | None = None,
     ) -> Job:
         """Create a new conversion job.
 
+        Supports both single-file and multi-file modes.
+
         Args:
-            filename: Original filename
-            file_data: File content as bytes
+            filename: Original filename (single-file mode)
+            file_data: File content as bytes (single-file mode)
             config: Conversion configuration
             user_id: User identifier (None if auth disabled)
+            filenames: List of filenames (multi-file mode)
+            files_data: List of file contents (multi-file mode)
 
         Returns:
             The created job
@@ -167,30 +177,62 @@ class JobManager:
             prefix=f"pdfa_job_{job_id}_", dir=self.config.temp_dir
         )
 
-        # Save input file
-        input_path = Path(temp_dir.name) / filename
-        input_path.write_bytes(file_data)
+        # Multi-file mode
+        if filenames and files_data:
+            # Save all input files
+            input_paths = []
+            total_size = 0
+            for fname, fdata in zip(filenames, files_data):
+                input_path = Path(temp_dir.name) / fname
+                input_path.write_bytes(fdata)
+                input_paths.append(input_path)
+                total_size += len(fdata)
 
-        # Create job
-        job = Job(
-            job_id=job_id,
-            status="queued",
-            filename=filename,
-            input_path=input_path,
-            config=config,
-            user_id=user_id,
-            temp_dir=temp_dir,
-        )
+            # Use first filename as primary, store all paths
+            job = Job(
+                job_id=job_id,
+                status="queued",
+                filename=f"{len(filenames)}_pages.pdf",  # Combined name
+                input_path=input_paths[0],  # First file as primary
+                input_paths=input_paths,  # All files
+                config=config,
+                user_id=user_id,
+                temp_dir=temp_dir,
+            )
+
+            # Persist with combined filename
+            file_size = total_size
+            persist_filename = f"{len(filenames)}_pages.pdf"
+        else:
+            # Single-file mode (backward compatibility)
+            # Save input file
+            input_path = Path(temp_dir.name) / filename
+            input_path.write_bytes(file_data)
+
+            # Create job
+            job = Job(
+                job_id=job_id,
+                status="queued",
+                filename=filename,
+                input_path=input_path,
+                config=config,
+                user_id=user_id,
+                temp_dir=temp_dir,
+            )
+
+            file_size = len(file_data)
+            persist_filename = filename
 
         # Store job in-memory
         self.jobs[job_id] = job
 
         # Persist to MongoDB (async, non-blocking)
         # Only persist if there's a running event loop (skip in synchronous tests)
-        file_size = len(file_data)
         try:
             asyncio.create_task(
-                self._persist_job_creation(job_id, filename, config, user_id, file_size)
+                self._persist_job_creation(
+                    job_id, persist_filename, config, user_id, file_size
+                )
             )
         except RuntimeError:
             # No event loop running (e.g., in synchronous tests)
