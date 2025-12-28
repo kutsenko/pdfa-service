@@ -275,8 +275,13 @@ def convert_to_pdfa(
                     # We're in an async context, create task
                     loop.create_task(event_callback(event_type, **kwargs))
                 except RuntimeError:
-                    # No event loop running (worker thread), run in new loop
-                    asyncio.run(event_callback(event_type, **kwargs))
+                    # No event loop running (worker thread), create new one
+                    # Use new_event_loop() instead of run() to avoid conflicts
+                    loop = asyncio.new_event_loop()
+                    try:
+                        loop.run_until_complete(event_callback(event_type, **kwargs))
+                    finally:
+                        loop.close()
             else:
                 # Sync callback: just call it
                 result = event_callback(event_type, **kwargs)
