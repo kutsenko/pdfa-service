@@ -1712,6 +1712,235 @@
             margin: 0 auto;
         }
 
+        /* ================================================== */
+        /* Camera Tab Styles                                  */
+        /* ================================================== */
+
+        /* Camera Controls */
+        .camera-controls {
+            margin-bottom: 30px;
+        }
+
+        .camera-preview-container {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto 20px;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 4/3;
+        }
+
+        .camera-preview {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .capture-canvas {
+            display: none;
+        }
+
+        .camera-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .btn-capture {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-capture:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-capture:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        .camera-selector {
+            max-width: 400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .camera-selector label {
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .form-select {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+
+        /* Page Staging Area */
+        .page-staging {
+            border-top: 2px solid #e5e7eb;
+            padding-top: 30px;
+            margin-top: 30px;
+        }
+
+        .staging-header {
+            margin-bottom: 20px;
+        }
+
+        .staging-header h3 {
+            font-size: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        .page-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 16px;
+            min-height: 160px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .page-list:empty::before {
+            content: attr(data-empty-message);
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+            padding: 40px 20px;
+        }
+
+        .page-thumbnail {
+            position: relative;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+
+        .page-thumbnail:active {
+            cursor: grabbing;
+        }
+
+        .page-thumbnail:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .page-thumbnail img {
+            width: 100%;
+            height: auto;
+            display: block;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+        }
+
+        .page-number {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .delete-page {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .page-thumbnail:hover .delete-page {
+            opacity: 1;
+        }
+
+        .delete-page:hover {
+            background: rgba(220, 38, 38, 0.95);
+        }
+
+        .staging-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .staging-actions .btn {
+            min-width: 140px;
+        }
+
+        /* Mobile Responsive - Camera Tab */
+        @media (max-width: 600px) {
+            .camera-preview-container {
+                aspect-ratio: 3/4;
+            }
+
+            .camera-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .camera-buttons .btn {
+                width: 100%;
+            }
+
+            .page-list {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 12px;
+            }
+
+            .staging-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .staging-actions .btn {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+
         /* Mobile Responsive - Scrollable tabs */
         @media (max-width: 600px) {
             .tab-navigation {
@@ -2596,16 +2825,94 @@
         </dialog>
         </div>
 
-        <!-- Kamera Tab (placeholder) -->
+        <!-- Kamera Tab -->
         <div id="tab-kamera"
              class="tab-panel"
              role="tabpanel"
              aria-labelledby="tab-kamera-btn"
              hidden>
-            <div class="placeholder-content">
-                <div class="icon" aria-hidden="true">📷</div>
-                <h2 data-i18n="placeholder.kamera.title">Camera Scanner</h2>
-                <p data-i18n="placeholder.kamera.description">Coming soon: Upload documents directly from your camera or scanner</p>
+
+            <!-- Camera Controls Section -->
+            <div id="cameraControls" class="camera-controls">
+                <div class="camera-preview-container">
+                    <video id="cameraPreview"
+                           class="camera-preview"
+                           autoplay
+                           playsinline
+                           aria-label="Camera preview"></video>
+                    <canvas id="captureCanvas" class="capture-canvas" hidden></canvas>
+                </div>
+
+                <div class="camera-buttons">
+                    <button id="startCameraBtn"
+                            class="btn btn-primary"
+                            data-i18n="camera.start">
+                        📷 Start Camera
+                    </button>
+                    <button id="stopCameraBtn"
+                            class="btn btn-secondary"
+                            hidden
+                            data-i18n="camera.stop">
+                        ⏹️ Stop Camera
+                    </button>
+                    <button id="captureBtn"
+                            class="btn btn-capture"
+                            hidden
+                            data-i18n="camera.capture">
+                        📸 Capture
+                    </button>
+                    <button id="switchCameraBtn"
+                            class="btn btn-icon"
+                            hidden
+                            data-i18n="camera.switch">
+                        🔄 Switch Camera
+                    </button>
+                </div>
+
+                <div class="camera-selector" hidden>
+                    <label for="cameraSelect" data-i18n="camera.selectCamera">
+                        Select Camera:
+                    </label>
+                    <select id="cameraSelect" class="form-select"></select>
+                </div>
+            </div>
+
+            <!-- Image Editor (initially hidden, will be implemented in Phase 3) -->
+            <div id="imageEditor" class="image-editor" hidden>
+                <!-- Editor UI to be implemented in Phase 3 -->
+            </div>
+
+            <!-- Page Staging Area -->
+            <div id="pageStaging" class="page-staging">
+                <div class="staging-header">
+                    <h3>
+                        <span data-i18n="camera.pages.title">Pages</span>
+                        (<span id="pageCount">0</span>)
+                    </h3>
+                </div>
+
+                <div id="pageList" class="page-list">
+                    <!-- Page thumbnails will be dynamically inserted here -->
+                </div>
+
+                <div class="staging-actions">
+                    <button id="addPageBtn"
+                            class="btn btn-secondary"
+                            data-i18n="camera.pages.add">
+                        ➕ Add Page
+                    </button>
+                    <button id="clearAllBtn"
+                            class="btn btn-warning"
+                            data-i18n="camera.pages.clear">
+                        🗑️ Clear All
+                    </button>
+                    <button id="submitPagesBtn"
+                            class="btn btn-primary"
+                            disabled
+                            data-i18n="camera.pages.submit">
+                        📄 Convert to PDF/A
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -7363,6 +7670,348 @@
             }
         }
 
+        /**
+         * ================================================
+         * CameraManager: Handles camera capture and page staging
+         * ================================================
+         */
+        class CameraManager {
+            constructor() {
+                this.stream = null;
+                this.videoElement = null;
+                this.canvasElement = null;
+                this.currentDeviceId = null;
+                this.availableCameras = [];
+                this.stagedPages = [];  // {id, imageData, timestamp}
+                this.nextPageId = 1;
+            }
+
+            async init() {
+                console.log('[Camera] Initializing CameraManager');
+
+                // Get DOM elements
+                this.videoElement = document.getElementById('cameraPreview');
+                this.canvasElement = document.getElementById('captureCanvas');
+
+                if (!this.videoElement || !this.canvasElement) {
+                    console.error('[Camera] Required elements not found');
+                    return;
+                }
+
+                // Enumerate cameras
+                await this.enumerateCameras();
+
+                // Setup event listeners
+                this.setupEventListeners();
+
+                console.log('[Camera] CameraManager initialized');
+            }
+
+            async enumerateCameras() {
+                try {
+                    const devices = await navigator.mediaDevices.enumerateDevices();
+                    this.availableCameras = devices.filter(d => d.kind === 'videoinput');
+
+                    console.log('[Camera] Found cameras:', this.availableCameras.length);
+
+                    // Populate camera selector
+                    const select = document.getElementById('cameraSelect');
+                    if (select) {
+                        select.innerHTML = '';
+                        this.availableCameras.forEach((camera, index) => {
+                            const option = document.createElement('option');
+                            option.value = camera.deviceId;
+                            option.text = camera.label || `Camera ${index + 1}`;
+                            select.appendChild(option);
+                        });
+                    }
+                } catch (err) {
+                    console.error('[Camera] Error enumerating cameras:', err);
+                }
+            }
+
+            setupEventListeners() {
+                // Start Camera button
+                const startBtn = document.getElementById('startCameraBtn');
+                if (startBtn) {
+                    startBtn.addEventListener('click', () => this.startCamera());
+                }
+
+                // Stop Camera button
+                const stopBtn = document.getElementById('stopCameraBtn');
+                if (stopBtn) {
+                    stopBtn.addEventListener('click', () => this.stopCamera());
+                }
+
+                // Capture button
+                const captureBtn = document.getElementById('captureBtn');
+                if (captureBtn) {
+                    captureBtn.addEventListener('click', () => this.capturePhoto());
+                }
+
+                // Switch Camera button
+                const switchBtn = document.getElementById('switchCameraBtn');
+                if (switchBtn) {
+                    switchBtn.addEventListener('click', () => this.switchCamera());
+                }
+
+                // Camera selector
+                const cameraSelect = document.getElementById('cameraSelect');
+                if (cameraSelect) {
+                    cameraSelect.addEventListener('change', (e) => {
+                        this.stopCamera();
+                        this.startCamera(e.target.value);
+                    });
+                }
+
+                // Add Page button
+                const addPageBtn = document.getElementById('addPageBtn');
+                if (addPageBtn) {
+                    addPageBtn.addEventListener('click', () => {
+                        if (this.stream) {
+                            this.capturePhoto();
+                        }
+                    });
+                }
+
+                // Clear All button
+                const clearAllBtn = document.getElementById('clearAllBtn');
+                if (clearAllBtn) {
+                    clearAllBtn.addEventListener('click', () => this.clearAllPages());
+                }
+
+                // Submit Pages button
+                const submitBtn = document.getElementById('submitPagesBtn');
+                if (submitBtn) {
+                    submitBtn.addEventListener('click', () => this.submitMultiPageJob());
+                }
+            }
+
+            async startCamera(deviceId = null) {
+                console.log('[Camera] Starting camera...');
+
+                const constraints = {
+                    video: {
+                        deviceId: deviceId ? { exact: deviceId } : undefined,
+                        facingMode: deviceId ? undefined : { ideal: 'environment' },
+                        width: { ideal: 1920 },
+                        height: { ideal: 1080 }
+                    }
+                };
+
+                try {
+                    this.stream = await navigator.mediaDevices.getUserMedia(constraints);
+                    this.videoElement.srcObject = this.stream;
+                    this.currentDeviceId = deviceId;
+
+                    console.log('[Camera] Camera started successfully');
+
+                    // Update UI
+                    document.getElementById('startCameraBtn').hidden = true;
+                    document.getElementById('stopCameraBtn').hidden = false;
+                    document.getElementById('captureBtn').hidden = false;
+                    if (this.availableCameras.length > 1) {
+                        document.getElementById('switchCameraBtn').hidden = false;
+                        document.querySelector('.camera-selector').hidden = false;
+                    }
+
+                } catch (err) {
+                    console.error('[Camera] Failed to start camera:', err);
+                    alert('Camera permission denied or not available. Please allow camera access.');
+                }
+            }
+
+            stopCamera() {
+                console.log('[Camera] Stopping camera...');
+
+                if (this.stream) {
+                    this.stream.getTracks().forEach(track => track.stop());
+                    this.stream = null;
+                    this.videoElement.srcObject = null;
+                }
+
+                // Update UI
+                document.getElementById('startCameraBtn').hidden = false;
+                document.getElementById('stopCameraBtn').hidden = true;
+                document.getElementById('captureBtn').hidden = true;
+                document.getElementById('switchCameraBtn').hidden = true;
+                document.querySelector('.camera-selector').hidden = true;
+            }
+
+            async switchCamera() {
+                if (this.availableCameras.length < 2) return;
+
+                // Find next camera
+                const currentIndex = this.availableCameras.findIndex(
+                    c => c.deviceId === this.currentDeviceId
+                );
+                const nextIndex = (currentIndex + 1) % this.availableCameras.length;
+                const nextCamera = this.availableCameras[nextIndex];
+
+                // Switch to next camera
+                this.stopCamera();
+                await this.startCamera(nextCamera.deviceId);
+
+                // Update selector
+                const select = document.getElementById('cameraSelect');
+                if (select) {
+                    select.value = nextCamera.deviceId;
+                }
+            }
+
+            capturePhoto() {
+                if (!this.stream) {
+                    console.warn('[Camera] Cannot capture: camera not started');
+                    return;
+                }
+
+                const video = this.videoElement;
+                const canvas = this.canvasElement;
+                const ctx = canvas.getContext('2d');
+
+                // Set canvas size to video dimensions
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Draw current frame
+                ctx.drawImage(video, 0, 0);
+
+                // Convert to JPEG (85% quality for file size)
+                const imageData = canvas.toDataURL('image/jpeg', 0.85);
+
+                console.log('[Camera] Photo captured');
+
+                // Add directly to staging (editing will be added in Phase 3)
+                this.addPageToStaging(imageData);
+            }
+
+            addPageToStaging(imageData) {
+                const page = {
+                    id: this.nextPageId++,
+                    imageData: imageData,
+                    timestamp: Date.now()
+                };
+
+                this.stagedPages.push(page);
+                console.log('[Camera] Page added to staging. Total pages:', this.stagedPages.length);
+
+                this.renderPageThumbnails();
+                this.updateSubmitButton();
+            }
+
+            renderPageThumbnails() {
+                const container = document.getElementById('pageList');
+                if (!container) return;
+
+                container.innerHTML = '';
+
+                this.stagedPages.forEach((page, index) => {
+                    const thumb = document.createElement('div');
+                    thumb.className = 'page-thumbnail';
+                    thumb.dataset.pageId = page.id;
+                    thumb.dataset.pageIndex = index;
+
+                    thumb.innerHTML = `
+                        <img src="${page.imageData}" alt="Page ${index + 1}">
+                        <span class="page-number">${index + 1}</span>
+                        <button class="delete-page" data-page-id="${page.id}" aria-label="Delete page ${index + 1}">×</button>
+                    `;
+
+                    // Delete button handler
+                    const deleteBtn = thumb.querySelector('.delete-page');
+                    deleteBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.deletePage(page.id);
+                    });
+
+                    container.appendChild(thumb);
+                });
+
+                // Update page count
+                document.getElementById('pageCount').textContent = this.stagedPages.length;
+            }
+
+            deletePage(pageId) {
+                const index = this.stagedPages.findIndex(p => p.id === pageId);
+                if (index !== -1) {
+                    this.stagedPages.splice(index, 1);
+                    console.log('[Camera] Page deleted. Remaining:', this.stagedPages.length);
+                    this.renderPageThumbnails();
+                    this.updateSubmitButton();
+                }
+            }
+
+            clearAllPages() {
+                if (this.stagedPages.length === 0) return;
+
+                if (confirm('Clear all captured pages?')) {
+                    this.stagedPages = [];
+                    console.log('[Camera] All pages cleared');
+                    this.renderPageThumbnails();
+                    this.updateSubmitButton();
+                }
+            }
+
+            updateSubmitButton() {
+                const btn = document.getElementById('submitPagesBtn');
+                if (btn) {
+                    btn.disabled = this.stagedPages.length === 0;
+                }
+            }
+
+            async submitMultiPageJob() {
+                if (this.stagedPages.length === 0) {
+                    alert('Please capture at least one page');
+                    return;
+                }
+
+                console.log('[Camera] Submitting multi-page job with', this.stagedPages.length, 'pages');
+
+                // Get conversion settings from UI (from main converter tab)
+                const config = {
+                    ocr_language: document.getElementById('language-select')?.value || 'eng',
+                    pdfa_level: document.getElementById('pdfa-level')?.value || '2',
+                    enable_ocr: document.getElementById('enable-ocr')?.checked ?? true,
+                    compression_profile: document.getElementById('compression-profile')?.value || 'balanced'
+                };
+
+                // Create multi-file WebSocket message
+                const message = {
+                    type: 'submit',
+                    multi_file_mode: true,
+                    filenames: this.stagedPages.map((page, i) => `page_${String(i + 1).padStart(3, '0')}.jpg`),
+                    filesData: this.stagedPages.map(page => {
+                        // Remove data:image/jpeg;base64, prefix
+                        return page.imageData.split(',')[1];
+                    }),
+                    config: config
+                };
+
+                // Submit via existing WebSocket client
+                if (window.conversionClient && window.conversionClient.ws && window.conversionClient.ws.readyState === WebSocket.OPEN) {
+                    window.conversionClient.ws.send(JSON.stringify(message));
+                    console.log('[Camera] Multi-page job submitted');
+
+                    // Clear staging after successful submission
+                    this.stagedPages = [];
+                    this.renderPageThumbnails();
+                    this.updateSubmitButton();
+
+                    // Switch to Jobs tab to see progress
+                    const jobsTabBtn = document.getElementById('tab-jobs-btn');
+                    if (jobsTabBtn) {
+                        jobsTabBtn.click();
+                    }
+                } else {
+                    console.error('[Camera] WebSocket not connected');
+                    alert('Connection error. Please ensure you are connected.');
+                }
+            }
+        }
+
+        // Global camera manager instance
+        const cameraManager = new CameraManager();
+
         // Global jobs manager instance
         const jobsManager = new JobsManager();
 
@@ -7416,6 +8065,9 @@
 
                 // Initialize jobs manager
                 jobsManager.init();
+
+                // Initialize camera manager
+                cameraManager.init();
 
                 // Load account data when Konto tab is activated
                 const kontoTab = document.getElementById('tab-account-btn');
