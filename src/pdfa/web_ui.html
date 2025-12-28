@@ -1915,6 +1915,69 @@
             min-width: 140px;
         }
 
+        /* Camera Conversion Settings */
+        .camera-conversion-settings {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .camera-conversion-settings h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .camera-settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .camera-settings-grid .form-group {
+            margin-bottom: 0;
+        }
+
+        .camera-settings-grid label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .camera-settings-grid .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: white;
+            transition: all 0.2s ease;
+        }
+
+        .camera-settings-grid .form-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .camera-settings-grid .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        .camera-settings-grid .checkbox-label input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
         /* Image Editor */
         .image-editor {
             margin-bottom: 30px;
@@ -3144,6 +3207,55 @@
                     <!-- Page thumbnails will be dynamically inserted here -->
                 </div>
 
+                <!-- Conversion Settings -->
+                <div class="camera-conversion-settings">
+                    <h4 data-i18n="camera.settings.title">Conversion Settings</h4>
+
+                    <div class="camera-settings-grid">
+                        <div class="form-group">
+                            <label for="cameraPdfType" data-i18n="form.pdfType">PDF Type</label>
+                            <select id="cameraPdfType" name="camera_pdfa_level" class="form-select">
+                                <option value="standard" data-i18n="pdf.standard">Standard PDF</option>
+                                <option value="1">PDF/A-1</option>
+                                <option value="2" selected>PDF/A-2</option>
+                                <option value="3">PDF/A-3</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cameraOcrLanguage" data-i18n="form.ocrLanguage">OCR Language</label>
+                            <select id="cameraOcrLanguage" name="camera_ocr_language" class="form-select">
+                                <option value="eng" data-i18n="ocr.english">English</option>
+                                <option value="deu" data-i18n="ocr.german">Deutsch</option>
+                                <option value="deu+eng" data-i18n="ocr.germanEnglish">Deutsch + English</option>
+                                <option value="fra" data-i18n="ocr.french">Français</option>
+                                <option value="fra+eng" data-i18n="ocr.frenchEnglish">Français + English</option>
+                                <option value="spa" data-i18n="ocr.spanish">Español</option>
+                                <option value="spa+eng" data-i18n="ocr.spanishEnglish">Español + English</option>
+                                <option value="ita" data-i18n="ocr.italian">Italiano</option>
+                                <option value="ita+eng" data-i18n="ocr.italianEnglish">Italiano + English</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="cameraCompression" data-i18n="form.compressionProfile">Compression Profile</label>
+                            <select id="cameraCompression" name="camera_compression" class="form-select">
+                                <option value="balanced" selected data-i18n="compression.balanced">Balanced (150 DPI, Quality 85)</option>
+                                <option value="quality" data-i18n="compression.quality">High Quality (300 DPI, Quality 95)</option>
+                                <option value="aggressive" data-i18n="compression.aggressive">Aggressive (100 DPI, Quality 75)</option>
+                                <option value="minimal" data-i18n="compression.minimal">Minimal Size (72 DPI, Quality 70)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="cameraOcrEnabled" name="camera_ocr_enabled" checked>
+                                <span data-i18n="form.enableOcr">Enable OCR</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="staging-actions">
                     <button id="addPageBtn"
                             class="btn btn-secondary"
@@ -3784,6 +3896,7 @@
                 'camera.pages.add': 'Add Page',
                 'camera.pages.clear': 'Clear All',
                 'camera.pages.submit': 'Convert to PDF/A',
+                'camera.settings.title': 'Conversion Settings',
                 'camera.edit.rotation': 'Rotation',
                 'camera.edit.rotateLeft': '↺ 90° Left',
                 'camera.edit.rotateRight': '↻ 90° Right',
@@ -4082,6 +4195,7 @@
                 'camera.pages.add': 'Seite hinzufügen',
                 'camera.pages.clear': 'Alle löschen',
                 'camera.pages.submit': 'In PDF/A konvertieren',
+                'camera.settings.title': 'Konvertierungseinstellungen',
                 'camera.edit.rotation': 'Drehung',
                 'camera.edit.rotateLeft': '↺ 90° Links',
                 'camera.edit.rotateRight': '↻ 90° Rechts',
@@ -4380,6 +4494,7 @@
                 'camera.pages.add': 'Añadir Página',
                 'camera.pages.clear': 'Borrar Todo',
                 'camera.pages.submit': 'Convertir a PDF/A',
+                'camera.settings.title': 'Configuración de Conversión',
                 'camera.edit.rotation': 'Rotación',
                 'camera.edit.rotateLeft': '↺ 90° Izquierda',
                 'camera.edit.rotateRight': '↻ 90° Derecha',
@@ -4678,6 +4793,7 @@
                 'camera.pages.add': 'Ajouter une Page',
                 'camera.pages.clear': 'Tout Effacer',
                 'camera.pages.submit': 'Convertir en PDF/A',
+                'camera.settings.title': 'Paramètres de Conversion',
                 'camera.edit.rotation': 'Rotation',
                 'camera.edit.rotateLeft': '↺ 90° Gauche',
                 'camera.edit.rotateRight': '↻ 90° Droite',
@@ -6619,6 +6735,11 @@
 
                 currentTab = tabId;
 
+                // Apply user preferences when switching to camera tab
+                if (tabId === 'tab-kamera' && window.accountManager) {
+                    window.accountManager.applyPreferencesToCameraTab();
+                }
+
                 // Update URL hash (optional - preserves tab on refresh)
                 if (history.replaceState) {
                     const hash = tabId.replace('tab-', '');
@@ -7018,6 +7139,33 @@
                 converterForm.querySelector('#skip_ocr_on_tagged_pdfs').checked = this.preferences.default_skip_ocr_on_tagged;
 
                 console.log('[Account] Preferences applied to converter form');
+            }
+
+            /**
+             * Apply user preferences to camera tab
+             */
+            applyPreferencesToCameraTab() {
+                if (!this.preferences) return;
+
+                const cameraPdfType = document.getElementById('cameraPdfType');
+                const cameraOcrLanguage = document.getElementById('cameraOcrLanguage');
+                const cameraCompression = document.getElementById('cameraCompression');
+                const cameraOcrEnabled = document.getElementById('cameraOcrEnabled');
+
+                if (cameraPdfType) {
+                    cameraPdfType.value = this.preferences.default_pdfa_level || '2';
+                }
+                if (cameraOcrLanguage) {
+                    cameraOcrLanguage.value = this.preferences.default_ocr_language || 'eng';
+                }
+                if (cameraCompression) {
+                    cameraCompression.value = this.preferences.default_compression_profile || 'balanced';
+                }
+                if (cameraOcrEnabled) {
+                    cameraOcrEnabled.checked = this.preferences.default_ocr_enabled !== false;
+                }
+
+                console.log('[Account] Preferences applied to camera tab');
             }
 
             /**
@@ -8569,12 +8717,12 @@
 
                 console.log('[Camera] Submitting multi-page job with', this.stagedPages.length, 'pages');
 
-                // Get conversion settings from UI (from main converter tab)
+                // Get conversion settings from camera tab's own selectors
                 const config = {
-                    ocr_language: document.getElementById('language-select')?.value || 'eng',
-                    pdfa_level: document.getElementById('pdfa-level')?.value || '2',
-                    enable_ocr: document.getElementById('enable-ocr')?.checked ?? true,
-                    compression_profile: document.getElementById('compression-profile')?.value || 'balanced'
+                    ocr_language: document.getElementById('cameraOcrLanguage')?.value || 'eng',
+                    pdfa_level: document.getElementById('cameraPdfType')?.value || '2',
+                    enable_ocr: document.getElementById('cameraOcrEnabled')?.checked ?? true,
+                    compression_profile: document.getElementById('cameraCompression')?.value || 'balanced'
                 };
 
                 // Create multi-file WebSocket message
