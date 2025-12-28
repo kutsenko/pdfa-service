@@ -899,6 +899,609 @@
             border-width: 0;
         }
 
+        /* ===================================
+           Jobs Tab Styles
+           =================================== */
+
+        /* Jobs Header with Filter */
+        .jobs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .jobs-controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .jobs-controls .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .jobs-controls .btn:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+
+        .jobs-controls .btn:active {
+            transform: scale(0.98);
+        }
+
+        .jobs-controls .btn-icon span[aria-hidden="true"] {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        .jobs-controls .btn-toggle[aria-pressed="true"] {
+            background: #4caf50;
+            color: white;
+            border-color: #45a049;
+        }
+
+        .jobs-controls .btn-toggle[aria-pressed="true"]:hover {
+            background: #45a049;
+        }
+
+        .jobs-controls .btn-toggle[aria-pressed="false"] {
+            background: #f44336;
+            color: white;
+            border-color: #da190b;
+        }
+
+        .jobs-controls .btn-toggle[aria-pressed="false"]:hover {
+            background: #da190b;
+        }
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .jobs-controls .btn {
+                background: #2d2d2d;
+                border-color: #444;
+                color: #e0e0e0;
+            }
+
+            .jobs-controls .btn:hover {
+                background: #3d3d3d;
+                border-color: #555;
+            }
+        }
+
+        .jobs-filter {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color, #ddd);
+            background: var(--card-bg, #fff);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            color: var(--text-color, #333);
+        }
+
+        .filter-btn:hover {
+            background: var(--hover-bg, #f5f5f5);
+            border-color: var(--primary-color, #007bff);
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color, #007bff);
+            color: white;
+            border-color: var(--primary-color, #007bff);
+            font-weight: 500;
+        }
+
+        .filter-btn:focus {
+            outline: 2px solid var(--primary-color, #007bff);
+            outline-offset: 2px;
+        }
+
+        /* Jobs Table */
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+
+        .jobs-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--card-bg, #fff);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .jobs-table thead {
+            background: var(--table-header-bg, #f8f9fa);
+            border-bottom: 2px solid var(--border-color, #ddd);
+        }
+
+        .jobs-table th {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary, #666);
+        }
+
+        .jobs-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color, #ddd);
+            vertical-align: middle;
+        }
+
+        .jobs-table tbody tr.job-row {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .jobs-table tbody tr.job-row:hover {
+            background-color: var(--hover-bg, #f8f9fa);
+        }
+
+        .jobs-table tbody tr.job-row:focus {
+            outline: 2px solid var(--primary-color, #007bff);
+            outline-offset: -2px;
+        }
+
+        .jobs-table tbody tr.job-row:last-child td {
+            border-bottom: none;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .status-badge.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-badge.processing {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-badge.queued {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-badge.cancelled {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        /* Event Timeline (Expandable Row) */
+        .jobs-table tbody tr.events-row {
+            background: var(--event-timeline-bg, #f8f9fa);
+        }
+
+        .jobs-table tbody tr.events-row td {
+            padding: 0;
+            border-bottom: 2px solid var(--border-color, #ddd);
+        }
+
+        .event-timeline {
+            padding: 1.5rem;
+            background: var(--event-timeline-bg, #f8f9fa);
+            border-left: 4px solid var(--primary-color, #007bff);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            display: flex;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-color, #ddd);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .event-item:last-child {
+            border-bottom: none;
+        }
+
+        .event-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
+        .event-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .event-message {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: var(--text-color, #333);
+        }
+
+        .event-timestamp {
+            font-size: 0.8125rem;
+            color: var(--text-secondary, #666);
+            margin-bottom: 0.25rem;
+        }
+
+        .event-details {
+            font-size: 0.875rem;
+            color: var(--text-secondary, #666);
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.03);
+            padding: 0.5rem;
+            border-radius: 0.25rem;
+            overflow-wrap: break-word;
+        }
+
+        /* Action Buttons */
+        .jobs-table .actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 0.375rem 0.75rem;
+            border: 1px solid var(--border-color, #ddd);
+            background: white;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.8125rem;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            background: var(--hover-bg, #f5f5f5);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .action-btn:focus {
+            outline: 2px solid var(--primary-color, #007bff);
+            outline-offset: 2px;
+        }
+
+        .action-btn.download {
+            color: #28a745;
+            border-color: #28a745;
+        }
+
+        .action-btn.download:hover {
+            background: #28a745;
+            color: white;
+        }
+
+        .action-btn.retry {
+            color: #ffc107;
+            border-color: #ffc107;
+        }
+
+        .action-btn.retry:hover {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .action-btn.expand {
+            color: var(--primary-color, #007bff);
+            border-color: var(--primary-color, #007bff);
+        }
+
+        .action-btn.expand:hover {
+            background: var(--primary-color, #007bff);
+            color: white;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: var(--badge-bg, #e9ecef);
+            color: var(--text-secondary, #666);
+            border-radius: 0.25rem;
+        }
+
+        /* Pagination */
+        .jobs-pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            padding: 1rem;
+        }
+
+        .pagination-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color, #ddd);
+            background: var(--card-bg, #fff);
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+            color: var(--text-color, #333);
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: var(--hover-bg, #f5f5f5);
+            border-color: var(--primary-color, #007bff);
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: var(--disabled-bg, #e9ecef);
+        }
+
+        .pagination-btn:focus {
+            outline: 2px solid var(--primary-color, #007bff);
+            outline-offset: 2px;
+        }
+
+        .page-info {
+            font-size: 0.875rem;
+            color: var(--text-secondary, #666);
+            min-width: 150px;
+            text-align: center;
+        }
+
+        /* Loading/Error/Empty States */
+        .loading-state,
+        .error-state,
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+        }
+
+        .loading-state .spinner {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 1rem;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-top-color: var(--primary-color, #007bff);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-state .error-message {
+            color: #dc3545;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .empty-state .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .empty-state h3 {
+            margin-bottom: 0.5rem;
+            color: var(--text-color, #333);
+        }
+
+        .empty-state p {
+            color: var(--text-secondary, #666);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1000px) {
+            .jobs-table th:nth-child(5),
+            .jobs-table td:nth-child(5) {
+                display: none; /* Hide Size column on smaller screens */
+            }
+        }
+
+        @media (max-width: 800px) {
+            .jobs-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .jobs-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .jobs-controls .btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .jobs-filter {
+                width: 100%;
+            }
+
+            .filter-btn {
+                flex: 1;
+                text-align: center;
+            }
+
+            .jobs-table {
+                font-size: 0.875rem;
+            }
+
+            .jobs-table th,
+            .jobs-table td {
+                padding: 0.5rem 0.75rem;
+            }
+
+            .jobs-table .actions {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+        @media (max-width: 600px) {
+            /* Mobile: Card-based layout instead of table */
+            .jobs-table {
+                display: block;
+                border: none;
+                box-shadow: none;
+            }
+
+            .jobs-table thead {
+                display: none;
+            }
+
+            .jobs-table tbody {
+                display: block;
+            }
+
+            .jobs-table tbody tr.job-row {
+                display: block;
+                margin-bottom: 1rem;
+                border: 1px solid var(--border-color, #ddd);
+                border-radius: 0.5rem;
+                padding: 1rem;
+                background: var(--card-bg, #fff);
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            }
+
+            .jobs-table tbody tr.events-row {
+                display: block;
+                border: 1px solid var(--border-color, #ddd);
+                border-radius: 0.5rem;
+                margin-bottom: 1rem;
+                padding: 0;
+            }
+
+            .jobs-table td {
+                display: block;
+                border: none;
+                padding: 0.5rem 0;
+                text-align: left;
+            }
+
+            .jobs-table td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                margin-right: 0.5rem;
+                display: inline-block;
+                min-width: 80px;
+                color: var(--text-secondary, #666);
+            }
+
+            .jobs-table .actions {
+                margin-top: 0.5rem;
+            }
+
+            .action-btn {
+                min-height: 44px; /* Touch-friendly */
+            }
+
+            .hide-mobile {
+                display: none !important;
+            }
+        }
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            .status-badge.completed {
+                background: #1e4620;
+                color: #a3cfbb;
+            }
+
+            .status-badge.failed {
+                background: #4a1c1c;
+                color: #f5c6cb;
+            }
+
+            .status-badge.processing {
+                background: #1c3d47;
+                color: #bee5eb;
+            }
+
+            .status-badge.queued {
+                background: #4a3c1c;
+                color: #ffeeba;
+            }
+
+            .status-badge.cancelled {
+                background: #2c2e30;
+                color: #c6c8ca;
+            }
+
+            .event-timeline {
+                background: #2d3748;
+                border-left-color: #4299e1;
+            }
+
+            .event-details {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .jobs-table {
+                background: #1a202c;
+            }
+
+            .jobs-table thead {
+                background: #2d3748;
+            }
+
+            .filter-btn.active {
+                background: #4299e1;
+                border-color: #4299e1;
+            }
+
+            .pagination-btn:disabled {
+                background: #2d3748;
+            }
+        }
+
         /* Authentication UI */
         .auth-bar {
             position: fixed;
@@ -1203,11 +1806,11 @@
         }
 
         /* Section Styling */
-        .konto-section {
+        .account-section {
             margin-bottom: 40px;
         }
 
-        .konto-section h2 {
+        .account-section h2 {
             font-size: 24px;
             color: #333;
             margin-bottom: 20px;
@@ -1215,27 +1818,27 @@
         }
 
         /* Card Grid */
-        .konto-grid {
+        .account-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 20px;
         }
 
-        .konto-card {
+        .account-card {
             background: #f9fafb;
             border-radius: 12px;
             padding: 24px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
-        .konto-card h3 {
+        .account-card h3 {
             font-size: 18px;
             color: #111827;
             margin-bottom: 16px;
             font-weight: 600;
         }
 
-        .konto-card-full {
+        .account-card-full {
             grid-column: 1 / -1;
         }
 
@@ -1565,7 +2168,7 @@
                 overflow-x: hidden;
             }
 
-            .konto-grid {
+            .account-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -1585,12 +2188,12 @@
             }
 
             /* Prevent horizontal overflow */
-            #tab-konto {
+            #tab-account {
                 max-width: 100vw;
                 overflow-x: hidden;
             }
 
-            .konto-card {
+            .account-card {
                 max-width: 100%;
                 overflow-x: hidden;
                 word-wrap: break-word;
@@ -1611,27 +2214,27 @@
 
         /* Tablet Responsive */
         @media (min-width: 601px) and (max-width: 800px) {
-            .konto-grid {
+            .account-grid {
                 gap: 16px;
             }
 
-            .konto-card {
+            .account-card {
                 padding: 20px;
             }
         }
 
         /* Dark Mode */
         @media (prefers-color-scheme: dark) {
-            .konto-section h2 {
+            .account-section h2 {
                 color: #e5e7eb;
             }
 
-            .konto-card {
+            .account-card {
                 background: #1f2937;
                 color: #e5e7eb;
             }
 
-            .konto-card h3 {
+            .account-card h3 {
                 color: #f3f4f6;
             }
 
@@ -1739,27 +2342,27 @@
                     data-i18n="tabs.kamera">
                 Kamera
             </button>
-            <button id="tab-auftraege-btn"
+            <button id="tab-jobs-btn"
                     class="tab-button"
                     role="tab"
                     aria-selected="false"
-                    aria-controls="tab-auftraege"
+                    aria-controls="tab-jobs"
                     data-i18n="tabs.auftraege">
                 Aufträge
             </button>
-            <button id="tab-konto-btn"
+            <button id="tab-account-btn"
                     class="tab-button"
                     role="tab"
                     aria-selected="false"
-                    aria-controls="tab-konto"
+                    aria-controls="tab-account"
                     data-i18n="tabs.konto">
                 Konto
             </button>
-            <button id="tab-dokumentation-btn"
+            <button id="tab-documentation-btn"
                     class="tab-button"
                     role="tab"
                     aria-selected="false"
-                    aria-controls="tab-dokumentation"
+                    aria-controls="tab-documentation"
                     data-i18n="tabs.dokumentation">
                 Dokumentation
             </button>
@@ -2007,50 +2610,124 @@
         </div>
 
         <!-- Aufträge Tab (placeholder) -->
-        <div id="tab-auftraege"
+        <div id="tab-jobs"
              class="tab-panel"
              role="tabpanel"
-             aria-labelledby="tab-auftraege-btn"
+             aria-labelledby="tab-jobs-btn"
              hidden>
-            <div class="placeholder-content">
+            <!-- Header with Filter -->
+            <div class="jobs-header">
+                <h2 data-i18n="jobs.title">Job History</h2>
+
+                <!-- Refresh Controls -->
+                <div class="jobs-controls">
+                    <button id="refreshJobsBtn" class="btn btn-icon" aria-label="Refresh jobs list" title="Refresh jobs list">
+                        <span aria-hidden="true">🔄</span>
+                        <span data-i18n="jobs.refresh">Refresh</span>
+                    </button>
+                    <button id="toggleAutoRefreshBtn" class="btn btn-toggle" aria-pressed="true">
+                        <span class="toggle-status" data-i18n="jobs.autoRefresh.on">Auto-Refresh: ON</span>
+                    </button>
+                </div>
+
+                <div class="jobs-filter" role="radiogroup" aria-label="Filter jobs by status">
+                    <button class="filter-btn active" data-status="all" aria-pressed="true" data-i18n="jobs.filter.all">All</button>
+                    <button class="filter-btn" data-status="completed" aria-pressed="false" data-i18n="jobs.filter.completed">Completed</button>
+                    <button class="filter-btn" data-status="failed" aria-pressed="false" data-i18n="jobs.filter.failed">Failed</button>
+                    <button class="filter-btn" data-status="processing" aria-pressed="false" data-i18n="jobs.filter.processing">Processing</button>
+                </div>
+            </div>
+
+            <!-- Loading State (silent for screenreaders during auto-refresh) -->
+            <div id="jobsLoading" class="loading-state" style="display: none;" aria-hidden="true">
+                <div class="spinner" aria-hidden="true"></div>
+                <p data-i18n="jobs.loading">Loading jobs...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="jobsError" class="error-state" style="display: none;" role="alert" aria-live="assertive">
+                <p class="error-message"></p>
+                <button class="retry-btn" data-i18n="jobs.retry">Retry</button>
+            </div>
+
+            <!-- Empty State -->
+            <div id="jobsEmpty" class="empty-state" style="display: none;">
                 <div class="icon" aria-hidden="true">📋</div>
-                <h2 data-i18n="placeholder.auftraege.title">Job History</h2>
-                <p data-i18n="placeholder.auftraege.description">Coming soon: View and manage your conversion history</p>
+                <h3 data-i18n="jobs.empty.title">No jobs found</h3>
+                <p data-i18n="jobs.empty.description">Start a conversion to see jobs here</p>
+            </div>
+
+            <!-- Jobs Table -->
+            <div id="jobsContent" style="display: none;">
+                <div class="table-responsive">
+                    <table class="jobs-table" role="table" aria-label="Conversion jobs">
+                        <thead>
+                            <tr role="row">
+                                <th role="columnheader" scope="col" data-i18n="jobs.table.status">Status</th>
+                                <th role="columnheader" scope="col" data-i18n="jobs.table.filename">Filename</th>
+                                <th role="columnheader" scope="col" data-i18n="jobs.table.created">Created</th>
+                                <th role="columnheader" scope="col" data-i18n="jobs.table.duration">Duration</th>
+                                <th role="columnheader" scope="col" class="hide-mobile" data-i18n="jobs.table.size">Size</th>
+                                <th role="columnheader" scope="col" data-i18n="jobs.table.events">Events</th>
+                                <th role="columnheader" scope="col" data-i18n="jobs.table.actions">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="jobsTableBody" role="rowgroup">
+                            <!-- Dynamically populated by JobsManager -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <nav class="jobs-pagination" role="navigation" aria-label="Pagination">
+                    <button id="jobsPrevBtn"
+                            class="pagination-btn"
+                            aria-label="Previous page"
+                            data-i18n="jobs.pagination.previous">Previous</button>
+                    <span id="jobsPageInfo"
+                          class="page-info"
+                          aria-live="polite"
+                          aria-atomic="true"></span>
+                    <button id="jobsNextBtn"
+                            class="pagination-btn"
+                            aria-label="Next page"
+                            data-i18n="jobs.pagination.next">Next</button>
+                </nav>
             </div>
         </div>
 
         <!-- Konto Tab -->
-        <div id="tab-konto"
+        <div id="tab-account"
              class="tab-panel"
              role="tabpanel"
-             aria-labelledby="tab-konto-btn"
+             aria-labelledby="tab-account-btn"
              hidden>
 
             <!-- Loading State -->
-            <div id="kontoLoading" class="loading-state">
+            <div id="accountLoading" class="loading-state">
                 <div class="spinner"></div>
                 <p data-i18n="konto.loading">Loading account information...</p>
             </div>
 
             <!-- Error State -->
-            <div id="kontoError" class="error-state" style="display: none;">
+            <div id="accountError" class="error-state" style="display: none;">
                 <p data-i18n="konto.error">Failed to load account information</p>
-                <button id="kontoRetryBtn" class="btn-retry" data-i18n="konto.retry">Retry</button>
+                <button id="accountRetryBtn" class="btn-retry" data-i18n="konto.retry">Retry</button>
             </div>
 
             <!-- Main Content -->
-            <div id="kontoContent" style="display: none;">
+            <div id="accountContent" style="display: none;">
 
                 <!-- Account Information Section -->
-                <section class="konto-section">
+                <section class="account-section">
                     <h2 data-i18n="konto.accountInfo">Account Information</h2>
 
-                    <div class="konto-grid">
+                    <div class="account-grid">
                         <!-- Profile Card -->
-                        <div class="konto-card">
+                        <div class="account-card">
                             <h3 data-i18n="konto.profile">Profile</h3>
                             <div class="profile-info">
-                                <img id="kontoProfilePicture"
+                                <img id="accountProfilePicture"
                                      class="profile-picture-large"
                                      src=""
                                      alt="Profile"
@@ -2058,58 +2735,58 @@
                                 <div class="profile-details">
                                     <div class="info-row">
                                         <span class="info-label" data-i18n="konto.name">Name:</span>
-                                        <span id="kontoName" class="info-value">-</span>
+                                        <span id="accountName" class="info-value">-</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label" data-i18n="konto.email">Email:</span>
-                                        <span id="kontoEmail" class="info-value">-</span>
+                                        <span id="accountEmail" class="info-value">-</span>
                                     </div>
                                     <div class="info-row">
                                         <span class="info-label" data-i18n="konto.userId">User ID:</span>
-                                        <span id="kontoUserId" class="info-value">-</span>
+                                        <span id="accountUserId" class="info-value">-</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Login Stats Card -->
-                        <div class="konto-card">
+                        <div class="account-card">
                             <h3 data-i18n="konto.loginStats">Login Statistics</h3>
                             <div class="stats-grid">
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.accountCreated">Account Created:</span>
-                                    <span id="kontoCreatedAt" class="stat-value">-</span>
+                                    <span id="accountCreatedAt" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.lastLogin">Last Login:</span>
-                                    <span id="kontoLastLogin" class="stat-value">-</span>
+                                    <span id="accountLastLogin" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.totalLogins">Total Logins:</span>
-                                    <span id="kontoLoginCount" class="stat-value">-</span>
+                                    <span id="accountLoginCount" class="stat-value">-</span>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Job Stats Card -->
-                        <div class="konto-card">
+                        <div class="account-card">
                             <h3 data-i18n="konto.jobStats">Conversion Statistics</h3>
                             <div class="stats-grid">
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.totalJobs">Total Jobs:</span>
-                                    <span id="kontoTotalJobs" class="stat-value">-</span>
+                                    <span id="accountTotalJobs" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.successRate">Success Rate:</span>
-                                    <span id="kontoSuccessRate" class="stat-value">-</span>
+                                    <span id="accountSuccessRate" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.avgDuration">Avg Duration:</span>
-                                    <span id="kontoAvgDuration" class="stat-value">-</span>
+                                    <span id="accountAvgDuration" class="stat-value">-</span>
                                 </div>
                                 <div class="stat-item">
                                     <span class="stat-label" data-i18n="konto.dataProcessed">Data Processed:</span>
-                                    <span id="kontoDataProcessed" class="stat-value">-</span>
+                                    <span id="accountDataProcessed" class="stat-value">-</span>
                                 </div>
                             </div>
                         </div>
@@ -2117,7 +2794,7 @@
                         <!-- Activity Log Card -->
                         <div class="konto-card konto-card-full">
                             <h3 data-i18n="konto.recentActivity">Recent Activity</h3>
-                            <div id="kontoActivityLog" class="activity-log">
+                            <div id="accountActivityLog" class="activity-log">
                                 <!-- Populated by JavaScript -->
                             </div>
                         </div>
@@ -2125,10 +2802,10 @@
                 </section>
 
                 <!-- Settings Section -->
-                <section class="konto-section">
+                <section class="account-section">
                     <h2 data-i18n="konto.settings">Settings</h2>
 
-                    <div class="konto-card">
+                    <div class="account-card">
                         <h3 data-i18n="konto.defaultParams">Default Conversion Parameters</h3>
                         <p class="settings-description" data-i18n="konto.defaultParamsDesc">
                             These settings will be automatically applied when you open the converter.
@@ -2258,10 +2935,10 @@
         </dialog>
 
         <!-- Dokumentation Tab (placeholder) -->
-        <div id="tab-dokumentation"
+        <div id="tab-documentation"
              class="tab-panel"
              role="tabpanel"
-             aria-labelledby="tab-dokumentation-btn"
+             aria-labelledby="tab-documentation-btn"
              hidden>
             <div class="placeholder-content">
                 <div class="icon" aria-hidden="true">📖</div>
@@ -2547,6 +3224,49 @@
                 'placeholder.konto.description': 'Coming soon: Manage your account preferences and settings',
                 'placeholder.dokumentation.title': 'Documentation',
                 'placeholder.dokumentation.description': 'Coming soon: User guides and help documentation',
+                // Jobs Tab translations
+                'jobs.title': 'Job History',
+                'jobs.loading': 'Loading jobs...',
+                'jobs.retry': 'Retry',
+                'jobs.refresh': 'Refresh',
+                'jobs.autoRefresh.on': 'Auto-Refresh: ON',
+                'jobs.autoRefresh.off': 'Auto-Refresh: OFF',
+                'jobs.filter.all': 'All',
+                'jobs.filter.completed': 'Completed',
+                'jobs.filter.failed': 'Failed',
+                'jobs.filter.processing': 'Processing',
+                'jobs.table.status': 'Status',
+                'jobs.table.filename': 'Filename',
+                'jobs.table.created': 'Created',
+                'jobs.table.duration': 'Duration',
+                'jobs.table.size': 'Size',
+                'jobs.table.events': 'Events',
+                'jobs.table.actions': 'Actions',
+                'jobs.status.completed': 'Completed',
+                'jobs.status.failed': 'Failed',
+                'jobs.status.processing': 'Processing',
+                'jobs.status.queued': 'Queued',
+                'jobs.status.cancelled': 'Cancelled',
+                'jobs.actions.download': 'Download',
+                'jobs.actions.retry': 'Retry',
+                'jobs.actions.expand': 'Expand',
+                'jobs.actions.collapse': 'Collapse',
+                'jobs.events.empty': 'No events recorded',
+                'jobs.download.error': 'Download failed. Please try again.',
+                'jobs.retry.notification': 'Please upload {filename} to retry this conversion',
+                'jobs.retry.error': 'Failed to load job details. Please try again.',
+                'jobs.empty.title': 'No jobs found',
+                'jobs.empty.description': 'Start a conversion to see jobs here',
+                'jobs.pagination.previous': 'Previous',
+                'jobs.pagination.next': 'Next',
+                'jobs.pagination.info': '{start}-{end} of {total} jobs',
+                'jobs.time.year': '{count} year ago',
+                'jobs.time.month': '{count} month ago',
+                'jobs.time.week': '{count} week ago',
+                'jobs.time.day': '{count} day ago',
+                'jobs.time.hour': '{count} hour ago',
+                'jobs.time.minute': '{count} minute ago',
+                'jobs.time.just_now': 'Just now',
                 // Event list translations (flat keys for HTML)
                 'events.title': 'Conversion Events',
                 'events.details': 'Details',
@@ -2778,6 +3498,49 @@
                 'placeholder.konto.description': 'Demnächst: Ihre Kontoeinstellungen und Präferenzen verwalten',
                 'placeholder.dokumentation.title': 'Dokumentation',
                 'placeholder.dokumentation.description': 'Demnächst: Benutzerhandbücher und Hilfedokumentation',
+                // Aufträge-Tab-Übersetzungen
+                'jobs.title': 'Aufträge',
+                'jobs.loading': 'Lade Aufträge...',
+                'jobs.retry': 'Wiederholen',
+                'jobs.refresh': 'Aktualisieren',
+                'jobs.autoRefresh.on': 'Auto-Aktualisierung: EIN',
+                'jobs.autoRefresh.off': 'Auto-Aktualisierung: AUS',
+                'jobs.filter.all': 'Alle',
+                'jobs.filter.completed': 'Abgeschlossen',
+                'jobs.filter.failed': 'Fehlgeschlagen',
+                'jobs.filter.processing': 'In Bearbeitung',
+                'jobs.table.status': 'Status',
+                'jobs.table.filename': 'Dateiname',
+                'jobs.table.created': 'Erstellt',
+                'jobs.table.duration': 'Dauer',
+                'jobs.table.size': 'Größe',
+                'jobs.table.events': 'Ereignisse',
+                'jobs.table.actions': 'Aktionen',
+                'jobs.status.completed': 'Abgeschlossen',
+                'jobs.status.failed': 'Fehlgeschlagen',
+                'jobs.status.processing': 'In Bearbeitung',
+                'jobs.status.queued': 'Warteschlange',
+                'jobs.status.cancelled': 'Abgebrochen',
+                'jobs.actions.download': 'Herunterladen',
+                'jobs.actions.retry': 'Wiederholen',
+                'jobs.actions.expand': 'Erweitern',
+                'jobs.actions.collapse': 'Einklappen',
+                'jobs.events.empty': 'Keine Ereignisse aufgezeichnet',
+                'jobs.download.error': 'Download fehlgeschlagen. Bitte erneut versuchen.',
+                'jobs.retry.notification': 'Bitte laden Sie {filename} hoch, um diese Konvertierung zu wiederholen',
+                'jobs.retry.error': 'Fehler beim Laden der Auftragsdetails. Bitte erneut versuchen.',
+                'jobs.empty.title': 'Keine Aufträge gefunden',
+                'jobs.empty.description': 'Starten Sie eine Konvertierung, um Aufträge hier zu sehen',
+                'jobs.pagination.previous': 'Zurück',
+                'jobs.pagination.next': 'Weiter',
+                'jobs.pagination.info': '{start}-{end} von {total} Aufträgen',
+                'jobs.time.year': 'vor {count} Jahr',
+                'jobs.time.month': 'vor {count} Monat',
+                'jobs.time.week': 'vor {count} Woche',
+                'jobs.time.day': 'vor {count} Tag',
+                'jobs.time.hour': 'vor {count} Stunde',
+                'jobs.time.minute': 'vor {count} Minute',
+                'jobs.time.just_now': 'Gerade eben',
                 // Event-Listen-Übersetzungen (flache Schlüssel für HTML)
                 'events.title': 'Konvertierungsereignisse',
                 'events.details': 'Details',
@@ -3009,6 +3772,49 @@
                 'placeholder.konto.description': 'Próximamente: Administre sus preferencias y configuraciones de cuenta',
                 'placeholder.dokumentation.title': 'Documentación',
                 'placeholder.dokumentation.description': 'Próximamente: Guías de usuario y documentación de ayuda',
+                // Traducciones de la pestaña Trabajos
+                'jobs.title': 'Historial de Trabajos',
+                'jobs.loading': 'Cargando trabajos...',
+                'jobs.retry': 'Reintentar',
+                'jobs.refresh': 'Actualizar',
+                'jobs.autoRefresh.on': 'Actualización Automática: ACTIVADA',
+                'jobs.autoRefresh.off': 'Actualización Automática: DESACTIVADA',
+                'jobs.filter.all': 'Todos',
+                'jobs.filter.completed': 'Completados',
+                'jobs.filter.failed': 'Fallidos',
+                'jobs.filter.processing': 'Procesando',
+                'jobs.table.status': 'Estado',
+                'jobs.table.filename': 'Nombre de Archivo',
+                'jobs.table.created': 'Creado',
+                'jobs.table.duration': 'Duración',
+                'jobs.table.size': 'Tamaño',
+                'jobs.table.events': 'Eventos',
+                'jobs.table.actions': 'Acciones',
+                'jobs.status.completed': 'Completado',
+                'jobs.status.failed': 'Fallido',
+                'jobs.status.processing': 'Procesando',
+                'jobs.status.queued': 'En Cola',
+                'jobs.status.cancelled': 'Cancelado',
+                'jobs.actions.download': 'Descargar',
+                'jobs.actions.retry': 'Reintentar',
+                'jobs.actions.expand': 'Expandir',
+                'jobs.actions.collapse': 'Contraer',
+                'jobs.events.empty': 'No hay eventos registrados',
+                'jobs.download.error': 'Error al descargar. Inténtelo de nuevo.',
+                'jobs.retry.notification': 'Por favor suba {filename} para reintentar esta conversión',
+                'jobs.retry.error': 'Error al cargar los detalles del trabajo. Inténtelo de nuevo.',
+                'jobs.empty.title': 'No se encontraron trabajos',
+                'jobs.empty.description': 'Inicie una conversión para ver trabajos aquí',
+                'jobs.pagination.previous': 'Anterior',
+                'jobs.pagination.next': 'Siguiente',
+                'jobs.pagination.info': '{start}-{end} de {total} trabajos',
+                'jobs.time.year': 'hace {count} año',
+                'jobs.time.month': 'hace {count} mes',
+                'jobs.time.week': 'hace {count} semana',
+                'jobs.time.day': 'hace {count} día',
+                'jobs.time.hour': 'hace {count} hora',
+                'jobs.time.minute': 'hace {count} minuto',
+                'jobs.time.just_now': 'Justo ahora',
                 // Traducciones de lista de eventos (claves planas para HTML)
                 'events.title': 'Eventos de Conversión',
                 'events.details': 'Detalles',
@@ -3240,6 +4046,49 @@
                 'placeholder.konto.description': 'Bientôt disponible : Gérez vos préférences et paramètres de compte',
                 'placeholder.dokumentation.title': 'Documentation',
                 'placeholder.dokumentation.description': 'Bientôt disponible : Guides d\'utilisation et documentation d\'aide',
+                // Traductions de l'onglet Tâches
+                'jobs.title': 'Historique des Tâches',
+                'jobs.loading': 'Chargement des tâches...',
+                'jobs.retry': 'Réessayer',
+                'jobs.refresh': 'Actualiser',
+                'jobs.autoRefresh.on': 'Actualisation Auto: ACTIVÉE',
+                'jobs.autoRefresh.off': 'Actualisation Auto: DÉSACTIVÉE',
+                'jobs.filter.all': 'Tous',
+                'jobs.filter.completed': 'Terminés',
+                'jobs.filter.failed': 'Échoués',
+                'jobs.filter.processing': 'En cours',
+                'jobs.table.status': 'Statut',
+                'jobs.table.filename': 'Nom du fichier',
+                'jobs.table.created': 'Créé',
+                'jobs.table.duration': 'Durée',
+                'jobs.table.size': 'Taille',
+                'jobs.table.events': 'Événements',
+                'jobs.table.actions': 'Actions',
+                'jobs.status.completed': 'Terminé',
+                'jobs.status.failed': 'Échoué',
+                'jobs.status.processing': 'En cours',
+                'jobs.status.queued': 'En attente',
+                'jobs.status.cancelled': 'Annulé',
+                'jobs.actions.download': 'Télécharger',
+                'jobs.actions.retry': 'Réessayer',
+                'jobs.actions.expand': 'Développer les événements',
+                'jobs.actions.collapse': 'Réduire les événements',
+                'jobs.events.empty': 'Aucun événement enregistré pour cette tâche',
+                'jobs.download.error': 'Échec du téléchargement. Veuillez réessayer.',
+                'jobs.retry.notification': 'Veuillez télécharger {filename} pour réessayer cette conversion',
+                'jobs.retry.error': 'Échec du chargement des détails de la tâche. Veuillez réessayer.',
+                'jobs.empty.title': 'Aucune tâche trouvée',
+                'jobs.empty.description': 'Vous n\'avez pas encore de tâches de conversion',
+                'jobs.pagination.previous': 'Précédent',
+                'jobs.pagination.next': 'Suivant',
+                'jobs.pagination.info': '{start}-{end} sur {total} tâches',
+                'jobs.time.year': 'il y a {value} an(s)',
+                'jobs.time.month': 'il y a {value} mois',
+                'jobs.time.week': 'il y a {value} semaine(s)',
+                'jobs.time.day': 'il y a {value} jour(s)',
+                'jobs.time.hour': 'il y a {value} heure(s)',
+                'jobs.time.minute': 'il y a {value} minute(s)',
+                'jobs.time.just_now': 'À l\'instant',
                 // Traductions de la liste d'événements (clés plates pour HTML)
                 'events.title': 'Événements de Conversion',
                 'events.details': 'Détails',
@@ -5182,7 +6031,7 @@
              */
             async init() {
                 // Bind event listeners
-                document.getElementById('kontoRetryBtn')?.addEventListener('click', () => {
+                document.getElementById('accountRetryBtn')?.addEventListener('click', () => {
                     this.loadAccountData();
                 });
 
@@ -5272,27 +6121,27 @@
              * Show loading state
              */
             showLoading() {
-                document.getElementById('kontoLoading').style.display = 'block';
-                document.getElementById('kontoError').style.display = 'none';
-                document.getElementById('kontoContent').style.display = 'none';
+                document.getElementById('accountLoading').style.display = 'block';
+                document.getElementById('accountError').style.display = 'none';
+                document.getElementById('accountContent').style.display = 'none';
             }
 
             /**
              * Show error state
              */
             showError() {
-                document.getElementById('kontoLoading').style.display = 'none';
-                document.getElementById('kontoError').style.display = 'block';
-                document.getElementById('kontoContent').style.display = 'none';
+                document.getElementById('accountLoading').style.display = 'none';
+                document.getElementById('accountError').style.display = 'block';
+                document.getElementById('accountContent').style.display = 'none';
             }
 
             /**
              * Render all account data
              */
             renderAccountData() {
-                document.getElementById('kontoLoading').style.display = 'none';
-                document.getElementById('kontoError').style.display = 'none';
-                document.getElementById('kontoContent').style.display = 'block';
+                document.getElementById('accountLoading').style.display = 'none';
+                document.getElementById('accountError').style.display = 'none';
+                document.getElementById('accountContent').style.display = 'block';
 
                 // Render profile
                 this.renderProfile();
@@ -5319,11 +6168,11 @@
             renderProfile() {
                 const user = this.profileData.user;
 
-                document.getElementById('kontoName').textContent = user.name || '-';
-                document.getElementById('kontoEmail').textContent = user.email || '-';
-                document.getElementById('kontoUserId').textContent = user.user_id || '-';
+                document.getElementById('accountName').textContent = user.name || '-';
+                document.getElementById('accountEmail').textContent = user.email || '-';
+                document.getElementById('accountUserId').textContent = user.user_id || '-';
 
-                const picture = document.getElementById('kontoProfilePicture');
+                const picture = document.getElementById('accountProfilePicture');
                 if (user.picture) {
                     picture.src = user.picture;
                     picture.style.display = 'block';
@@ -5340,19 +6189,19 @@
 
                 if (stats.created_at) {
                     const created = new Date(stats.created_at);
-                    document.getElementById('kontoCreatedAt').textContent = created.toLocaleDateString(currentLang);
+                    document.getElementById('accountCreatedAt').textContent = created.toLocaleDateString(currentLang);
                 } else {
-                    document.getElementById('kontoCreatedAt').textContent = '-';
+                    document.getElementById('accountCreatedAt').textContent = '-';
                 }
 
                 if (stats.last_login_at) {
                     const lastLogin = new Date(stats.last_login_at);
-                    document.getElementById('kontoLastLogin').textContent = lastLogin.toLocaleString(currentLang);
+                    document.getElementById('accountLastLogin').textContent = lastLogin.toLocaleString(currentLang);
                 } else {
-                    document.getElementById('kontoLastLogin').textContent = '-';
+                    document.getElementById('accountLastLogin').textContent = '-';
                 }
 
-                document.getElementById('kontoLoginCount').textContent = stats.login_count || '-';
+                document.getElementById('accountLoginCount').textContent = stats.login_count || '-';
             }
 
             /**
@@ -5361,27 +6210,27 @@
             renderJobStats() {
                 const stats = this.profileData.job_stats;
 
-                document.getElementById('kontoTotalJobs').textContent = stats.total_jobs || 0;
+                document.getElementById('accountTotalJobs').textContent = stats.total_jobs || 0;
 
                 if (stats.total_jobs > 0) {
                     const successRate = ((stats.completed_jobs / stats.total_jobs) * 100).toFixed(1);
-                    document.getElementById('kontoSuccessRate').textContent = `${successRate}%`;
+                    document.getElementById('accountSuccessRate').textContent = `${successRate}%`;
                 } else {
-                    document.getElementById('kontoSuccessRate').textContent = '-';
+                    document.getElementById('accountSuccessRate').textContent = '-';
                 }
 
                 if (stats.avg_duration_seconds) {
                     const avgMin = (stats.avg_duration_seconds / 60).toFixed(1);
-                    document.getElementById('kontoAvgDuration').textContent = `${avgMin} min`;
+                    document.getElementById('accountAvgDuration').textContent = `${avgMin} min`;
                 } else {
-                    document.getElementById('kontoAvgDuration').textContent = '-';
+                    document.getElementById('accountAvgDuration').textContent = '-';
                 }
 
                 if (stats.total_input_bytes || stats.total_output_bytes) {
                     const totalMB = ((stats.total_input_bytes + stats.total_output_bytes) / 1024 / 1024).toFixed(1);
-                    document.getElementById('kontoDataProcessed').textContent = `${totalMB} MB`;
+                    document.getElementById('accountDataProcessed').textContent = `${totalMB} MB`;
                 } else {
-                    document.getElementById('kontoDataProcessed').textContent = '-';
+                    document.getElementById('accountDataProcessed').textContent = '-';
                 }
             }
 
@@ -5389,7 +6238,7 @@
              * Render activity log
              */
             renderActivityLog() {
-                const container = document.getElementById('kontoActivityLog');
+                const container = document.getElementById('accountActivityLog');
                 container.innerHTML = '';
 
                 const activities = this.profileData.recent_activity || [];
@@ -5628,6 +6477,917 @@
         const accountManager = new AccountManager();
 
         // ============================================================================
+        // Jobs (Aufträge) Tab Manager
+        // ============================================================================
+
+        class JobsManager {
+            constructor() {
+                this.jobs = [];
+                this.total = 0;
+                this.currentPage = 1;
+                this.currentFilter = 'all';
+                this.limit = 20;
+                this.lastFetchTime = 0;
+                this.cacheDuration = 5000; // 5 seconds
+                this.expandedJobId = null;
+                this.eventsCache = new Map(); // Cache loaded events
+                this.pollingInterval = null;
+                this.keyboardNavigationDetected = false;
+
+                // Auto-refresh settings (enhanced accessibility detection)
+                // Disable auto-refresh if ANY assistive technology indicator is detected
+                this.autoRefreshEnabled = this.detectAccessibilityPreferences();
+
+                // Monitor keyboard navigation for dynamic detection
+                this.setupKeyboardNavigationDetection();
+            }
+
+            /**
+             * Multi-Signal Accessibility Detection
+             * Detects assistive technology usage via multiple browser signals
+             * @returns {boolean} true if auto-refresh should be ENABLED, false if DISABLED
+             */
+            detectAccessibilityPreferences() {
+                const signals = {
+                    reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+                    highContrast: window.matchMedia('(prefers-contrast: more)').matches,
+                    reducedTransparency: window.matchMedia('(prefers-reduced-transparency: reduce)').matches,
+                    forcedColors: window.matchMedia('(forced-colors: active)').matches
+                };
+
+                // Detect active signals
+                const activeSignals = Object.entries(signals)
+                    .filter(([_, value]) => value)
+                    .map(([key, _]) => key);
+
+                const assistiveTechDetected = activeSignals.length > 0;
+
+                // Logging for transparency
+                console.log('[Jobs] Accessibility Detection:');
+                console.log('  - prefers-reduced-motion:', signals.reducedMotion);
+                console.log('  - prefers-contrast (high):', signals.highContrast);
+                console.log('  - prefers-reduced-transparency:', signals.reducedTransparency);
+                console.log('  - forced-colors (Windows High Contrast):', signals.forcedColors);
+
+                if (assistiveTechDetected) {
+                    console.log('  ⚠️  Assistive Technology detected:', activeSignals.join(', '));
+                    console.log('  → Auto-refresh DEFAULT: DISABLED (user can enable manually)');
+                    return false; // Disable auto-refresh
+                } else {
+                    console.log('  ✓ No accessibility preferences detected');
+                    console.log('  → Auto-refresh DEFAULT: ENABLED');
+                    return true; // Enable auto-refresh
+                }
+            }
+
+            /**
+             * Setup keyboard navigation detection
+             * Detects if user is navigating with keyboard (Tab key)
+             */
+            setupKeyboardNavigationDetection() {
+                // Listen for Tab key to detect keyboard-only users
+                const tabKeyHandler = (e) => {
+                    if (e.key === 'Tab' && !this.keyboardNavigationDetected) {
+                        this.keyboardNavigationDetected = true;
+                        console.log('[Jobs] Keyboard navigation detected (Tab key used)');
+
+                        // If auto-refresh is currently enabled AND keyboard nav detected,
+                        // suggest disabling it (non-intrusive)
+                        if (this.autoRefreshEnabled) {
+                            console.log('[Jobs] ℹ️  Tip: Consider disabling auto-refresh for keyboard navigation');
+                            console.log('[Jobs]     Click the "Auto-Refresh" toggle button to disable');
+                        }
+
+                        // Remove listener after first detection (performance)
+                        document.removeEventListener('keydown', tabKeyHandler);
+                    }
+                };
+
+                document.addEventListener('keydown', tabKeyHandler);
+            }
+
+            async init() {
+                console.log('[Jobs] Initializing Jobs Manager...');
+
+                // Bind refresh controls
+                const refreshBtn = document.getElementById('refreshJobsBtn');
+                const toggleAutoRefreshBtn = document.getElementById('toggleAutoRefreshBtn');
+
+                if (refreshBtn) {
+                    refreshBtn.addEventListener('click', () => {
+                        console.log('[Jobs] Manual refresh triggered');
+                        this.loadJobs(true, true); // Show loading indicator for manual refresh
+                    });
+                }
+
+                if (toggleAutoRefreshBtn) {
+                    toggleAutoRefreshBtn.addEventListener('click', () => {
+                        this.toggleAutoRefresh();
+                    });
+
+                    // Set initial state
+                    this.updateAutoRefreshButton();
+                }
+
+                // Bind filter buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        this.handleFilterChange(btn.dataset.status);
+                    });
+                });
+
+                // Bind pagination buttons
+                const prevBtn = document.getElementById('jobsPrevBtn');
+                const nextBtn = document.getElementById('jobsNextBtn');
+
+                if (prevBtn) prevBtn.addEventListener('click', () => this.previousPage());
+                if (nextBtn) nextBtn.addEventListener('click', () => this.nextPage());
+
+                // Bind retry button in error state
+                const errorRetryBtn = document.querySelector('#jobsError .retry-btn');
+                if (errorRetryBtn) {
+                    errorRetryBtn.addEventListener('click', () => this.loadJobs(true, true)); // Show loading on retry
+                }
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (!document.getElementById('tab-jobs').hasAttribute('hidden')) {
+                        if (e.key === 'ArrowLeft' && !e.ctrlKey && !e.metaKey) {
+                            e.preventDefault();
+                            this.previousPage();
+                        }
+                        if (e.key === 'ArrowRight' && !e.ctrlKey && !e.metaKey) {
+                            e.preventDefault();
+                            this.nextPage();
+                        }
+                        if (e.key === 'Escape' && this.expandedJobId) {
+                            e.preventDefault();
+                            this.collapseJob();
+                        }
+                    }
+                });
+
+                // Tab activation listener
+                const auftraegeBtn = document.getElementById('tab-jobs-btn');
+                if (auftraegeBtn) {
+                    auftraegeBtn.addEventListener('click', () => {
+                        this.onTabActivated();
+                    });
+                }
+
+                console.log('[Jobs] Jobs Manager initialized');
+            }
+
+            onTabActivated() {
+                console.log('[Jobs] Tab activated');
+                this.loadJobs(false, true); // Show loading indicator on initial tab activation
+                this.startPolling();
+            }
+
+            onTabDeactivated() {
+                console.log('[Jobs] Tab deactivated');
+                this.stopPolling();
+            }
+
+            async loadJobs(forceRefresh = false, showLoadingIndicator = false) {
+                // Check cache
+                const now = Date.now();
+                if (!forceRefresh && now - this.lastFetchTime < this.cacheDuration) {
+                    console.log('[Jobs] Using cached job list');
+                    return;
+                }
+
+                // Only show loading indicator if explicitly requested (initial load, manual refresh)
+                // Silent loading for auto-refresh to avoid screenreader interruptions
+                if (showLoadingIndicator) {
+                    this.showLoading();
+                }
+
+                try {
+                    const offset = (this.currentPage - 1) * this.limit;
+                    const statusParam = this.currentFilter === 'all' ? '' : `&status=${this.currentFilter}`;
+                    const url = `/api/v1/jobs/history?limit=${this.limit}&offset=${offset}${statusParam}`;
+
+                    console.log(`[Jobs] Fetching jobs: ${url} (silent: ${!showLoadingIndicator})`);
+
+                    const response = await fetch(url, {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    this.jobs = data.jobs || [];
+                    this.total = data.total || 0;
+                    this.lastFetchTime = now;
+
+                    console.log(`[Jobs] Loaded ${this.jobs.length} jobs (total: ${this.total})`);
+
+                    this.renderJobs();
+                } catch (error) {
+                    console.error('[Jobs] Failed to load jobs:', error);
+                    this.showError(error.message);
+                }
+            }
+
+            showLoading() {
+                document.getElementById('jobsLoading').style.display = 'block';
+                document.getElementById('jobsError').style.display = 'none';
+                document.getElementById('jobsEmpty').style.display = 'none';
+                document.getElementById('jobsContent').style.display = 'none';
+            }
+
+            showError(message) {
+                document.getElementById('jobsLoading').style.display = 'none';
+                document.getElementById('jobsError').style.display = 'block';
+                document.getElementById('jobsError').querySelector('.error-message').textContent = message;
+                document.getElementById('jobsEmpty').style.display = 'none';
+                document.getElementById('jobsContent').style.display = 'none';
+            }
+
+            renderJobs() {
+                document.getElementById('jobsLoading').style.display = 'none';
+                document.getElementById('jobsError').style.display = 'none';
+
+                if (this.jobs.length === 0) {
+                    document.getElementById('jobsEmpty').style.display = 'block';
+                    document.getElementById('jobsContent').style.display = 'none';
+                    return;
+                }
+
+                document.getElementById('jobsEmpty').style.display = 'none';
+                document.getElementById('jobsContent').style.display = 'block';
+
+                const tbody = document.getElementById('jobsTableBody');
+
+                // SMART DOM UPDATE: Preserve focus and minimize DOM changes
+
+                // Save current focus and expanded state
+                const activeElement = document.activeElement;
+                const wasFocused = tbody.contains(activeElement);
+                const focusedJobId = wasFocused ? activeElement.closest('.job-row')?.dataset.jobId : null;
+                const expandedJobId = this.expandedJobId;
+
+                // Index existing rows by job_id
+                const existingRows = new Map();
+                tbody.querySelectorAll('tr.job-row').forEach(row => {
+                    existingRows.set(row.dataset.jobId, row);
+                });
+
+                // Track which rows to keep
+                const processedJobIds = new Set();
+
+                // Update or create rows
+                this.jobs.forEach((job, index) => {
+                    processedJobIds.add(job.job_id);
+                    const existingRow = existingRows.get(job.job_id);
+
+                    if (existingRow) {
+                        // Row exists - check if update is needed
+                        if (this.jobHasChanged(job, existingRow)) {
+                            console.log(`[Jobs] Updating changed job: ${job.job_id}`);
+                            const newRow = this.createJobRowElement(job);
+                            existingRow.replaceWith(newRow);
+
+                            // Preserve expanded state
+                            if (expandedJobId === job.job_id) {
+                                this.expandedJobId = null; // Reset to trigger re-expansion
+                                this.toggleJobExpansion(job.job_id);
+                            }
+                        } else {
+                            // No changes - keep existing row, just check position
+                            const currentIndex = Array.from(tbody.children).indexOf(existingRow);
+                            const expectedIndex = index * 2; // Account for event rows
+
+                            if (currentIndex !== expectedIndex) {
+                                const referenceNode = tbody.children[expectedIndex];
+                                if (referenceNode && referenceNode !== existingRow) {
+                                    tbody.insertBefore(existingRow, referenceNode);
+                                }
+                            }
+                        }
+                    } else {
+                        // New job - create and insert
+                        console.log(`[Jobs] Adding new job: ${job.job_id}`);
+                        const newRow = this.createJobRowElement(job);
+
+                        // Find correct position (accounting for event rows)
+                        let insertBeforeNode = null;
+                        const jobRows = Array.from(tbody.querySelectorAll('tr.job-row'));
+                        if (index < jobRows.length) {
+                            insertBeforeNode = jobRows[index];
+                        }
+
+                        if (insertBeforeNode) {
+                            tbody.insertBefore(newRow, insertBeforeNode);
+                        } else {
+                            tbody.appendChild(newRow);
+                        }
+                    }
+                });
+
+                // Remove deleted jobs
+                existingRows.forEach((row, jobId) => {
+                    if (!processedJobIds.has(jobId)) {
+                        console.log(`[Jobs] Removing deleted job: ${jobId}`);
+
+                        // Remove event row if exists
+                        const eventRow = row.nextElementSibling;
+                        if (eventRow && eventRow.classList.contains('events-row')) {
+                            eventRow.remove();
+                        }
+
+                        row.remove();
+
+                        // Clear expanded state if this was the expanded job
+                        if (this.expandedJobId === jobId) {
+                            this.expandedJobId = null;
+                        }
+                    }
+                });
+
+                // Restore focus if it was in the table
+                if (wasFocused && focusedJobId) {
+                    const focusTarget = tbody.querySelector(`tr[data-job-id="${focusedJobId}"]`);
+                    if (focusTarget) {
+                        // Small delay to ensure DOM is ready
+                        setTimeout(() => focusTarget.focus(), 0);
+                    }
+                }
+
+                this.updatePagination();
+
+                // Apply i18n to dynamically created content
+                if (window.applyI18n) {
+                    window.applyI18n();
+                }
+            }
+
+            createJobRow(job) {
+                const statusClass = job.status.toLowerCase();
+                const statusText = t(`jobs.status.${job.status}`) || job.status;
+                const createdDate = new Date(job.created_at);
+                const relativeTime = this.getRelativeTime(createdDate);
+                const duration = job.duration_seconds ? this.formatDuration(job.duration_seconds) : '-';
+                const sizeInfo = this.formatSizeInfo(job);
+                const eventsCount = job.events_count || 0;
+
+                const downloadBtn = job.status === 'completed'
+                    ? `<button class="action-btn download download-btn" data-job-id="${job.job_id}" data-filename="${job.filename}" data-i18n="jobs.actions.download">Download</button>`
+                    : '';
+
+                const retryBtn = (job.status === 'failed' || job.status === 'cancelled')
+                    ? `<button class="action-btn retry retry-btn" data-job-id="${job.job_id}" data-i18n="jobs.actions.retry">Retry</button>`
+                    : '';
+
+                const expandBtnText = t('jobs.actions.expand') || 'Expand';
+
+                return `
+                    <tr class="job-row" data-job-id="${job.job_id}" role="row">
+                        <td role="cell" data-label="Status"><span class="status-badge ${statusClass}">${statusText}</span></td>
+                        <td role="cell" data-label="Filename" title="${this.escapeHtml(job.filename)}">${this.truncateFilename(job.filename, 40)}</td>
+                        <td role="cell" data-label="Created" title="${createdDate.toLocaleString()}">${relativeTime}</td>
+                        <td role="cell" data-label="Duration">${duration}</td>
+                        <td role="cell" data-label="Size" class="hide-mobile">${sizeInfo}</td>
+                        <td role="cell" data-label="Events"><span class="badge">${eventsCount} events</span></td>
+                        <td role="cell" data-label="Actions" class="actions">
+                            ${downloadBtn}
+                            ${retryBtn}
+                            <button class="action-btn expand expand-btn" data-i18n="jobs.actions.expand">${expandBtnText}</button>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            /**
+             * Create job row as DOM element (for smart update)
+             * @param {Object} job - Job object
+             * @returns {HTMLElement} Row element
+             */
+            createJobRowElement(job) {
+                const template = document.createElement('template');
+                template.innerHTML = this.createJobRow(job).trim();
+                const row = template.content.firstChild;
+                this.bindJobRowHandlers(row, job.job_id);
+                return row;
+            }
+
+            /**
+             * Check if job data has changed compared to existing row
+             * @param {Object} job - New job object
+             * @param {HTMLElement} existingRow - Existing DOM row
+             * @returns {boolean} True if job has changed
+             */
+            jobHasChanged(job, existingRow) {
+                // Extract current data from row
+                const currentStatus = existingRow.querySelector('.status-badge').textContent.trim();
+                const currentEventsCount = existingRow.querySelector('.badge').textContent.match(/\d+/);
+                const currentDuration = existingRow.querySelector('[data-label="Duration"]').textContent.trim();
+
+                // Compare key fields
+                const newStatus = t(`jobs.status.${job.status}`) || job.status;
+                const newEventsCount = String(job.events_count || 0);
+                const newDuration = job.duration_seconds ? this.formatDuration(job.duration_seconds) : '-';
+
+                return (
+                    currentStatus !== newStatus ||
+                    (currentEventsCount && currentEventsCount[0] !== newEventsCount) ||
+                    currentDuration !== newDuration
+                );
+            }
+
+            /**
+             * Bind event handlers to job row
+             * @param {HTMLElement} row - Row element
+             * @param {string} jobId - Job ID
+             */
+            bindJobRowHandlers(row, jobId) {
+                // Row click handler
+                row.addEventListener('click', (e) => {
+                    if (!e.target.closest('button')) {
+                        this.toggleJobExpansion(jobId);
+                    }
+                });
+
+                // Keyboard accessibility
+                row.setAttribute('tabindex', '0');
+                row.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.toggleJobExpansion(jobId);
+                    }
+                });
+
+                // Download button
+                const downloadBtn = row.querySelector('.download-btn');
+                if (downloadBtn) {
+                    downloadBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.downloadJob(downloadBtn.dataset.jobId, downloadBtn.dataset.filename);
+                    });
+                }
+
+                // Retry button
+                const retryBtn = row.querySelector('.retry-btn');
+                if (retryBtn) {
+                    retryBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        this.retryJob(retryBtn.dataset.jobId);
+                    });
+                }
+
+                // Expand button - handler is managed by toggleJobExpansion
+            }
+
+            async toggleJobExpansion(jobId) {
+                console.log(`[Jobs] Toggle expansion for job: ${jobId}`);
+
+                // Collapse if already expanded
+                if (this.expandedJobId === jobId) {
+                    this.collapseJob();
+                    return;
+                }
+
+                // Collapse previous
+                if (this.expandedJobId) {
+                    this.collapseJob();
+                }
+
+                // Expand new job
+                this.expandedJobId = jobId;
+
+                // Load events if not cached
+                if (!this.eventsCache.has(jobId)) {
+                    await this.loadJobEvents(jobId);
+                }
+
+                // Render event panel
+                const row = document.querySelector(`tr[data-job-id="${jobId}"]`);
+                if (!row) return;
+
+                const eventsRow = document.createElement('tr');
+                eventsRow.className = 'events-row';
+                eventsRow.innerHTML = `
+                    <td colspan="7">
+                        <div class="event-timeline" id="events-${jobId}">
+                            ${this.renderEvents(this.eventsCache.get(jobId))}
+                        </div>
+                    </td>
+                `;
+                row.after(eventsRow);
+
+                const expandBtn = row.querySelector('.expand-btn');
+                if (expandBtn) {
+                    expandBtn.textContent = t('jobs.actions.collapse') || 'Collapse';
+                    expandBtn.setAttribute('data-i18n', 'jobs.actions.collapse');
+                }
+            }
+
+            collapseJob() {
+                if (!this.expandedJobId) return;
+
+                console.log(`[Jobs] Collapsing job: ${this.expandedJobId}`);
+
+                const eventsRow = document.querySelector('.events-row');
+                if (eventsRow) eventsRow.remove();
+
+                const row = document.querySelector(`tr[data-job-id="${this.expandedJobId}"]`);
+                if (row) {
+                    const expandBtn = row.querySelector('.expand-btn');
+                    if (expandBtn) {
+                        expandBtn.textContent = t('jobs.actions.expand') || 'Expand';
+                        expandBtn.setAttribute('data-i18n', 'jobs.actions.expand');
+                    }
+                }
+
+                this.expandedJobId = null;
+            }
+
+            async loadJobEvents(jobId) {
+                try {
+                    console.log(`[Jobs] Loading events for job: ${jobId}`);
+
+                    const response = await fetch(`/api/v1/jobs/${jobId}/status`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (!response.ok) throw new Error('Failed to load events');
+
+                    const job = await response.json();
+                    this.eventsCache.set(jobId, job.events || []);
+
+                    console.log(`[Jobs] Loaded ${job.events?.length || 0} events`);
+                } catch (error) {
+                    console.error('[Jobs] Error loading events:', error);
+                    this.eventsCache.set(jobId, []);
+                }
+            }
+
+            renderEvents(events) {
+                if (!events || events.length === 0) {
+                    return `<p data-i18n="jobs.events.empty">No events recorded</p>`;
+                }
+
+                return events.map(event => {
+                    const icon = this.getEventIcon(event.event_type);
+                    const details = this.formatEventDetails(event.details);
+                    const timestamp = new Date(event.timestamp).toLocaleTimeString();
+
+                    return `
+                        <div class="event-item">
+                            <div class="event-icon" aria-hidden="true">${icon}</div>
+                            <div class="event-content">
+                                <div class="event-message">${this.escapeHtml(event.message)}</div>
+                                <div class="event-timestamp">${timestamp}</div>
+                                ${details ? `<div class="event-details">${details}</div>` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            getEventIcon(eventType) {
+                const icons = {
+                    'format_conversion': '📄',
+                    'ocr_decision': '👁️',
+                    'compression_selected': '🗜️',
+                    'passthrough_mode': '⚡',
+                    'fallback_applied': '🔄',
+                    'job_timeout': '⏱️',
+                    'job_cleanup': '🧹'
+                };
+                return icons[eventType] || '📌';
+            }
+
+            formatEventDetails(details) {
+                if (!details || Object.keys(details).length === 0) return '';
+
+                return Object.entries(details)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(' | ');
+            }
+
+            async downloadJob(jobId, filename) {
+                try {
+                    console.log(`[Jobs] Downloading job: ${jobId}`);
+
+                    const response = await fetch(`/download/${jobId}`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Download failed: HTTP ${response.status}`);
+                    }
+
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    console.log(`[Jobs] Downloaded: ${filename}`);
+                } catch (error) {
+                    console.error('[Jobs] Download error:', error);
+                    alert(t('jobs.download.error') || 'Download failed. Please try again.');
+                }
+            }
+
+            async retryJob(jobId) {
+                try {
+                    console.log(`[Jobs] Retrying job: ${jobId}`);
+
+                    const response = await fetch(`/api/v1/jobs/${jobId}/status`, {
+                        headers: authManager.getAuthHeaders()
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to load job details: HTTP ${response.status}`);
+                    }
+
+                    const job = await response.json();
+
+                    // Pre-fill converter form
+                    const pdfaLevelSelect = document.getElementById('pdfa_level');
+                    const ocrLanguageSelect = document.getElementById('ocr_language');
+                    const compressionSelect = document.getElementById('compression_profile');
+                    const enableOcrCheckbox = document.getElementById('enable_ocr');
+                    const skipTaggedCheckbox = document.getElementById('skip_ocr_on_tagged');
+
+                    if (pdfaLevelSelect && job.config.pdfa_level !== undefined) {
+                        pdfaLevelSelect.value = job.config.pdfa_level;
+                    }
+                    if (ocrLanguageSelect && job.config.ocr_language) {
+                        ocrLanguageSelect.value = job.config.ocr_language;
+                    }
+                    if (compressionSelect && job.config.compression_profile) {
+                        compressionSelect.value = job.config.compression_profile;
+                    }
+                    if (enableOcrCheckbox) {
+                        enableOcrCheckbox.checked = job.config.enable_ocr !== false;
+                    }
+                    if (skipTaggedCheckbox) {
+                        skipTaggedCheckbox.checked = job.config.skip_ocr_on_tagged !== false;
+                    }
+
+                    // Switch to converter tab
+                    const konverterBtn = document.getElementById('tab-konverter-btn');
+                    if (konverterBtn) konverterBtn.click();
+
+                    // Show notification
+                    const message = t('jobs.retry.notification').replace('{filename}', job.filename) ||
+                                  `Please upload ${job.filename} to retry this conversion`;
+                    showToast(message, 'info', 5000);
+
+                    console.log(`[Jobs] Pre-filled form for retry: ${job.filename}`);
+                } catch (error) {
+                    console.error('[Jobs] Retry error:', error);
+                    alert(t('jobs.retry.error') || 'Failed to load job details. Please try again.');
+                }
+            }
+
+            handleFilterChange(status) {
+                console.log(`[Jobs] Filter changed to: ${status}`);
+
+                this.currentFilter = status;
+                this.currentPage = 1; // Reset to first page
+
+                // Update active button
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    const isActive = btn.dataset.status === status;
+                    btn.classList.toggle('active', isActive);
+                    btn.setAttribute('aria-pressed', isActive.toString());
+                });
+
+                this.loadJobs(true, true); // Show loading indicator when changing filter
+            }
+
+            previousPage() {
+                if (this.currentPage > 1) {
+                    this.currentPage--;
+                    this.loadJobs(true, true); // Show loading indicator when changing page
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+
+            nextPage() {
+                const totalPages = Math.ceil(this.total / this.limit);
+                if (this.currentPage < totalPages) {
+                    this.currentPage++;
+                    this.loadJobs(true, true); // Show loading indicator when changing page
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+            }
+
+            updatePagination() {
+                const totalPages = Math.ceil(this.total / this.limit);
+                const startIndex = (this.currentPage - 1) * this.limit + 1;
+                const endIndex = Math.min(this.currentPage * this.limit, this.total);
+
+                const prevBtn = document.getElementById('jobsPrevBtn');
+                const nextBtn = document.getElementById('jobsNextBtn');
+                const pageInfo = document.getElementById('jobsPageInfo');
+
+                if (prevBtn) prevBtn.disabled = this.currentPage === 1;
+                if (nextBtn) nextBtn.disabled = this.currentPage >= totalPages;
+
+                if (pageInfo) {
+                    const infoText = t('jobs.pagination.info')
+                        .replace('{start}', startIndex)
+                        .replace('{end}', endIndex)
+                        .replace('{total}', this.total) ||
+                        `${startIndex}-${endIndex} of ${this.total} jobs`;
+                    pageInfo.textContent = infoText;
+                }
+            }
+
+            handleWebSocketMessage(message) {
+                if (['completed', 'failed', 'job_event'].includes(message.type)) {
+                    console.log(`[Jobs] WebSocket update: ${message.type} for job ${message.job_id}`);
+
+                    // Refresh job list if the job is in current view
+                    const jobIndex = this.jobs.findIndex(j => j.job_id === message.job_id);
+                    if (jobIndex !== -1) {
+                        this.loadJobs(true);
+                    }
+                }
+            }
+
+            startPolling() {
+                if (this.pollingInterval) return;
+
+                // Check if auto-refresh is enabled (accessibility)
+                if (!this.autoRefreshEnabled) {
+                    console.log('[Jobs] Polling disabled (auto-refresh OFF)');
+                    return;
+                }
+
+                // Only poll if WebSocket is not connected
+                if (!window.ws || window.ws.readyState !== WebSocket.OPEN) {
+                    console.log('[Jobs] Starting polling (WebSocket unavailable)');
+                    this.pollingInterval = setInterval(() => {
+                        if (!document.getElementById('tab-jobs').hasAttribute('hidden')) {
+                            this.loadJobs();
+                        }
+                    }, 5000); // Poll every 5 seconds
+                }
+            }
+
+            stopPolling() {
+                if (this.pollingInterval) {
+                    console.log('[Jobs] Stopping polling');
+                    clearInterval(this.pollingInterval);
+                    this.pollingInterval = null;
+                }
+            }
+
+            /**
+             * Toggle auto-refresh on/off
+             */
+            toggleAutoRefresh() {
+                this.autoRefreshEnabled = !this.autoRefreshEnabled;
+
+                console.log('[Jobs] Auto-refresh toggled:', this.autoRefreshEnabled ? 'ON' : 'OFF');
+
+                if (this.autoRefreshEnabled) {
+                    // Enable: Start polling if tab is active
+                    if (!document.getElementById('tab-jobs').hasAttribute('hidden')) {
+                        this.startPolling();
+                    }
+                } else {
+                    // Disable: Stop polling
+                    this.stopPolling();
+                }
+
+                this.updateAutoRefreshButton();
+            }
+
+            /**
+             * Update auto-refresh button visual state
+             */
+            updateAutoRefreshButton() {
+                const btn = document.getElementById('toggleAutoRefreshBtn');
+                if (!btn) return;
+
+                const statusSpan = btn.querySelector('.toggle-status');
+                if (!statusSpan) return;
+
+                // Update ARIA pressed state
+                btn.setAttribute('aria-pressed', this.autoRefreshEnabled ? 'true' : 'false');
+
+                // Update text with i18n
+                const key = this.autoRefreshEnabled ? 'jobs.autoRefresh.on' : 'jobs.autoRefresh.off';
+                statusSpan.setAttribute('data-i18n', key);
+
+                // Apply translation immediately
+                const translation = t(key);
+                if (translation) {
+                    statusSpan.textContent = translation;
+                } else {
+                    // Fallback
+                    statusSpan.textContent = this.autoRefreshEnabled ? 'Auto-Refresh: ON' : 'Auto-Refresh: OFF';
+                }
+            }
+
+            // ============================================================================
+            // Utility Methods
+            // ============================================================================
+
+            getRelativeTime(date) {
+                const seconds = Math.floor((new Date() - date) / 1000);
+
+                if (seconds < 30) return t('jobs.time.just_now') || 'Just now';
+
+                const intervals = [
+                    { unit: 'year', seconds: 31536000 },
+                    { unit: 'month', seconds: 2592000 },
+                    { unit: 'week', seconds: 604800 },
+                    { unit: 'day', seconds: 86400 },
+                    { unit: 'hour', seconds: 3600 },
+                    { unit: 'minute', seconds: 60 }
+                ];
+
+                for (const { unit, seconds: secondsInUnit } of intervals) {
+                    const interval = Math.floor(seconds / secondsInUnit);
+                    if (interval >= 1) {
+                        const key = `jobs.time.${unit}`;
+                        return t(key).replace('{count}', interval) || `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
+                    }
+                }
+
+                return t('jobs.time.just_now') || 'Just now';
+            }
+
+            formatDuration(seconds) {
+                if (seconds < 60) return `${seconds.toFixed(1)}s`;
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}m ${secs}s`;
+            }
+
+            formatSizeInfo(job) {
+                if (!job.file_size_input) return '-';
+
+                const input = this.formatBytes(job.file_size_input);
+                const output = job.file_size_output ? this.formatBytes(job.file_size_output) : '-';
+                const ratio = job.compression_ratio ? `(${job.compression_ratio.toFixed(1)}x)` : '';
+
+                return `${input} → ${output} ${ratio}`;
+            }
+
+            formatBytes(bytes) {
+                if (bytes === 0) return '0 B';
+                const k = 1024;
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+            }
+
+            truncateFilename(filename, maxLength) {
+                if (filename.length <= maxLength) return filename;
+                const extension = filename.split('.').pop();
+                const nameLength = maxLength - extension.length - 4; // 4 for "..." and "."
+                return filename.substring(0, nameLength) + '...' + extension;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Global jobs manager instance
+        const jobsManager = new JobsManager();
+
+        // Tab visibility observer for Jobs Tab
+        const jobsTabObserver = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.target.id === 'tab-jobs') {
+                    if (mutation.target.hasAttribute('hidden')) {
+                        jobsManager.onTabDeactivated();
+                    } else {
+                        jobsManager.onTabActivated();
+                    }
+                }
+            });
+        });
+
+        const jobsTab = document.getElementById('tab-jobs');
+        if (jobsTab) {
+            jobsTabObserver.observe(jobsTab, {
+                attributes: true,
+                attributeFilter: ['hidden']
+            });
+        }
+
+        // ============================================================================
         // Authentication Initialization
         // ============================================================================
 
@@ -5654,12 +7414,15 @@
                 // Initialize account manager
                 accountManager.init();
 
+                // Initialize jobs manager
+                jobsManager.init();
+
                 // Load account data when Konto tab is activated
-                const kontoTab = document.getElementById('tab-konto-btn');
+                const kontoTab = document.getElementById('tab-account-btn');
                 kontoTab?.addEventListener('click', () => {
                     // Load data when tab becomes active
                     setTimeout(() => {
-                        if (!document.getElementById('tab-konto').hidden) {
+                        if (!document.getElementById('tab-account').hidden) {
                             accountManager.loadAccountData();
 
                             // Apply preferences to converter form when switching back

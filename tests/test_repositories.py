@@ -659,7 +659,7 @@ class TestJobRepositoryEvents:
 
     @pytest.mark.asyncio
     async def test_get_user_jobs_returns_events(self, mock_mongodb):
-        """Should return events when querying user jobs."""
+        """Should return events_count but not events array (perf optimization)."""
         repo = JobRepository()
 
         mock_cursor = AsyncMock()
@@ -702,8 +702,8 @@ class TestJobRepositoryEvents:
         # Act
         result = await repo.get_user_jobs("user-123", limit=2, offset=0)
 
-        # Assert
+        # Assert - Performance optimization: events removed, events_count added
         assert len(result) == 2
-        assert len(result[0].events) == 1
-        assert result[0].events[0].event_type == "format_conversion"
-        assert len(result[1].events) == 0  # Empty events list
+        assert result[0].events_count == 1  # 1 event in source data
+        assert len(result[0].events) == 0  # Events array should be empty (removed)
+        assert result[1].events_count == 0  # 0 events in source data

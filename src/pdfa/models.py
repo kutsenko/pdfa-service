@@ -161,6 +161,7 @@ class JobDocument(BaseModel):
     error: str | None = None
     progress: dict[str, Any] | None = None
     events: list[JobEvent] = Field(default_factory=list)
+    events_count: int | None = None  # Performance optimization for job lists
 
     model_config = {"arbitrary_types_allowed": True}
 
