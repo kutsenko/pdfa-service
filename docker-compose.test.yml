@@ -23,6 +23,29 @@ services:
     networks:
       - pdfa-test-network
 
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pdfa-test-runner
+    depends_on:
+      mongodb-test:
+        condition: service_healthy
+    environment:
+      MONGODB_URI: "mongodb://admin:test_password@mongodb-test:27017/pdfa_test?authSource=admin"
+      AUTH_ENABLED: "false"
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      - .:/app
+    working_dir: /app
+    networks:
+      - pdfa-test-network
+    command: >
+      sh -c "
+        pip install -e '.[dev]' &&
+        pytest tests/ --ignore=tests/e2e -v --tb=short --cov=src --cov-report=term-missing --cov-fail-under=79
+      "
+
 networks:
   pdfa-test-network:
     driver: bridge
