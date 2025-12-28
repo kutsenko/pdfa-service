@@ -2638,8 +2638,8 @@
                 </div>
             </div>
 
-            <!-- Loading State -->
-            <div id="jobsLoading" class="loading-state" style="display: none;" role="alert" aria-live="polite">
+            <!-- Loading State (silent for screenreaders during auto-refresh) -->
+            <div id="jobsLoading" class="loading-state" style="display: none;" aria-hidden="true">
                 <div class="spinner" aria-hidden="true"></div>
                 <p data-i18n="jobs.loading">Loading jobs...</p>
             </div>
@@ -6576,7 +6576,7 @@
                 if (refreshBtn) {
                     refreshBtn.addEventListener('click', () => {
                         console.log('[Jobs] Manual refresh triggered');
-                        this.loadJobs(true);
+                        this.loadJobs(true, true); // Show loading indicator for manual refresh
                     });
                 }
 
@@ -6607,7 +6607,7 @@
                 // Bind retry button in error state
                 const errorRetryBtn = document.querySelector('#jobsError .retry-btn');
                 if (errorRetryBtn) {
-                    errorRetryBtn.addEventListener('click', () => this.loadJobs(true));
+                    errorRetryBtn.addEventListener('click', () => this.loadJobs(true, true)); // Show loading on retry
                 }
 
                 // Keyboard shortcuts
@@ -6641,7 +6641,7 @@
 
             onTabActivated() {
                 console.log('[Jobs] Tab activated');
-                this.loadJobs();
+                this.loadJobs(false, true); // Show loading indicator on initial tab activation
                 this.startPolling();
             }
 
@@ -6650,7 +6650,7 @@
                 this.stopPolling();
             }
 
-            async loadJobs(forceRefresh = false) {
+            async loadJobs(forceRefresh = false, showLoadingIndicator = false) {
                 // Check cache
                 const now = Date.now();
                 if (!forceRefresh && now - this.lastFetchTime < this.cacheDuration) {
@@ -6658,14 +6658,18 @@
                     return;
                 }
 
-                this.showLoading();
+                // Only show loading indicator if explicitly requested (initial load, manual refresh)
+                // Silent loading for auto-refresh to avoid screenreader interruptions
+                if (showLoadingIndicator) {
+                    this.showLoading();
+                }
 
                 try {
                     const offset = (this.currentPage - 1) * this.limit;
                     const statusParam = this.currentFilter === 'all' ? '' : `&status=${this.currentFilter}`;
                     const url = `/api/v1/jobs/history?limit=${this.limit}&offset=${offset}${statusParam}`;
 
-                    console.log(`[Jobs] Fetching jobs: ${url}`);
+                    console.log(`[Jobs] Fetching jobs: ${url} (silent: ${!showLoadingIndicator})`);
 
                     const response = await fetch(url, {
                         headers: authManager.getAuthHeaders()
@@ -7161,13 +7165,13 @@
                     btn.setAttribute('aria-pressed', isActive.toString());
                 });
 
-                this.loadJobs(true);
+                this.loadJobs(true, true); // Show loading indicator when changing filter
             }
 
             previousPage() {
                 if (this.currentPage > 1) {
                     this.currentPage--;
-                    this.loadJobs(true);
+                    this.loadJobs(true, true); // Show loading indicator when changing page
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             }
@@ -7176,7 +7180,7 @@
                 const totalPages = Math.ceil(this.total / this.limit);
                 if (this.currentPage < totalPages) {
                     this.currentPage++;
-                    this.loadJobs(true);
+                    this.loadJobs(true, true); // Show loading indicator when changing page
                     window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
             }
