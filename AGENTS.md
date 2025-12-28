@@ -278,6 +278,128 @@ pdfa-cli --help
 
 ---
 
+## Common Pitfalls and Solutions
+
+### asyncio Event Loop Issues in Tests
+
+**Problem**: Integration tests fail with `RuntimeError: Runner.run() cannot be called from a running event loop` when using `asyncio.run()` inside code that's already running in a pytest-asyncio event loop.
+
+**Root Cause**: `asyncio.run()` creates a new event loop, which conflicts with pytest-asyncio's existing event loop.
+
+**Solution**: Use `new_event_loop()` pattern instead:
+
+```python
+# DON'T: Fails in pytest-asyncio context
+asyncio.run(event_callback(event_type, **kwargs))
+
+# DO: Compatible with pytest-asyncio
+loop = asyncio.new_event_loop()
+try:
+    loop.run_until_complete(event_callback(event_type, **kwargs))
+finally:
+    loop.close()
+```
+
+**Location**: `src/pdfa/converter.py` line 280-284
+
+### Coverage Configuration
+
+**Problem**: E2E tests show ERROR status (no server running) and lower overall coverage percentage, causing CI failures.
+
+**Root Cause**: E2E tests require running API server and aren't meant for coverage measurement.
+
+**Solution**: Exclude E2E tests from coverage:
+
+```bash
+# In CI and local testing
+pytest --cov=src --cov-report=term-missing --cov-fail-under=80 --ignore=tests/e2e
+```
+
+**Configuration**: `.github/workflows/dod-check.yml` line 56
+
+**Realistic Baseline**: 80% coverage is achievable and meaningful; 90%+ often forces artificial test coverage.
+
+### Security Scan False Positives
+
+**Problem**: Security scans detect "hardcoded secrets" in test fixtures (e.g., `test_client_secret_67890`).
+
+**Root Cause**: Grep-based secret detection doesn't distinguish between test fixtures and production code.
+
+**Solution**: Exclude test files from secret scanning:
+
+```bash
+# In secret detection workflow
+git grep -E "(password|secret|token|api_key)\s*=\s*['\"][^'\"]+['\"]" -- '*.py' ':!tests/*'
+```
+
+**Configuration**: `.github/workflows/dod-check.yml` line 116
+
+### Docker Compose Test Timeouts
+
+**Problem**: Docker Compose test job runs for 6+ hours without completing.
+
+**Root Cause**: `docker-compose.test.yml` only provides infrastructure (MongoDB) but no test execution.
+
+**Solution**: Add test-runner service to actually execute tests:
+
+```yaml
+test-runner:
+  build:
+    context: .
+    dockerfile: Dockerfile
+  depends_on:
+    mongodb-test:
+      condition: service_healthy
+  environment:
+    MONGODB_URI: "mongodb://admin:test_password@mongodb-test:27017/pdfa_test?authSource=admin"
+    AUTH_ENABLED: "false"
+  volumes:
+    - .:/app
+  working_dir: /app
+  command: >
+    sh -c "
+      pip install -e '.[dev]' &&
+      pytest tests/ --ignore=tests/e2e -v --cov=src --cov-fail-under=79
+    "
+```
+
+**Configuration**: `docker-compose.test.yml` test-runner service
+
+### Python Version Consistency
+
+**Problem**: CI/CD failures due to Python version mismatches between local development, CI workflows, and Docker images.
+
+**Root Cause**: Multiple files reference Python version, and they can drift out of sync during updates.
+
+**Solution**: When updating Python version, update ALL of these files:
+
+1. **Configuration Files**:
+   - `pyproject.toml` (requires-python, black target-version, ruff target-version)
+   - `Dockerfile` (FROM python:X.Y-slim)
+   - `.github/workflows/docker-publish.yml` (setup-python in test and security jobs)
+
+2. **English Documentation**:
+   - `README.md` (system requirements, installation commands, version checks)
+   - `AGENTS.md` (Python version requirement)
+   - `CLAUDE.md` (type hints reference)
+   - `DEFINITION_OF_DONE.md` (quality checklist)
+
+3. **German Documentation**:
+   - `README.de.md` (system requirements, installation commands, version checks)
+   - `CLAUDE.de.md` (type hints reference)
+
+**Verification**: After update, search for old version references:
+
+```bash
+grep -r "3\.11\|3\.12" --include="*.md" --include="*.toml" --include="*.yml" \
+  --include="Dockerfile" | grep -v ".venv" | grep -v ".git"
+# Should return no relevant matches
+```
+
+**Note**: Use feature branch workflow for Python version updates to validate CI/CD compatibility before merging.
+
+---
+
 ## Development Workflow
 
 ### Quick Start
