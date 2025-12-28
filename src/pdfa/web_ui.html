@@ -5315,6 +5315,9 @@
             }
         };
 
+        // Make translations globally accessible for dynamic translation updates
+        window.translations = translations;
+
         // Detect browser language and redirect if on auto mode
         function detectAndRedirectToPreferredLanguage() {
             const dataLang = document.documentElement.getAttribute('data-lang');
@@ -5346,6 +5349,9 @@
 
         // Get current language from HTML data-lang attribute or browser detection
         const currentLang = detectAndRedirectToPreferredLanguage();
+
+        // Make currentLang available globally for dynamic translation updates
+        window.currentLang = currentLang;
 
         // Helper function to get nested value from dot notation key
         function getNestedValue(obj, key) {
@@ -5396,6 +5402,9 @@
                 }
             });
         }
+
+        // Make applyTranslations globally accessible for dynamic translation updates
+        window.applyTranslations = applyTranslations;
 
         // Helper function to get translated text with placeholders
         function t(key, replacements = {}) {
@@ -7048,6 +7057,11 @@
                 // Apply user preferences when switching to camera tab
                 if (tabId === 'tab-kamera' && window.accountManager) {
                     window.accountManager.applyPreferencesToCameraTab();
+                }
+
+                // Reapply translations to newly visible tab elements
+                if (window.currentLang) {
+                    applyTranslations(window.currentLang);
                 }
 
                 // Update URL hash (optional - preserves tab on refresh)
