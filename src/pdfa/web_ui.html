@@ -9328,7 +9328,53 @@
                 if (checkbox) {
                     checkbox.addEventListener('change', async (e) => {
                         if (e.target.checked) {
-                            await this.enable();
+                            // iOS Fix: Create and resume AudioContext HERE in direct user gesture
+                            // This is CRITICAL for iOS - AudioContext.resume() must be called
+                            // synchronously in a user gesture handler, not in an async callback
+                            try {
+                                console.log('[A11y] ========== User clicked enable checkbox ==========');
+                                console.log('[A11y] Creating AudioContext in direct user gesture');
+
+                                // Pre-create AudioContext while still in user gesture context
+                                if (!this.audioContext) {
+                                    // Check browser support
+                                    if (!window.AudioContext && !window.webkitAudioContext) {
+                                        throw new Error('AudioContext not supported in this browser');
+                                    }
+
+                                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                                    console.log('[A11y] AudioContext created in user gesture. State:', this.audioContext.state);
+
+                                    // Resume immediately while still in user gesture (critical for iOS)
+                                    if (this.audioContext.state === 'suspended') {
+                                        console.log('[A11y] AudioContext suspended, resuming NOW in user gesture...');
+                                        await this.audioContext.resume();
+                                        console.log('[A11y] ✓ AudioContext resumed in user gesture. State:', this.audioContext.state);
+
+                                        // Give iOS a moment to process
+                                        await new Promise(resolve => setTimeout(resolve, 50));
+                                        console.log('[A11y] Final AudioContext state:', this.audioContext.state);
+                                    } else {
+                                        console.log('[A11y] AudioContext already running (state:', this.audioContext.state + ')');
+                                    }
+                                }
+
+                                // Now call enable() which can assume AudioContext is ready
+                                await this.enable();
+                            } catch (error) {
+                                console.error('[A11y] ✗ Failed to initialize in user gesture:', error);
+                                alert('Failed to enable audio: ' + error.message + '\n\nPlease try clicking the checkbox again.');
+                                e.target.checked = false;
+                                // Clean up if AudioContext was created
+                                if (this.audioContext) {
+                                    try {
+                                        this.audioContext.close();
+                                    } catch (closeError) {
+                                        console.error('[A11y] Failed to close AudioContext:', closeError);
+                                    }
+                                    this.audioContext = null;
+                                }
+                            }
                         } else {
                             this.disable();
                         }
@@ -9380,53 +9426,22 @@
                         loadingIndicator.hidden = false;
                     }
 
-                    // Check AudioContext availability
-                    console.log('[A11y] Step 2: Checking AudioContext availability');
-                    if (!window.AudioContext && !window.webkitAudioContext) {
-                        throw new Error('AudioContext not supported in this browser');
+                    // AudioContext should already be created and resumed in setupControls()
+                    // This is critical for iOS - resume() must be called in direct user gesture
+                    console.log('[A11y] Step 2: Checking AudioContext (should be pre-created)');
+                    if (!this.audioContext) {
+                        throw new Error('AudioContext was not pre-created. This should not happen.');
                     }
+                    console.log('[A11y] ✓ AudioContext exists. State:', this.audioContext.state);
 
-                    // Initialize audio context
-                    console.log('[A11y] Step 3: Creating AudioContext');
-                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    console.log('[A11y] AudioContext created. State:', this.audioContext.state);
-
-                    // iOS Safari Fix: Resume AudioContext if suspended
-                    // On iOS, AudioContext starts in 'suspended' state and requires user interaction
-                    if (this.audioContext.state === 'suspended') {
-                        console.log('[A11y] Step 4: AudioContext is suspended, attempting to resume...');
-                        console.log('[A11y] This is expected on iOS - requires user gesture');
-                        try {
-                            // iOS workaround: Resume must be called directly in user gesture
-                            await this.audioContext.resume();
-
-                            // Give it a moment to settle
-                            await new Promise(resolve => setTimeout(resolve, 100));
-
-                            console.log('[A11y] AudioContext state after resume:', this.audioContext.state);
-
-                            if (this.audioContext.state !== 'running') {
-                                // Try one more time with longer delay
-                                console.log('[A11y] Retrying resume after delay...');
-                                await new Promise(resolve => setTimeout(resolve, 200));
-                                await this.audioContext.resume();
-
-                                if (this.audioContext.state !== 'running') {
-                                    throw new Error('AudioContext stuck in state: ' + this.audioContext.state);
-                                }
-                            }
-
-                            console.log('[A11y] ✓ AudioContext resumed successfully');
-                        } catch (resumeError) {
-                            console.error('[A11y] ✗ Failed to resume AudioContext:', resumeError);
-                            throw new Error('iOS audio initialization failed. Error: ' + resumeError.message);
-                        }
-                    } else {
-                        console.log('[A11y] Step 4: AudioContext already running (state:', this.audioContext.state + ')');
+                    // Verify AudioContext is running (should be after setupControls resume)
+                    if (this.audioContext.state !== 'running') {
+                        console.warn('[A11y] ⚠ WARNING: AudioContext not running. State:', this.audioContext.state);
+                        console.warn('[A11y] This may indicate iOS user gesture was lost. Audio may not work.');
                     }
 
                     // Create oscillator and gain nodes
-                    console.log('[A11y] Step 5: Creating audio nodes');
+                    console.log('[A11y] Step 3: Creating audio nodes');
                     this.oscillator = this.audioContext.createOscillator();
                     this.gainNode = this.audioContext.createGain();
                     this.oscillator.connect(this.gainNode);
@@ -9436,8 +9451,9 @@
                     console.log('[A11y] ✓ Audio nodes created and started');
 
                     // iOS Audio Unlock: Play a brief tone to unlock audio on iOS
-                    // This MUST happen in direct user gesture (checkbox click)
-                    console.log('[A11y] Step 5b: Unlocking iOS audio with test tone...');
+                    // AudioContext was already resumed in setupControls() user gesture
+                    // This tone further ensures audio pipeline is ready
+                    console.log('[A11y] Step 4: Unlocking iOS audio with test tone...');
                     try {
                         // Play very brief, barely audible tone
                         const now = this.audioContext.currentTime;
@@ -9451,7 +9467,7 @@
                     }
 
                     // Create analysis canvas
-                    console.log('[A11y] Step 6: Creating analysis canvas');
+                    console.log('[A11y] Step 5: Creating analysis canvas');
                     this.analysisCanvas = document.createElement('canvas');
                     this.analysisCtx = this.analysisCanvas.getContext('2d');
                     if (!this.analysisCtx) {
@@ -9460,7 +9476,7 @@
                     console.log('[A11y] ✓ Canvas created');
 
                     // Load edge detection library (jscanify)
-                    console.log('[A11y] Step 7: Loading jscanify library from CDN (with fallbacks)');
+                    console.log('[A11y] Step 6: Loading jscanify library from CDN (with fallbacks)');
                     await this.loadEdgeDetectionLibrary();
 
                     if (this.degradedMode) {
@@ -9476,13 +9492,13 @@
                     }
 
                     // Start frame analysis loop (will skip edge detection if degradedMode)
-                    console.log('[A11y] Step 8: Starting frame analysis');
+                    console.log('[A11y] Step 7: Starting frame analysis');
                     this.startAnalysis();
                     console.log('[A11y] ✓ Frame analysis started');
 
                     this.enabled = true;
 
-                    console.log('[A11y] Step 9: Announcing success');
+                    console.log('[A11y] Step 8: Announcing success');
                     if (this.degradedMode) {
                         // Inform user about degraded mode
                         this.announce('Audio guidance enabled. Edge detection unavailable - audio features only.', 'force');
