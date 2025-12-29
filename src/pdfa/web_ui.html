@@ -9310,6 +9310,21 @@
                     this.gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
                     console.log('[A11y] ✓ Audio nodes created and started');
 
+                    // iOS Audio Unlock: Play a brief tone to unlock audio on iOS
+                    // This MUST happen in direct user gesture (checkbox click)
+                    console.log('[A11y] Step 5b: Unlocking iOS audio with test tone...');
+                    try {
+                        // Play very brief, barely audible tone
+                        const now = this.audioContext.currentTime;
+                        this.oscillator.frequency.setValueAtTime(440, now);
+                        this.gainNode.gain.setValueAtTime(0.01, now); // Very quiet
+                        this.gainNode.gain.setValueAtTime(0, now + 0.05); // 50ms
+                        console.log('[A11y] ✓ iOS audio unlock tone played');
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    } catch (unlockError) {
+                        console.warn('[A11y] iOS audio unlock failed (may be OK):', unlockError);
+                    }
+
                     // Create analysis canvas
                     console.log('[A11y] Step 6: Creating analysis canvas');
                     this.analysisCanvas = document.createElement('canvas');
@@ -9875,16 +9890,75 @@
                 this.playTone(frequency, 100);
             }
 
-            testAudio() {
-                console.log('[A11y] Testing audio');
+            async testAudio() {
+                console.log('[A11y] ===== Testing Audio =====');
+                console.log('[A11y] Platform:', navigator.platform);
+                console.log('[A11y] User Agent:', navigator.userAgent);
 
-                // Play success tone
-                this.playSuccessTone();
+                if (!this.audioContext) {
+                    alert('Audio not initialized. Please enable accessibility assistance first.');
+                    return;
+                }
 
-                // Announce test message
-                setTimeout(() => {
-                    this.announce(this.translate('camera.a11y.testAnnouncement') || 'Audio test. If you can hear this, audio is working.');
-                }, 500);
+                console.log('[A11y] AudioContext state:', this.audioContext.state);
+
+                // iOS Fix: Resume AudioContext if needed (must be in user gesture)
+                if (this.audioContext.state === 'suspended') {
+                    console.log('[A11y] AudioContext suspended, resuming...');
+                    try {
+                        await this.audioContext.resume();
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        console.log('[A11y] AudioContext state after resume:', this.audioContext.state);
+                    } catch (error) {
+                        console.error('[A11y] Failed to resume AudioContext:', error);
+                        alert('Failed to resume audio: ' + error.message);
+                        return;
+                    }
+                }
+
+                if (this.audioContext.state !== 'running') {
+                    alert('AudioContext not running. State: ' + this.audioContext.state);
+                    return;
+                }
+
+                // Test 1: Play tone
+                console.log('[A11y] Test 1: Playing tone...');
+                try {
+                    await this.playSuccessTone();
+                    console.log('[A11y] ✓ Tone played');
+                } catch (error) {
+                    console.error('[A11y] ✗ Tone failed:', error);
+                }
+
+                // Test 2: Try speech (may not work on iOS Safari)
+                console.log('[A11y] Test 2: Testing speech synthesis...');
+                const testText = this.translate('camera.a11y.testAnnouncement') || 'Audio test. If you can hear this, audio is working.';
+
+                if (window.speechSynthesis) {
+                    console.log('[A11y] Speech synthesis available');
+                    setTimeout(() => {
+                        try {
+                            window.speechSynthesis.cancel(); // Cancel any pending speech
+                            const utterance = new SpeechSynthesisUtterance(testText);
+                            utterance.lang = this.getLangCode();
+                            utterance.volume = this.volume;
+                            utterance.rate = 1.0;
+
+                            utterance.onstart = () => console.log('[A11y] ✓ Speech started');
+                            utterance.onend = () => console.log('[A11y] ✓ Speech ended');
+                            utterance.onerror = (e) => console.error('[A11y] ✗ Speech error:', e);
+
+                            window.speechSynthesis.speak(utterance);
+                        } catch (error) {
+                            console.error('[A11y] ✗ Speech failed:', error);
+                        }
+                    }, 600);
+                } else {
+                    console.warn('[A11y] ⚠️ Speech synthesis NOT available (expected on iOS Safari)');
+                    alert('Speech synthesis not available on this browser. Tones should work.');
+                }
+
+                console.log('[A11y] ===== Test Complete =====');
             }
 
             announce(text, priority = 'polite') {
@@ -9903,20 +9977,30 @@
                     liveRegion.textContent = text;
                 }
 
-                // Also use Web Speech API (for all users)
-                if (this.synth) {
-                    // Cancel any ongoing speech
-                    this.synth.cancel();
+                // Try Web Speech API (may not work on iOS Safari)
+                if (this.synth && window.speechSynthesis) {
+                    try {
+                        // Cancel any ongoing speech
+                        this.synth.cancel();
 
-                    const utterance = new SpeechSynthesisUtterance(text);
-                    utterance.lang = this.getLangCode();
-                    utterance.volume = this.volume;
-                    utterance.rate = 1.2; // Slightly faster
+                        const utterance = new SpeechSynthesisUtterance(text);
+                        utterance.lang = this.getLangCode();
+                        utterance.volume = this.volume;
+                        utterance.rate = 1.2; // Slightly faster
 
-                    this.synth.speak(utterance);
+                        utterance.onerror = (e) => {
+                            console.warn('[A11y] Speech synthesis error (may be normal on iOS):', e.error);
+                        };
+
+                        this.synth.speak(utterance);
+                        console.log('[A11y] Speech announced:', text);
+                    } catch (error) {
+                        console.warn('[A11y] Speech synthesis failed (may be normal on iOS):', error);
+                        // Fallback: tone only (already played by caller if needed)
+                    }
+                } else {
+                    console.log('[A11y] Announced (text only, no speech):', text);
                 }
-
-                console.log('[A11y] Announced:', text);
             }
 
             getLangCode() {
