@@ -9732,18 +9732,57 @@
                     return;
                 }
 
+                // iOS Fix: Check if in degraded mode (no edge detection)
+                if (this.degradedMode) {
+                    console.log('[A11y] In degraded mode - skipping edge detection');
+                    return;
+                }
+
                 if (!this.scanner) {
+                    console.warn('[A11y] Scanner not initialized - skipping frame');
                     return;
                 }
 
                 try {
+                    // iOS Fix: Validate video dimensions before processing
+                    if (video.videoWidth === 0 || video.videoHeight === 0) {
+                        console.warn('[A11y] Video dimensions are 0 - skipping frame');
+                        return;
+                    }
+
                     // Draw to analysis canvas (downscale for performance)
                     const scale = 0.5; // Process at 50% resolution
-                    this.analysisCanvas.width = video.videoWidth * scale;
-                    this.analysisCanvas.height = video.videoHeight * scale;
-                    this.analysisCtx.drawImage(video, 0, 0,
-                        this.analysisCanvas.width,
-                        this.analysisCanvas.height);
+                    const targetWidth = Math.floor(video.videoWidth * scale);
+                    const targetHeight = Math.floor(video.videoHeight * scale);
+
+                    // iOS Fix: Ensure dimensions are valid
+                    if (targetWidth < 1 || targetHeight < 1) {
+                        console.warn('[A11y] Calculated dimensions too small - skipping frame');
+                        return;
+                    }
+
+                    this.analysisCanvas.width = targetWidth;
+                    this.analysisCanvas.height = targetHeight;
+
+                    // Only log dimensions once per session
+                    if (!this._dimensionsLogged) {
+                        console.log('[A11y] Drawing frame:', targetWidth, 'x', targetHeight);
+                        this._dimensionsLogged = true;
+                    }
+
+                    this.analysisCtx.drawImage(video, 0, 0, targetWidth, targetHeight);
+
+                    // iOS Fix: Verify canvas has content (only check on first few frames)
+                    if (!this._canvasVerified) {
+                        const imageData = this.analysisCtx.getImageData(0, 0, Math.min(10, targetWidth), Math.min(10, targetHeight));
+                        const hasContent = imageData.data.some(byte => byte !== 0);
+                        if (!hasContent) {
+                            console.warn('[A11y] Canvas appears empty after drawImage - skipping frame');
+                            return;
+                        }
+                        console.log('[A11y] ✓ Canvas verified - has content');
+                        this._canvasVerified = true;
+                    }
 
                     // Detect document edges using jscanify v1.4.0 API
                     // Pass canvas element (jscanifyImage type) instead of ImageData
@@ -9753,6 +9792,12 @@
                     if (contour) {
                         // Extract corner points from contour
                         corners = this.scanner.getCornerPoints(contour);
+
+                        // Log only when edges are first detected
+                        if (!this._edgesDetectedLogged) {
+                            console.log('[A11y] ✓ Edges detected:', corners);
+                            this._edgesDetectedLogged = true;
+                        }
                     }
 
                     // Build result object compatible with old code
@@ -9770,6 +9815,12 @@
                     // Calculate confidence (0-1)
                     const confidence = this.calculateConfidence(result);
 
+                    // Log confidence only when it changes significantly (> 10%)
+                    if (!this._lastLoggedConfidence || Math.abs(confidence - this._lastLoggedConfidence) > 0.1) {
+                        console.log('[A11y] Edge confidence:', confidence.toFixed(2));
+                        this._lastLoggedConfidence = confidence;
+                    }
+
                     // Provide feedback based on confidence
                     this.provideFeedback(confidence, result);
 
@@ -9777,7 +9828,10 @@
                     this.lastEdgeConfidence = confidence;
                 } catch (error) {
                     console.error('[A11y] Error analyzing frame:', error);
+                    console.error('[A11y] Error stack:', error.stack);
                     // Don't throw - just skip this frame
+                    // Show error in debug console for iOS testing
+                    this.announce('Error analyzing frame: ' + error.message, 'force');
                 }
             }
 
@@ -9816,6 +9870,7 @@
 
                 if (confidence >= threshold && this.lastEdgeConfidence < threshold) {
                     // Transition: edges not detected → edges detected
+                    console.log('[A11y] ✓ Edges detected! Playing success tone');
                     this.playSuccessTone();
                     this.announce(this.translate('camera.a11y.edgesDetected'));
                     this.showVisualIndicator('success');
@@ -9823,6 +9878,7 @@
 
                 } else if (confidence < threshold && this.lastEdgeConfidence >= threshold) {
                     // Transition: edges detected → edges lost
+                    console.log('[A11y] ⚠ Edges lost! Playing warning tone');
                     this.playWarningTone();
                     this.announce(this.translate('camera.a11y.edgesLost'));
                     this.showVisualIndicator('warning');
@@ -9981,30 +10037,55 @@
             }
 
             async playTone(frequency, duration = 200) {
-                if (!this.audioContext || !this.enabled) return;
+                if (!this.audioContext || !this.enabled) {
+                    console.warn('[A11y] playTone: AudioContext not available or not enabled');
+                    return;
+                }
 
                 // iOS Safari Fix: Resume AudioContext if suspended (can happen at any time)
                 if (this.audioContext.state === 'suspended') {
+                    console.warn('[A11y] AudioContext suspended during playTone - attempting resume');
                     try {
                         await this.audioContext.resume();
+                        console.log('[A11y] AudioContext resumed successfully');
                     } catch (error) {
                         console.error('[A11y] Failed to resume AudioContext for playTone:', error);
+                        // Warn user that audio stopped working
+                        if (!this._audioSuspendedWarned) {
+                            this.announce('Audio suspended. Please toggle accessibility off and on again.');
+                            this._audioSuspendedWarned = true;
+                        }
                         return;
                     }
                 }
 
-                const now = this.audioContext.currentTime;
+                if (this.audioContext.state !== 'running') {
+                    console.warn('[A11y] AudioContext not running. State:', this.audioContext.state);
+                    return;
+                }
 
-                // Set frequency
-                this.oscillator.frequency.setValueAtTime(frequency, now);
+                try {
+                    const now = this.audioContext.currentTime;
 
-                // Fade in
-                this.gainNode.gain.cancelScheduledValues(now);
-                this.gainNode.gain.setValueAtTime(0, now);
-                this.gainNode.gain.linearRampToValueAtTime(this.volume * 0.3, now + 0.01);
+                    // Set frequency
+                    this.oscillator.frequency.setValueAtTime(frequency, now);
 
-                // Fade out
-                this.gainNode.gain.linearRampToValueAtTime(0, now + (duration / 1000));
+                    // Fade in
+                    this.gainNode.gain.cancelScheduledValues(now);
+                    this.gainNode.gain.setValueAtTime(0, now);
+                    this.gainNode.gain.linearRampToValueAtTime(this.volume * 0.3, now + 0.01);
+
+                    // Fade out
+                    this.gainNode.gain.linearRampToValueAtTime(0, now + (duration / 1000));
+
+                    // Log first successful tone
+                    if (!this._firstTonePlayed) {
+                        console.log('[A11y] ✓ First tone played successfully');
+                        this._firstTonePlayed = true;
+                    }
+                } catch (error) {
+                    console.error('[A11y] Error in playTone:', error);
+                }
             }
 
             playSuccessTone() {
