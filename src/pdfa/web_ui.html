@@ -9272,17 +9272,29 @@
                         console.log('[A11y] Step 4: AudioContext is suspended, attempting to resume...');
                         console.log('[A11y] This is expected on iOS - requires user gesture');
                         try {
+                            // iOS workaround: Resume must be called directly in user gesture
                             await this.audioContext.resume();
+
+                            // Give it a moment to settle
+                            await new Promise(resolve => setTimeout(resolve, 100));
+
                             console.log('[A11y] AudioContext state after resume:', this.audioContext.state);
 
                             if (this.audioContext.state !== 'running') {
-                                throw new Error('AudioContext failed to resume. State: ' + this.audioContext.state);
+                                // Try one more time with longer delay
+                                console.log('[A11y] Retrying resume after delay...');
+                                await new Promise(resolve => setTimeout(resolve, 200));
+                                await this.audioContext.resume();
+
+                                if (this.audioContext.state !== 'running') {
+                                    throw new Error('AudioContext stuck in state: ' + this.audioContext.state);
+                                }
                             }
 
                             console.log('[A11y] ✓ AudioContext resumed successfully');
                         } catch (resumeError) {
                             console.error('[A11y] ✗ Failed to resume AudioContext:', resumeError);
-                            throw new Error('iOS requires user tap to enable audio. Error: ' + resumeError.message);
+                            throw new Error('iOS audio initialization failed. Error: ' + resumeError.message);
                         }
                     } else {
                         console.log('[A11y] Step 4: AudioContext already running (state:', this.audioContext.state + ')');
@@ -9443,10 +9455,11 @@
                 }
 
                 // Multiple CDN URLs as fallbacks (iOS often blocks certain CDNs)
+                // Using v1.4.0 (latest as of 2025-02)
                 const cdnUrls = [
-                    'https://cdn.jsdelivr.net/npm/jscanify@1.2.0/dist/jscanify.min.js',
-                    'https://unpkg.com/jscanify@1.2.0/dist/jscanify.min.js',
-                    'https://cdnjs.cloudflare.com/ajax/libs/jscanify/1.2.0/jscanify.min.js'
+                    'https://cdn.jsdelivr.net/npm/jscanify@1.4.0/dist/jscanify.min.js',
+                    'https://unpkg.com/jscanify@1.4.0/dist/jscanify.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/jscanify/1.4.0/jscanify.min.js'
                 ];
 
                 let lastError = null;
@@ -9567,34 +9580,53 @@
                     return;
                 }
 
-                // Draw to analysis canvas (downscale for performance)
-                const scale = 0.5; // Process at 50% resolution
-                this.analysisCanvas.width = video.videoWidth * scale;
-                this.analysisCanvas.height = video.videoHeight * scale;
-                this.analysisCtx.drawImage(video, 0, 0,
-                    this.analysisCanvas.width,
-                    this.analysisCanvas.height);
+                try {
+                    // Draw to analysis canvas (downscale for performance)
+                    const scale = 0.5; // Process at 50% resolution
+                    this.analysisCanvas.width = video.videoWidth * scale;
+                    this.analysisCanvas.height = video.videoHeight * scale;
+                    this.analysisCtx.drawImage(video, 0, 0,
+                        this.analysisCanvas.width,
+                        this.analysisCanvas.height);
 
-                // Get image data
-                const imageData = this.analysisCtx.getImageData(0, 0,
-                    this.analysisCanvas.width,
-                    this.analysisCanvas.height);
+                    // Detect document edges using jscanify v1.4.0 API
+                    // Pass canvas element (jscanifyImage type) instead of ImageData
+                    const contour = this.scanner.findPaperContour(this.analysisCanvas);
 
-                // Detect document edges
-                const result = this.scanner.findPaperContour(imageData);
+                    let corners = null;
+                    if (contour) {
+                        // Extract corner points from contour
+                        corners = this.scanner.getCornerPoints(contour);
+                    }
 
-                // Calculate confidence (0-1)
-                const confidence = this.calculateConfidence(result);
+                    // Build result object compatible with old code
+                    const result = {
+                        success: !!corners,
+                        corners: corners ? [
+                            corners.topLeftCorner,
+                            corners.topRightCorner,
+                            corners.bottomRightCorner,
+                            corners.bottomLeftCorner
+                        ] : null,
+                        contour: contour
+                    };
 
-                // Provide feedback based on confidence
-                this.provideFeedback(confidence, result);
+                    // Calculate confidence (0-1)
+                    const confidence = this.calculateConfidence(result);
 
-                // Update last confidence
-                this.lastEdgeConfidence = confidence;
+                    // Provide feedback based on confidence
+                    this.provideFeedback(confidence, result);
+
+                    // Update last confidence
+                    this.lastEdgeConfidence = confidence;
+                } catch (error) {
+                    console.error('[A11y] Error analyzing frame:', error);
+                    // Don't throw - just skip this frame
+                }
             }
 
             calculateConfidence(result) {
-                if (!result || !result.success || !result.corners) return 0;
+                if (!result || !result.success || !result.corners || result.corners.length !== 4) return 0;
 
                 const corners = result.corners;
                 if (corners.length !== 4) return 0;
