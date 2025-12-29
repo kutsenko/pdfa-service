@@ -9142,6 +9142,7 @@
 
                 // jscanify scanner
                 this.scanner = null;
+                this.degradedMode = false; // True if running without edge detection
 
                 // Auto-capture state
                 this.autoCaptureEnabled = true;
@@ -9307,16 +9308,22 @@
                     console.log('[A11y] ✓ Canvas created');
 
                     // Load edge detection library (jscanify)
-                    console.log('[A11y] Step 7: Loading jscanify library from CDN');
+                    console.log('[A11y] Step 7: Loading jscanify library from CDN (with fallbacks)');
                     await this.loadEdgeDetectionLibrary();
-                    console.log('[A11y] ✓ jscanify library loaded');
+
+                    if (this.degradedMode) {
+                        console.warn('[A11y] ⚠️ Running in degraded mode (no edge detection)');
+                        console.log('[A11y] ✓ jscanify library loaded (degraded mode - audio only)');
+                    } else {
+                        console.log('[A11y] ✓ jscanify library loaded successfully');
+                    }
 
                     // Hide loading indicator
                     if (loadingIndicator) {
                         loadingIndicator.hidden = true;
                     }
 
-                    // Start frame analysis loop
+                    // Start frame analysis loop (will skip edge detection if degradedMode)
                     console.log('[A11y] Step 8: Starting frame analysis');
                     this.startAnalysis();
                     console.log('[A11y] ✓ Frame analysis started');
@@ -9324,9 +9331,20 @@
                     this.enabled = true;
 
                     console.log('[A11y] Step 9: Announcing success');
-                    this.announce(this.translate('camera.a11y.enabled'), 'force');
+                    if (this.degradedMode) {
+                        // Inform user about degraded mode
+                        this.announce('Audio guidance enabled. Edge detection unavailable - audio features only.', 'force');
+                        console.warn('[A11y] User notified about degraded mode');
+                    } else {
+                        this.announce(this.translate('camera.a11y.enabled'), 'force');
+                    }
 
                     console.log('[A11y] ========== ✓ Camera assistance enabled successfully ==========');
+                    if (this.degradedMode) {
+                        console.log('[A11y] Mode: DEGRADED (audio only, no edge detection)');
+                    } else {
+                        console.log('[A11y] Mode: FULL (audio + edge detection)');
+                    }
                 } catch (error) {
                     console.error('[A11y] ========== ✗ FAILED to enable assistance ==========');
                     console.error('[A11y] Error name:', error.name);
@@ -9415,32 +9433,83 @@
             }
 
             async loadEdgeDetectionLibrary() {
-                console.log('[A11y] Loading jscanify library');
+                console.log('[A11y] Loading jscanify library with CDN fallbacks');
 
-                return new Promise((resolve, reject) => {
-                    // Check if already loaded
-                    if (window.jscanify) {
-                        this.scanner = new window.jscanify();
-                        console.log('[A11y] jscanify already loaded');
-                        resolve();
-                        return;
-                    }
+                // Check if already loaded
+                if (window.jscanify) {
+                    this.scanner = new window.jscanify();
+                    console.log('[A11y] jscanify already loaded');
+                    return;
+                }
 
-                    const script = document.createElement('script');
-                    script.src = 'https://cdn.jsdelivr.net/npm/jscanify@1.2.0/dist/jscanify.min.js';
-                    script.onload = () => {
+                // Multiple CDN URLs as fallbacks (iOS often blocks certain CDNs)
+                const cdnUrls = [
+                    'https://cdn.jsdelivr.net/npm/jscanify@1.2.0/dist/jscanify.min.js',
+                    'https://unpkg.com/jscanify@1.2.0/dist/jscanify.min.js',
+                    'https://cdnjs.cloudflare.com/ajax/libs/jscanify/1.2.0/jscanify.min.js'
+                ];
+
+                let lastError = null;
+
+                // Try each CDN URL in sequence
+                for (let i = 0; i < cdnUrls.length; i++) {
+                    const url = cdnUrls[i];
+                    console.log(`[A11y] Attempting to load from CDN ${i + 1}/${cdnUrls.length}: ${url}`);
+
+                    try {
+                        await this.loadScriptFromUrl(url, 10000); // 10 second timeout
+
                         if (window.jscanify) {
                             this.scanner = new window.jscanify();
-                            console.log('[A11y] jscanify loaded successfully');
-                            resolve();
+                            console.log(`[A11y] ✓ jscanify loaded successfully from CDN ${i + 1}`);
+                            return; // Success!
                         } else {
-                            reject(new Error('jscanify not found after loading'));
+                            throw new Error('jscanify global not found after script loaded');
                         }
+                    } catch (error) {
+                        console.warn(`[A11y] CDN ${i + 1} failed:`, error.message);
+                        lastError = error;
+                        // Continue to next CDN
+                    }
+                }
+
+                // All CDNs failed - enable degraded mode without edge detection
+                console.error('[A11y] All CDN attempts failed. Enabling degraded mode without edge detection.');
+                console.error('[A11y] Last error:', lastError);
+
+                // Set scanner to null to indicate degraded mode
+                this.scanner = null;
+                this.degradedMode = true;
+
+                // Show warning to user but don't fail completely
+                console.warn('[A11y] ⚠️ Edge detection disabled. Audio features will work but without document edge detection.');
+            }
+
+            loadScriptFromUrl(url, timeout = 10000) {
+                return new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.src = url;
+
+                    // Timeout handler
+                    const timeoutId = setTimeout(() => {
+                        script.onload = null;
+                        script.onerror = null;
+                        document.head.removeChild(script);
+                        reject(new Error(`Timeout loading script from ${url}`));
+                    }, timeout);
+
+                    script.onload = () => {
+                        clearTimeout(timeoutId);
+                        console.log(`[A11y] Script loaded from ${url}`);
+                        resolve();
                     };
+
                     script.onerror = () => {
-                        console.error('[A11y] Failed to load jscanify');
-                        reject(new Error('Failed to load edge detection library'));
+                        clearTimeout(timeoutId);
+                        document.head.removeChild(script);
+                        reject(new Error(`Failed to load script from ${url}`));
                     };
+
                     document.head.appendChild(script);
                 });
             }
