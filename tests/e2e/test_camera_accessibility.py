@@ -158,6 +158,58 @@ class TestAccessibilityEnableDisable:
         # So we just verify the checkbox is checked
         expect(checkbox).to_be_checked()
 
+    def test_audiocontext_created_in_user_gesture(self, page_with_server: Page):
+        """Test that AudioContext is created in direct user gesture (iOS fix).
+
+        This test verifies the fix for iOS Safari/Chrome where AudioContext.resume()
+        must be called synchronously within a user gesture event handler.
+        The fix moved AudioContext creation from enable() to the checkbox event handler.
+        """
+        page = page_with_server
+        page.goto("http://localhost:8001/")
+        activate_camera_tab(page)
+
+        # Set up console message listener
+        console_messages = []
+
+        def handle_console(msg):
+            console_messages.append(msg.text)
+
+        page.on("console", handle_console)
+
+        # Enable assistance
+        checkbox = page.locator("#enableA11yAssistance")
+        checkbox.check()
+
+        # Wait for initialization to complete
+        page.wait_for_timeout(2000)
+
+        # Verify checkbox is checked (no errors occurred)
+        expect(checkbox).to_be_checked()
+
+        # Check debug console messages for iOS AudioContext fix
+        console_text = "\n".join(console_messages)
+
+        # Should show AudioContext creation in user gesture
+        assert (
+            "Creating AudioContext in direct user gesture" in console_text
+        ), "AudioContext should be created in user gesture"
+
+        # Should show AudioContext state after creation
+        assert (
+            "AudioContext created in user gesture" in console_text
+        ), "AudioContext creation should be logged"
+
+        # Should verify pre-created AudioContext in enable()
+        assert (
+            "Checking AudioContext (should be pre-created)" in console_text
+        ), "enable() should check for pre-created AudioContext"
+
+        # Should confirm AudioContext exists
+        assert (
+            "AudioContext exists" in console_text
+        ), "enable() should confirm AudioContext exists"
+
     def test_test_audio_button_clickable(self, page_with_server: Page):
         """Test that test audio button is clickable."""
         page = page_with_server
