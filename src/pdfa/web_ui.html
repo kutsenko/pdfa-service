@@ -9251,8 +9251,7 @@
 
                 // Audio components
                 this.audioContext = null;
-                this.oscillator = null;
-                this.gainNode = null;
+                // Note: oscillators are created on-demand for each tone (iOS compatibility)
 
                 // Speech synthesis
                 this.synth = window.speechSynthesis;
@@ -9446,26 +9445,30 @@
                         console.warn('[A11y] This may indicate iOS user gesture was lost. Audio may not work.');
                     }
 
-                    // Create oscillator and gain nodes
-                    console.log('[A11y] Step 3: Creating audio nodes');
-                    this.oscillator = this.audioContext.createOscillator();
-                    this.gainNode = this.audioContext.createGain();
-                    this.oscillator.connect(this.gainNode);
-                    this.gainNode.connect(this.audioContext.destination);
-                    this.oscillator.start();
-                    this.gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
-                    console.log('[A11y] ✓ Audio nodes created and started');
+                    // iOS Fix: Don't create persistent oscillator (causes issues on iOS)
+                    // Instead, each tone creates its own oscillator (see playTone method)
+                    console.log('[A11y] Step 3: Audio setup ready (using on-demand oscillators for iOS compatibility)');
 
                     // iOS Audio Unlock: Play a brief tone to unlock audio on iOS
                     // AudioContext was already resumed in setupControls() user gesture
                     // This tone further ensures audio pipeline is ready
                     console.log('[A11y] Step 4: Unlocking iOS audio with test tone...');
                     try {
-                        // Play very brief, barely audible tone
+                        // Play very brief, barely audible tone using on-demand oscillator
                         const now = this.audioContext.currentTime;
-                        this.oscillator.frequency.setValueAtTime(440, now);
-                        this.gainNode.gain.setValueAtTime(0.01, now); // Very quiet
-                        this.gainNode.gain.setValueAtTime(0, now + 0.05); // 50ms
+                        const unlockOsc = this.audioContext.createOscillator();
+                        const unlockGain = this.audioContext.createGain();
+
+                        unlockOsc.connect(unlockGain);
+                        unlockGain.connect(this.audioContext.destination);
+
+                        unlockOsc.frequency.setValueAtTime(440, now);
+                        unlockGain.gain.setValueAtTime(0.01, now); // Very quiet
+                        unlockGain.gain.setValueAtTime(0, now + 0.05); // 50ms
+
+                        unlockOsc.start(now);
+                        unlockOsc.stop(now + 0.05);
+
                         console.log('[A11y] ✓ iOS audio unlock tone played');
                         await new Promise(resolve => setTimeout(resolve, 100));
                     } catch (unlockError) {
@@ -9592,8 +9595,6 @@
                 if (this.audioContext) {
                     this.audioContext.close();
                     this.audioContext = null;
-                    this.oscillator = null;
-                    this.gainNode = null;
                 }
 
                 this.enabled = false;
@@ -10274,22 +10275,32 @@
                 }
 
                 try {
+                    // iOS Fix: Create a new oscillator for each tone instead of reusing
+                    // This is more reliable on iOS Safari which can suspend persistent oscillators
                     const now = this.audioContext.currentTime;
+                    const osc = this.audioContext.createOscillator();
+                    const gain = this.audioContext.createGain();
+
+                    osc.connect(gain);
+                    gain.connect(this.audioContext.destination);
 
                     // Set frequency
-                    this.oscillator.frequency.setValueAtTime(frequency, now);
+                    osc.frequency.setValueAtTime(frequency, now);
 
                     // Fade in
-                    this.gainNode.gain.cancelScheduledValues(now);
-                    this.gainNode.gain.setValueAtTime(0, now);
-                    this.gainNode.gain.linearRampToValueAtTime(this.volume * 0.3, now + 0.01);
+                    gain.gain.setValueAtTime(0, now);
+                    gain.gain.linearRampToValueAtTime(this.volume * 0.3, now + 0.01);
 
                     // Fade out
-                    this.gainNode.gain.linearRampToValueAtTime(0, now + (duration / 1000));
+                    gain.gain.linearRampToValueAtTime(0, now + (duration / 1000));
+
+                    // Start and stop
+                    osc.start(now);
+                    osc.stop(now + (duration / 1000));
 
                     // Log first successful tone
                     if (!this._firstTonePlayed) {
-                        console.log('[A11y] ✓ First tone played successfully');
+                        console.log('[A11y] ✓ First tone played successfully (iOS-friendly mode)');
                         this._firstTonePlayed = true;
                     }
                 } catch (error) {
