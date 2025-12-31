@@ -4262,6 +4262,7 @@
                 'camera.a11y.enableAutoCapture': 'Enable automatic capture',
                 'camera.a11y.autoCaptureHelp': 'Automatically takes photo after 2 seconds when document is centered',
                 'camera.a11y.holdSteady': 'Hold camera steady',
+                'camera.a11y.centerDocument': 'Center the document',
                 'camera.a11y.photoCaptured': 'Photo captured',
                 'camera.edit.rotation': 'Rotation',
                 'camera.edit.rotateLeft': '↺ 90° Left',
@@ -4584,6 +4585,7 @@
                 'camera.a11y.enableAutoCapture': 'Automatische Aufnahme aktivieren',
                 'camera.a11y.autoCaptureHelp': 'Nimmt automatisch ein Foto nach 2 Sekunden auf, wenn das Dokument zentriert ist',
                 'camera.a11y.holdSteady': 'Kamera ruhig halten',
+                'camera.a11y.centerDocument': 'Dokument zentrieren',
                 'camera.a11y.photoCaptured': 'Foto aufgenommen',
                 'camera.edit.rotation': 'Drehung',
                 'camera.edit.rotateLeft': '↺ 90° Links',
@@ -4906,6 +4908,7 @@
                 'camera.a11y.enableAutoCapture': 'Activar captura automática',
                 'camera.a11y.autoCaptureHelp': 'Toma una foto automáticamente después de 2 segundos cuando el documento está centrado',
                 'camera.a11y.holdSteady': 'Mantenga la cámara firme',
+                'camera.a11y.centerDocument': 'Centre el documento',
                 'camera.a11y.photoCaptured': 'Foto capturada',
                 'camera.edit.rotation': 'Rotación',
                 'camera.edit.rotateLeft': '↺ 90° Izquierda',
@@ -5228,6 +5231,7 @@
                 'camera.a11y.enableAutoCapture': 'Activer la capture automatique',
                 'camera.a11y.autoCaptureHelp': 'Prend automatiquement une photo après 2 secondes lorsque le document est centré',
                 'camera.a11y.holdSteady': 'Tenez la caméra fermement',
+                'camera.a11y.centerDocument': 'Centrez le document',
                 'camera.a11y.photoCaptured': 'Photo capturée',
                 'camera.edit.rotation': 'Rotation',
                 'camera.edit.rotateLeft': '↺ 90° Gauche',
@@ -9258,6 +9262,8 @@
                 this.lastEdgeConfidence = 0;
                 this.lastAnnouncementTime = 0;
                 this.announcementThrottle = 2000; // Min 2s between announcements
+                this.edgeState = 'lost'; // Current state: 'detected' or 'lost'
+                this.lastStatusTime = 0; // For periodic status updates
 
                 // Frame processing
                 this.analysisCanvas = null;
@@ -10013,34 +10019,71 @@
             }
 
             provideFeedback(confidence, result) {
-                // iOS Fix: Lower threshold from 0.6 to 0.4 for better detection on iOS
-                // iOS cameras often have lower contrast or different color processing
-                const threshold = 0.4; // 40% confidence to announce "edges detected"
+                // Hysteresis thresholds to prevent flip-flopping
+                const upperThreshold = 0.45; // Need 45% confidence to transition to "detected"
+                const lowerThreshold = 0.35; // Need to drop below 35% to transition to "lost"
 
-                if (confidence >= threshold && this.lastEdgeConfidence < threshold) {
-                    // Transition: edges not detected → edges detected
-                    console.log('[A11y] ✓ Edges detected! Confidence:', confidence.toFixed(2), 'Playing success tone');
+                // Determine current state based on hysteresis
+                const wasDetected = this.edgeState === 'detected';
+                const isDetected = wasDetected
+                    ? confidence >= lowerThreshold  // Stay detected until drops below 35%
+                    : confidence >= upperThreshold;  // Need 45% to become detected
+
+                // State transition handling
+                if (isDetected && !wasDetected) {
+                    // Transition: lost → detected
+                    console.log('[A11y] ✓ Edges detected! Confidence:', confidence.toFixed(2));
+                    this.edgeState = 'detected';
                     this.playSuccessTone();
-                    this.announce(this.translate('camera.a11y.edgesDetected'));
-                    this.showVisualIndicator('success');
-                    this.stableFrameCount = 0; // Reset stability counter
 
-                } else if (confidence < threshold && this.lastEdgeConfidence >= threshold) {
-                    // Transition: edges detected → edges lost
-                    console.log('[A11y] ⚠ Edges lost! Confidence:', confidence.toFixed(2), 'Playing warning tone');
+                    // Check document quality for better feedback
+                    const isCentered = this.isDocumentCentered(result);
+                    const area = this.calculatePolygonArea(result.corners);
+                    const canvasArea = this.analysisCanvas.width * this.analysisCanvas.height;
+                    const areaRatio = area / canvasArea;
+
+                    // Provide contextual announcement
+                    if (areaRatio < 0.2) {
+                        this.announce(this.translate('camera.a11y.moveCloser'));
+                    } else if (areaRatio > 0.8) {
+                        this.announce(this.translate('camera.a11y.moveFarther'));
+                    } else if (!isCentered) {
+                        this.announce(this.translate('camera.a11y.edgesDetected') + ' ' + this.translate('camera.a11y.centerDocument'));
+                    } else {
+                        this.announce(this.translate('camera.a11y.edgesDetected'));
+                    }
+
+                    this.showVisualIndicator('success');
+                    this.stableFrameCount = 0;
+                    this.lastStatusTime = Date.now();
+
+                } else if (!isDetected && wasDetected) {
+                    // Transition: detected → lost
+                    console.log('[A11y] ⚠ Edges lost! Confidence:', confidence.toFixed(2));
+                    this.edgeState = 'lost';
                     this.playWarningTone();
                     this.announce(this.translate('camera.a11y.edgesLost'));
                     this.showVisualIndicator('warning');
-                    this.stableFrameCount = 0; // Reset
-                    this.cancelAutoCapture(); // Cancel any pending capture
+                    this.stableFrameCount = 0;
+                    this.cancelAutoCapture();
+                    this.lastStatusTime = Date.now();
 
-                } else if (confidence >= threshold) {
-                    // Continuous good state
+                } else if (isDetected) {
+                    // Continuous detected state
                     this.playContinuousFeedbackTone(confidence);
 
-                    // Check if document is well-centered
-                    const isCentered = this.isDocumentCentered(result);
+                    // Periodic status updates (every 10 seconds)
+                    const now = Date.now();
+                    if (now - this.lastStatusTime > 10000) {
+                        const isCentered = this.isDocumentCentered(result);
+                        if (!isCentered) {
+                            this.announce(this.translate('camera.a11y.centerDocument'));
+                            this.lastStatusTime = now;
+                        }
+                    }
 
+                    // Check if document is well-centered for auto-capture
+                    const isCentered = this.isDocumentCentered(result);
                     if (isCentered) {
                         this.stableFrameCount++;
 
@@ -10060,6 +10103,9 @@
                         this.providePositionalGuidance(result);
                     }
                 }
+
+                // Store for next frame
+                this.lastEdgeConfidence = confidence;
             }
 
             isDocumentCentered(result) {
