@@ -9750,8 +9750,9 @@
                         return;
                     }
 
-                    // Draw to analysis canvas (downscale for performance)
-                    const scale = 0.5; // Process at 50% resolution
+                    // Draw to analysis canvas
+                    // iOS Fix: Increase scale from 0.5 to 0.75 for better edge detection
+                    const scale = 0.75; // Process at 75% resolution (better quality for iOS)
                     const targetWidth = Math.floor(video.videoWidth * scale);
                     const targetHeight = Math.floor(video.videoHeight * scale);
 
@@ -9788,16 +9789,26 @@
                     // Pass canvas element (jscanifyImage type) instead of ImageData
                     const contour = this.scanner.findPaperContour(this.analysisCanvas);
 
+                    // iOS Debug: Log detection status every 5 seconds
+                    const now = Date.now();
+                    if (!this._lastDetectionLog || now - this._lastDetectionLog > 5000) {
+                        console.log('[A11y] Detection status:', contour ? 'CONTOUR FOUND' : 'NO CONTOUR');
+                        this._lastDetectionLog = now;
+                    }
+
                     let corners = null;
                     if (contour) {
                         // Extract corner points from contour
                         corners = this.scanner.getCornerPoints(contour);
 
-                        // Log only when edges are first detected
+                        // Log when edges are first detected
                         if (!this._edgesDetectedLogged) {
                             console.log('[A11y] ✓ Edges detected:', corners);
                             this._edgesDetectedLogged = true;
                         }
+                    } else {
+                        // Reset flag when edges are lost
+                        this._edgesDetectedLogged = false;
                     }
 
                     // Build result object compatible with old code
@@ -9815,10 +9826,10 @@
                     // Calculate confidence (0-1)
                     const confidence = this.calculateConfidence(result);
 
-                    // Log confidence only when it changes significantly (> 10%)
-                    if (!this._lastLoggedConfidence || Math.abs(confidence - this._lastLoggedConfidence) > 0.1) {
-                        console.log('[A11y] Edge confidence:', confidence.toFixed(2));
-                        this._lastLoggedConfidence = confidence;
+                    // iOS Debug: Log confidence every 5 seconds regardless of change
+                    if (!this._lastConfidenceLog || now - this._lastConfidenceLog > 5000) {
+                        console.log('[A11y] Edge confidence:', confidence.toFixed(2), 'threshold: 0.40');
+                        this._lastConfidenceLog = now;
                     }
 
                     // Provide feedback based on confidence
@@ -9866,11 +9877,13 @@
             }
 
             provideFeedback(confidence, result) {
-                const threshold = 0.6; // 60% confidence to announce "edges detected"
+                // iOS Fix: Lower threshold from 0.6 to 0.4 for better detection on iOS
+                // iOS cameras often have lower contrast or different color processing
+                const threshold = 0.4; // 40% confidence to announce "edges detected"
 
                 if (confidence >= threshold && this.lastEdgeConfidence < threshold) {
                     // Transition: edges not detected → edges detected
-                    console.log('[A11y] ✓ Edges detected! Playing success tone');
+                    console.log('[A11y] ✓ Edges detected! Confidence:', confidence.toFixed(2), 'Playing success tone');
                     this.playSuccessTone();
                     this.announce(this.translate('camera.a11y.edgesDetected'));
                     this.showVisualIndicator('success');
@@ -9878,7 +9891,7 @@
 
                 } else if (confidence < threshold && this.lastEdgeConfidence >= threshold) {
                     // Transition: edges detected → edges lost
-                    console.log('[A11y] ⚠ Edges lost! Playing warning tone');
+                    console.log('[A11y] ⚠ Edges lost! Confidence:', confidence.toFixed(2), 'Playing warning tone');
                     this.playWarningTone();
                     this.announce(this.translate('camera.a11y.edgesLost'));
                     this.showVisualIndicator('warning');
