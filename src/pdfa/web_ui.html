@@ -4251,10 +4251,11 @@
                 'camera.a11y.statusReady': 'Ready to scan',
                 'camera.a11y.edgesDetected': 'Document edges detected. Hold steady.',
                 'camera.a11y.edgesLost': 'Edges lost. Adjust camera position.',
-                'camera.a11y.moveLeft': 'Move camera left',
-                'camera.a11y.moveRight': 'Move camera right',
-                'camera.a11y.moveUp': 'Move camera up',
-                'camera.a11y.moveDown': 'Move camera down',
+                'camera.a11y.topEdge': 'Top edge',
+                'camera.a11y.bottomEdge': 'Bottom edge',
+                'camera.a11y.leftEdge': 'Left edge',
+                'camera.a11y.rightEdge': 'Right edge',
+                'camera.a11y.notVisible': 'not visible',
                 'camera.a11y.moveCloser': 'Move closer to document',
                 'camera.a11y.moveFarther': 'Move farther from document',
                 'camera.a11y.enabled': 'Camera assistance enabled',
@@ -4574,10 +4575,11 @@
                 'camera.a11y.statusReady': 'Bereit zum Scannen',
                 'camera.a11y.edgesDetected': 'Dokumentränder erkannt. Halten Sie ruhig.',
                 'camera.a11y.edgesLost': 'Ränder verloren. Kameraposition anpassen.',
-                'camera.a11y.moveLeft': 'Kamera nach links bewegen',
-                'camera.a11y.moveRight': 'Kamera nach rechts bewegen',
-                'camera.a11y.moveUp': 'Kamera nach oben bewegen',
-                'camera.a11y.moveDown': 'Kamera nach unten bewegen',
+                'camera.a11y.topEdge': 'Oberer Rand',
+                'camera.a11y.bottomEdge': 'Unterer Rand',
+                'camera.a11y.leftEdge': 'Linker Rand',
+                'camera.a11y.rightEdge': 'Rechter Rand',
+                'camera.a11y.notVisible': 'nicht sichtbar',
                 'camera.a11y.moveCloser': 'Näher ans Dokument',
                 'camera.a11y.moveFarther': 'Weiter weg vom Dokument',
                 'camera.a11y.enabled': 'Kamera-Unterstützung aktiviert',
@@ -4897,10 +4899,11 @@
                 'camera.a11y.statusReady': 'Listo para escanear',
                 'camera.a11y.edgesDetected': 'Bordes del documento detectados. Mantenga firme.',
                 'camera.a11y.edgesLost': 'Bordes perdidos. Ajuste la posición de la cámara.',
-                'camera.a11y.moveLeft': 'Mueva la cámara hacia la izquierda',
-                'camera.a11y.moveRight': 'Mueva la cámara hacia la derecha',
-                'camera.a11y.moveUp': 'Mueva la cámara hacia arriba',
-                'camera.a11y.moveDown': 'Mueva la cámara hacia abajo',
+                'camera.a11y.topEdge': 'Borde superior',
+                'camera.a11y.bottomEdge': 'Borde inferior',
+                'camera.a11y.leftEdge': 'Borde izquierdo',
+                'camera.a11y.rightEdge': 'Borde derecho',
+                'camera.a11y.notVisible': 'no visible',
                 'camera.a11y.moveCloser': 'Acérquese al documento',
                 'camera.a11y.moveFarther': 'Aléjese del documento',
                 'camera.a11y.enabled': 'Asistencia de cámara activada',
@@ -5220,10 +5223,11 @@
                 'camera.a11y.statusReady': 'Prêt à numériser',
                 'camera.a11y.edgesDetected': 'Bords du document détectés. Tenez fermement.',
                 'camera.a11y.edgesLost': 'Bords perdus. Ajustez la position de la caméra.',
-                'camera.a11y.moveLeft': 'Déplacez la caméra vers la gauche',
-                'camera.a11y.moveRight': 'Déplacez la caméra vers la droite',
-                'camera.a11y.moveUp': 'Déplacez la caméra vers le haut',
-                'camera.a11y.moveDown': 'Déplacez la caméra vers le bas',
+                'camera.a11y.topEdge': 'Bord supérieur',
+                'camera.a11y.bottomEdge': 'Bord inférieur',
+                'camera.a11y.leftEdge': 'Bord gauche',
+                'camera.a11y.rightEdge': 'Bord droit',
+                'camera.a11y.notVisible': 'non visible',
                 'camera.a11y.moveCloser': 'Rapprochez-vous du document',
                 'camera.a11y.moveFarther': 'Éloignez-vous du document',
                 'camera.a11y.enabled': 'Assistance caméra activée',
@@ -9399,7 +9403,13 @@
                                 console.log('[A11y] Creating AudioContext in direct user gesture');
 
                                 // Pre-create AudioContext while still in user gesture context
-                                if (!this.audioContext) {
+                                if (!this.audioContext || this.audioContext.state === 'closed') {
+                                    // Clean up old context if it exists but is closed
+                                    if (this.audioContext && this.audioContext.state === 'closed') {
+                                        console.log('[A11y] Cleaning up closed AudioContext from previous session');
+                                        this.audioContext = null;
+                                    }
+
                                     // Check browser support
                                     if (!window.AudioContext && !window.webkitAudioContext) {
                                         throw new Error('AudioContext not supported in this browser');
@@ -9419,6 +9429,29 @@
                                         console.log('[A11y] Final AudioContext state:', this.audioContext.state);
                                     } else {
                                         console.log('[A11y] AudioContext already running (state:', this.audioContext.state + ')');
+                                    }
+                                } else {
+                                    // AudioContext exists and is not closed, just resume if needed
+                                    console.log('[A11y] AudioContext already exists. State:', this.audioContext.state);
+                                    if (this.audioContext.state === 'suspended') {
+                                        console.log('[A11y] Resuming existing AudioContext...');
+                                        await this.audioContext.resume();
+                                        console.log('[A11y] ✓ AudioContext resumed. State:', this.audioContext.state);
+                                    }
+                                }
+
+                                // iOS Safari TTS Fix: Initialize speech synthesis in user gesture
+                                // iOS Safari requires speechSynthesis to be "unlocked" with a user gesture
+                                if (window.speechSynthesis) {
+                                    console.log('[A11y] Unlocking iOS Safari speech synthesis in user gesture...');
+                                    try {
+                                        // Speak empty text to unlock iOS Safari TTS
+                                        window.speechSynthesis.cancel(); // Clear any pending speech
+                                        const unlockUtterance = new SpeechSynthesisUtterance('');
+                                        window.speechSynthesis.speak(unlockUtterance);
+                                        console.log('[A11y] ✓ Speech synthesis unlocked for iOS Safari');
+                                    } catch (speechError) {
+                                        console.warn('[A11y] Could not unlock speech synthesis:', speechError);
                                     }
                                 }
 
@@ -10058,10 +10091,18 @@
                 const canvasArea = this.analysisCanvas.width * this.analysisCanvas.height;
                 const areaRatio = area / canvasArea;
 
-                // Good document should fill 20-80% of frame
+                // Accept documents from 10-90% of frame (more forgiving for partial documents)
+                // This allows blind users to capture even when document is only 1/3 of frame
                 let confidence = 0;
-                if (areaRatio > 0.2 && areaRatio < 0.8) {
-                    confidence = Math.min(1.0, areaRatio / 0.5); // Peak at 50% coverage
+                if (areaRatio > 0.10 && areaRatio < 0.90) {
+                    // Peak confidence at 40% coverage (typical good centering)
+                    // Scale linearly: 10% -> 0.25 conf, 40% -> 1.0 conf, 90% -> 0.5 conf
+                    if (areaRatio <= 0.40) {
+                        confidence = 0.25 + (areaRatio - 0.10) * (0.75 / 0.30); // 0.25 to 1.0
+                    } else {
+                        confidence = 1.0 - (areaRatio - 0.40) * (0.5 / 0.50); // 1.0 to 0.5
+                    }
+                    confidence = Math.max(0, Math.min(1.0, confidence));
                 }
 
                 return confidence;
@@ -10109,13 +10150,20 @@
                     const canvasArea = this.analysisCanvas.width * this.analysisCanvas.height;
                     const areaRatio = area / canvasArea;
 
-                    // Provide contextual announcement
-                    if (areaRatio < 0.2) {
+                    // Provide contextual announcement with specific edge information
+                    if (areaRatio < 0.15) {
                         this.announce(this.translate('camera.a11y.moveCloser'));
-                    } else if (areaRatio > 0.8) {
+                    } else if (areaRatio > 0.85) {
                         this.announce(this.translate('camera.a11y.moveFarther'));
                     } else if (!isCentered) {
-                        this.announce(this.translate('camera.a11y.edgesDetected') + ' ' + this.translate('camera.a11y.centerDocument'));
+                        // Tell user which edges are not visible for better guidance
+                        const missingEdges = this.getMissingEdges(result);
+                        if (missingEdges.length > 0) {
+                            const edgesMsg = missingEdges.join(', ');
+                            this.announce(this.translate('camera.a11y.edgesDetected') + '. ' + edgesMsg + ' ' + this.translate('camera.a11y.notVisible'));
+                        } else {
+                            this.announce(this.translate('camera.a11y.edgesDetected') + '. ' + this.translate('camera.a11y.centerDocument'));
+                        }
                     } else {
                         this.announce(this.translate('camera.a11y.edgesDetected'));
                     }
@@ -10144,7 +10192,14 @@
                     if (now - this.lastStatusTime > 10000) {
                         const isCentered = this.isDocumentCentered(result);
                         if (!isCentered) {
-                            this.announce(this.translate('camera.a11y.centerDocument'));
+                            // Tell user which edges are missing for better guidance
+                            const missingEdges = this.getMissingEdges(result);
+                            if (missingEdges.length > 0) {
+                                const edgesMsg = missingEdges.join(', ');
+                                this.announce(edgesMsg + ' ' + this.translate('camera.a11y.notVisible'));
+                            } else {
+                                this.announce(this.translate('camera.a11y.centerDocument'));
+                            }
                             this.lastStatusTime = now;
                         }
                     }
@@ -10173,6 +10228,51 @@
 
                 // Store for next frame
                 this.lastEdgeConfidence = confidence;
+            }
+
+            getMissingEdges(result) {
+                // Determine which edges of the document are not visible or too close to frame edges
+                // Returns array of edge names (e.g., ["Top edge", "Left edge"])
+                if (!result || !result.corners || result.corners.length !== 4) return [];
+
+                const corners = result.corners;
+                const canvas = this.analysisCanvas;
+                const margin = 20; // pixels from edge to consider "too close"
+                const missingEdges = [];
+
+                // Validate all corners
+                for (const corner of corners) {
+                    if (!corner || typeof corner.x !== 'number' || typeof corner.y !== 'number') {
+                        return [];
+                    }
+                }
+
+                // Check each edge
+                // Top edge: if any corner is too close to top
+                const hasTopEdgeIssue = corners.some(c => c.y < margin);
+                if (hasTopEdgeIssue) {
+                    missingEdges.push(this.translate('camera.a11y.topEdge'));
+                }
+
+                // Bottom edge: if any corner is too close to bottom
+                const hasBottomEdgeIssue = corners.some(c => c.y > canvas.height - margin);
+                if (hasBottomEdgeIssue) {
+                    missingEdges.push(this.translate('camera.a11y.bottomEdge'));
+                }
+
+                // Left edge: if any corner is too close to left
+                const hasLeftEdgeIssue = corners.some(c => c.x < margin);
+                if (hasLeftEdgeIssue) {
+                    missingEdges.push(this.translate('camera.a11y.leftEdge'));
+                }
+
+                // Right edge: if any corner is too close to right
+                const hasRightEdgeIssue = corners.some(c => c.x > canvas.width - margin);
+                if (hasRightEdgeIssue) {
+                    missingEdges.push(this.translate('camera.a11y.rightEdge'));
+                }
+
+                return missingEdges;
             }
 
             isDocumentCentered(result) {
@@ -10270,45 +10370,20 @@
             }
 
             providePositionalGuidance(result) {
+                // Provide edge-based guidance instead of directional ("left edge not visible" vs "move camera right")
                 if (!result || !result.corners || result.corners.length !== 4) return;
 
                 const now = Date.now();
                 // Only provide guidance every 3 seconds
                 if (now - this.lastAnnouncementTime < 3000) return;
 
-                const corners = result.corners;
-                const canvas = this.analysisCanvas;
+                // Get missing edges
+                const missingEdges = this.getMissingEdges(result);
 
-                // Validate all corners have x/y coordinates
-                for (const corner of corners) {
-                    if (!corner || typeof corner.x !== 'number' || typeof corner.y !== 'number') {
-                        return;
-                    }
-                }
-
-                // Calculate center of detected document
-                const docCenterX = corners.reduce((sum, c) => sum + c.x, 0) / 4;
-                const docCenterY = corners.reduce((sum, c) => sum + c.y, 0) / 4;
-
-                // Calculate center of canvas
-                const canvasCenterX = canvas.width / 2;
-                const canvasCenterY = canvas.height / 2;
-
-                // Calculate offset
-                const offsetX = docCenterX - canvasCenterX;
-                const offsetY = docCenterY - canvasCenterY;
-                const threshold = 50; // pixels
-
-                // Provide directional guidance
-                if (Math.abs(offsetX) > threshold) {
-                    const direction = offsetX > 0 ? 'Left' : 'Right';
-                    this.announce(this.translate(`camera.a11y.move${direction}`));
-                    return; // Only one guidance at a time
-                }
-
-                if (Math.abs(offsetY) > threshold) {
-                    const direction = offsetY > 0 ? 'Up' : 'Down';
-                    this.announce(this.translate(`camera.a11y.move${direction}`));
+                if (missingEdges.length > 0) {
+                    // Announce which edges are not visible
+                    const edgesMsg = missingEdges.join(', ');
+                    this.announce(edgesMsg + ' ' + this.translate('camera.a11y.notVisible'));
                 }
             }
 
