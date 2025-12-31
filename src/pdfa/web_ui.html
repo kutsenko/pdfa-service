@@ -9911,8 +9911,9 @@
                     }
 
                     // Detect document edges using jscanify v1.4.0 API
-                    // Pass canvas element (jscanifyImage type) instead of ImageData
-                    const contour = this.scanner.findPaperContour(this.analysisCanvas);
+                    // Extract ImageData from canvas (jscanify expects ImageData, not Canvas element)
+                    const imageData = this.analysisCtx.getImageData(0, 0, this.analysisCanvas.width, this.analysisCanvas.height);
+                    const contour = this.scanner.findPaperContour(imageData);
 
                     // iOS Debug: Log detection status every 5 seconds
                     const now = Date.now();
