@@ -9491,12 +9491,14 @@
                         loadingIndicator.hidden = true;
                     }
 
+                    // IMPORTANT: Set enabled to true BEFORE starting analysis
+                    // (startAnalysis checks this.enabled and returns early if false)
+                    this.enabled = true;
+
                     // Start frame analysis loop (will skip edge detection if degradedMode)
                     console.log('[A11y] Step 7: Starting frame analysis');
                     this.startAnalysis();
                     console.log('[A11y] ✓ Frame analysis started');
-
-                    this.enabled = true;
 
                     console.log('[A11y] Step 8: Announcing success');
                     if (this.degradedMode) {
