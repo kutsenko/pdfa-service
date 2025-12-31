@@ -9775,12 +9775,18 @@
             }
 
             startAnalysis() {
-                if (!this.enabled || this.analysisLoopId) return;
+                console.log('[A11y] startAnalysis() called - enabled:', this.enabled, 'analysisLoopId:', this.analysisLoopId);
 
-                console.log('[A11y] Starting frame analysis');
+                if (!this.enabled || this.analysisLoopId) {
+                    console.warn('[A11y] Skipping startAnalysis - enabled:', this.enabled, 'analysisLoopId:', this.analysisLoopId);
+                    return;
+                }
+
+                console.log('[A11y] Starting frame analysis loop');
 
                 const processFrame = async () => {
                     if (!this.enabled) {
+                        console.log('[A11y] Stopping frame analysis - not enabled');
                         this.analysisLoopId = null;
                         return;
                     }
@@ -9791,7 +9797,7 @@
                         try {
                             await this.analyzeFrame();
                         } catch (error) {
-                            console.error('[A11y] Error analyzing frame:', error);
+                            console.error('[A11y] Error in processFrame:', error);
                         }
 
                         this.processingFrame = false;
@@ -9803,7 +9809,9 @@
                     }, 100);
                 };
 
+                console.log('[A11y] Calling processFrame() for first time');
                 processFrame();
+                console.log('[A11y] processFrame() call initiated');
             }
 
             stopAnalysis() {
