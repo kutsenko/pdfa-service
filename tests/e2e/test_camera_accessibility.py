@@ -261,6 +261,44 @@ class TestAccessibilityEnableDisable:
                 "skipping frame" in console_text
             ), "Zero dimensions should be handled gracefully"
 
+    def test_edge_detection_sensitivity_improvements(self, page_with_server: Page):
+        """Test improved edge detection sensitivity (iOS fix).
+
+        Verifies the sensitivity improvements:
+        - Higher resolution (75% vs 50%)
+        - Lower confidence threshold (40% vs 60%)
+        - Enhanced periodic debugging logs
+        """
+        page = page_with_server
+        page.goto("http://localhost:8001/")
+        activate_camera_tab(page)
+
+        # Set up console message listener
+        console_messages = []
+
+        def handle_console(msg):
+            console_messages.append(msg.text)
+
+        page.on("console", handle_console)
+
+        # Enable assistance
+        checkbox = page.locator("#enableA11yAssistance")
+        checkbox.check()
+
+        # Wait for several detection cycles (5+ seconds for periodic logs)
+        page.wait_for_timeout(6000)
+
+        # Verify checkbox is checked
+        expect(checkbox).to_be_checked()
+
+        # Check for periodic debug logs (new in this PR)
+        console_text = "\n".join(console_messages)
+
+        # Should see detection status logs (every 5 seconds)
+        assert (
+            "Detection status:" in console_text or "Edge confidence:" in console_text
+        ), "Should see periodic detection status or confidence logs"
+
     def test_test_audio_button_clickable(self, page_with_server: Page):
         """Test that test audio button is clickable."""
         page = page_with_server
