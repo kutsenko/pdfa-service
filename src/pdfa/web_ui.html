@@ -8873,20 +8873,75 @@
                 const canvas = this.canvasElement;
                 const ctx = canvas.getContext('2d');
 
-                // Set canvas size to video dimensions
+                // Set canvas to high resolution for better quality
+                // Use actual video resolution instead of display size
                 canvas.width = video.videoWidth;
                 canvas.height = video.videoHeight;
 
-                // Draw current frame
-                ctx.drawImage(video, 0, 0);
+                // Draw current frame at full resolution
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-                // Convert to JPEG (85% quality for file size)
-                const imageData = canvas.toDataURL('image/jpeg', 0.85);
+                // Auto-crop if accessibility assistant has detected edges
+                let imageData;
+                if (this.a11yAssistant &&
+                    this.a11yAssistant.enabled &&
+                    this.a11yAssistant.lastDetectedCorners &&
+                    !this.a11yAssistant.degradedMode) {
 
-                console.log('[Camera] Photo captured');
+                    console.log('[Camera] Auto-crop enabled: applying perspective correction');
+                    imageData = this.autoCropAndCorrect(canvas, this.a11yAssistant.lastDetectedCorners);
+                } else {
+                    // No auto-crop, use full frame
+                    imageData = canvas.toDataURL('image/jpeg', 0.85);
+                    console.log('[Camera] Photo captured (no auto-crop)');
+                }
 
                 // Open editor for adjustments
                 this.openEditor(imageData);
+            }
+
+            autoCropAndCorrect(sourceCanvas, corners) {
+                try {
+                    console.log('[Camera] Applying auto-crop with corners:', corners);
+
+                    // Scale corners from analysis canvas to full video resolution
+                    const scaleX = sourceCanvas.width / this.a11yAssistant.analysisCanvas.width;
+                    const scaleY = sourceCanvas.height / this.a11yAssistant.analysisCanvas.height;
+
+                    const scaledCorners = {
+                        topLeftCorner: { x: corners.topLeftCorner.x * scaleX, y: corners.topLeftCorner.y * scaleY },
+                        topRightCorner: { x: corners.topRightCorner.x * scaleX, y: corners.topRightCorner.y * scaleY },
+                        bottomRightCorner: { x: corners.bottomRightCorner.x * scaleX, y: corners.bottomRightCorner.y * scaleY },
+                        bottomLeftCorner: { x: corners.bottomLeftCorner.x * scaleX, y: corners.bottomLeftCorner.y * scaleY }
+                    };
+
+                    console.log('[Camera] Scaled corners for full resolution:', scaledCorners);
+
+                    // Use jscanify to extract and correct perspective
+                    // First convert canvas to cv.Mat
+                    const mat = cv.imread(sourceCanvas);
+
+                    // Apply perspective correction using jscanify
+                    const correctedImage = this.a11yAssistant.scanner.extractPaper(mat, scaledCorners);
+
+                    // Create output canvas for corrected image
+                    const outputCanvas = document.createElement('canvas');
+                    cv.imshow(outputCanvas, correctedImage);
+
+                    // Clean up OpenCV mats
+                    mat.delete();
+                    correctedImage.delete();
+
+                    // Convert to dataURL
+                    const result = outputCanvas.toDataURL('image/jpeg', 0.90);
+                    console.log('[Camera] ✓ Auto-crop and perspective correction applied');
+
+                    return result;
+                } catch (error) {
+                    console.error('[Camera] Auto-crop failed, using original:', error);
+                    // Fallback to original image if auto-crop fails
+                    return sourceCanvas.toDataURL('image/jpeg', 0.85);
+                }
             }
 
             openEditor(imageData) {
@@ -9281,6 +9336,9 @@
                 this.captureCountdown = null;
                 this.isCountingDown = false;
 
+                // Auto-crop feature
+                this.lastDetectedCorners = null; // Store last detected corners for perspective correction
+
                 console.log('[A11y] AccessibleCameraAssistant created');
             }
 
@@ -9475,6 +9533,13 @@
                         console.warn('[A11y] iOS audio unlock failed (may be OK):', unlockError);
                     }
 
+                    // IMMEDIATELY announce to user (before loading libraries)
+                    // This gives instant feedback instead of waiting for jscanify to load
+                    this.enabled = true; // Enable now so announce() works
+                    console.log('[A11y] Step 4b: Immediate user announcement');
+                    this.announce(this.translate('camera.a11y.enabled'), 'force');
+                    console.log('[A11y] ✓ User notified (loading libraries in background...)');
+
                     // Create analysis canvas
                     console.log('[A11y] Step 5: Creating analysis canvas');
                     this.analysisCanvas = document.createElement('canvas');
@@ -9500,22 +9565,19 @@
                         loadingIndicator.hidden = true;
                     }
 
-                    // IMPORTANT: Set enabled to true BEFORE starting analysis
-                    // (startAnalysis checks this.enabled and returns early if false)
-                    this.enabled = true;
+                    // enabled = true was already set earlier for immediate user feedback
 
                     // Start frame analysis loop (will skip edge detection if degradedMode)
                     console.log('[A11y] Step 7: Starting frame analysis');
                     this.startAnalysis();
                     console.log('[A11y] ✓ Frame analysis started');
 
-                    console.log('[A11y] Step 8: Announcing success');
+                    // Announce degraded mode if applicable (user already heard "enabled")
+                    console.log('[A11y] Step 8: Final status check');
                     if (this.degradedMode) {
-                        // Inform user about degraded mode
-                        this.announce('Audio guidance enabled. Edge detection unavailable - audio features only.', 'force');
+                        // Inform user about degraded mode limitation
+                        this.announce('Edge detection unavailable. Audio guidance only.', 'force');
                         console.warn('[A11y] User notified about degraded mode');
-                    } else {
-                        this.announce(this.translate('camera.a11y.enabled'), 'force');
                     }
 
                     console.log('[A11y] ========== ✓ Camera assistance enabled successfully ==========');
@@ -9936,6 +9998,9 @@
                         // Extract corner points from contour
                         corners = this.scanner.getCornerPoints(contour);
 
+                        // Store corners for auto-crop feature
+                        this.lastDetectedCorners = corners;
+
                         // Log when edges are first detected
                         if (!this._edgesDetectedLogged) {
                             console.log('[A11y] ✓ Edges detected:', corners);
@@ -9944,6 +10009,7 @@
                     } else {
                         // Reset flag when edges are lost
                         this._edgesDetectedLogged = false;
+                        // Keep last corners for a while (don't clear immediately)
                     }
 
                     // Build result object compatible with old code
