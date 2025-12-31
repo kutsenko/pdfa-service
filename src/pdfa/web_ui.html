@@ -9817,10 +9817,34 @@
             }
 
             async analyzeFrame() {
+                // Debug: Log that analyzeFrame is being called (only once)
+                if (!this._analyzeFrameLogged) {
+                    console.log('[A11y] analyzeFrame() called for first time');
+                    this._analyzeFrameLogged = true;
+                }
+
                 // Get current video element
                 const video = this.cameraManager.videoElement;
-                if (!video || video.readyState !== video.HAVE_ENOUGH_DATA) {
+                if (!video) {
+                    if (!this._noVideoLogged) {
+                        console.warn('[A11y] No video element found - cameraManager.videoElement is null');
+                        this._noVideoLogged = true;
+                    }
                     return;
+                }
+
+                if (video.readyState !== video.HAVE_ENOUGH_DATA) {
+                    if (!this._videoNotReadyLogged) {
+                        console.warn('[A11y] Video not ready - readyState:', video.readyState, '(need', video.HAVE_ENOUGH_DATA, ')');
+                        this._videoNotReadyLogged = true;
+                    }
+                    return;
+                }
+
+                // Log that we passed the video check (only once)
+                if (!this._videoReadyLogged) {
+                    console.log('[A11y] ✓ Video ready - readyState:', video.readyState);
+                    this._videoReadyLogged = true;
                 }
 
                 // iOS Fix: Check if in degraded mode (no edge detection)
