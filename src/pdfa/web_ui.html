@@ -10063,10 +10063,17 @@
             }
 
             isDocumentCentered(result) {
-                if (!result || !result.corners) return false;
+                if (!result || !result.corners || result.corners.length !== 4) return false;
 
                 const corners = result.corners;
                 const canvas = this.analysisCanvas;
+
+                // Validate all corners have x/y coordinates
+                for (const corner of corners) {
+                    if (!corner || typeof corner.x !== 'number' || typeof corner.y !== 'number') {
+                        return false;
+                    }
+                }
 
                 // Calculate center of detected document
                 const docCenterX = corners.reduce((sum, c) => sum + c.x, 0) / 4;
@@ -10150,7 +10157,7 @@
             }
 
             providePositionalGuidance(result) {
-                if (!result || !result.corners) return;
+                if (!result || !result.corners || result.corners.length !== 4) return;
 
                 const now = Date.now();
                 // Only provide guidance every 3 seconds
@@ -10158,6 +10165,13 @@
 
                 const corners = result.corners;
                 const canvas = this.analysisCanvas;
+
+                // Validate all corners have x/y coordinates
+                for (const corner of corners) {
+                    if (!corner || typeof corner.x !== 'number' || typeof corner.y !== 'number') {
+                        return;
+                    }
+                }
 
                 // Calculate center of detected document
                 const docCenterX = corners.reduce((sum, c) => sum + c.x, 0) / 4;
@@ -10388,14 +10402,25 @@
             translate(key) {
                 // Use existing i18n infrastructure
                 const translations = window.translations && window.translations[window.currentLang];
-                if (!translations) return key;
+                if (!translations) {
+                    console.warn('[A11y] No translations found for lang:', window.currentLang);
+                    return key;
+                }
 
-                // Navigate nested keys (e.g., "camera.a11y.edgesDetected")
+                // First try flat key (e.g., "camera.a11y.edgesDetected" as single key)
+                if (translations[key]) {
+                    return translations[key];
+                }
+
+                // Fall back to nested navigation for backwards compatibility
                 const keys = key.split('.');
                 let value = translations;
                 for (const k of keys) {
                     value = value[k];
-                    if (!value) return key;
+                    if (!value) {
+                        console.warn('[A11y] Translation not found:', key);
+                        return key;
+                    }
                 }
                 return value;
             }
