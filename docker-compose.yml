@@ -22,6 +22,7 @@ services:
       start_period: 10s
 
   pdfa:
+    image: kutsenko/pdfa-service
     build: .
     container_name: pdfa-service
     ports:
