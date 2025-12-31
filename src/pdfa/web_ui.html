@@ -9995,6 +9995,14 @@
             }
 
             calculatePolygonArea(corners) {
+                // Validate that all corners exist and have x/y properties
+                if (!corners || corners.length !== 4) return 0;
+                for (const corner of corners) {
+                    if (!corner || typeof corner.x !== 'number' || typeof corner.y !== 'number') {
+                        return 0;
+                    }
+                }
+
                 let area = 0;
                 for (let i = 0; i < corners.length; i++) {
                     const j = (i + 1) % corners.length;
