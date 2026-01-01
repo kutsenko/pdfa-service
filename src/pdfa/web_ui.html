@@ -8896,7 +8896,8 @@
                     imageData = this.autoCropAndCorrect(canvas, this.a11yAssistant.lastDetectedCorners);
                 } else {
                     // No auto-crop, use full frame
-                    imageData = canvas.toDataURL('image/jpeg', 0.85);
+                    const jpegQuality = this.a11yAssistant?.config.jpeg_quality_normal || 0.85;
+                    imageData = canvas.toDataURL('image/jpeg', jpegQuality);
                     console.log('[Camera] Photo captured (no auto-crop)');
                 }
 
@@ -8937,14 +8938,16 @@
                     correctedImage.delete();
 
                     // Convert to dataURL
-                    const result = outputCanvas.toDataURL('image/jpeg', 0.90);
+                    const jpegQuality = this.a11yAssistant?.config.jpeg_quality_autocrop || 0.90;
+                    const result = outputCanvas.toDataURL('image/jpeg', jpegQuality);
                     console.log('[Camera] ✓ Auto-crop and perspective correction applied');
 
                     return result;
                 } catch (error) {
                     console.error('[Camera] Auto-crop failed, using original:', error);
                     // Fallback to original image if auto-crop fails
-                    return sourceCanvas.toDataURL('image/jpeg', 0.85);
+                    const jpegQuality = this.a11yAssistant?.config.jpeg_quality_normal || 0.85;
+                    return sourceCanvas.toDataURL('image/jpeg', jpegQuality);
                 }
             }
 
@@ -9308,6 +9311,10 @@
                 this.screenReaderDetected = false;
                 this.volume = 0.8; // 80% default volume
 
+                // Load configuration from environment variables (injected by backend)
+                this.config = window.a11yCameraConfig || {};
+                this.debugEnabled = this.config.debug_enabled || false;
+
                 // Audio components
                 this.audioContext = null;
                 // Note: oscillators are created on-demand for each tone (iOS compatibility)
@@ -9319,7 +9326,7 @@
                 // Detection state
                 this.lastEdgeConfidence = 0;
                 this.lastAnnouncementTime = 0;
-                this.announcementThrottle = 2000; // Min 2s between announcements
+                this.announcementThrottle = this.config.announcement_throttle_ms || 2000;
                 this.edgeState = 'lost'; // Current state: 'detected' or 'lost'
                 this.lastStatusTime = 0; // For periodic status updates
 
@@ -9336,18 +9343,29 @@
                 // Auto-capture state
                 this.autoCaptureEnabled = true;
                 this.stableFrameCount = 0;
-                this.stableThreshold = 10; // 10 frames (~1 second at 10 FPS)
+                this.stableThreshold = this.config.stable_frame_count || 10;
                 this.captureCountdown = null;
                 this.isCountingDown = false;
 
                 // Auto-crop feature
                 this.lastDetectedCorners = null; // Store last detected corners for perspective correction
 
-                console.log('[A11y] AccessibleCameraAssistant created');
+                if (this.debugEnabled) {
+                    console.log('[A11y] AccessibleCameraAssistant created with config:', this.config);
+                } else {
+                    console.log('[A11y] AccessibleCameraAssistant created');
+                }
+            }
+
+            log(...args) {
+                // Only log if debug is enabled
+                if (this.debugEnabled) {
+                    console.log(...args);
+                }
             }
 
             async init() {
-                console.log('[A11y] Initializing AccessibleCameraAssistant');
+                this.log('[A11y] Initializing AccessibleCameraAssistant');
 
                 // Detect screen reader
                 this.screenReaderDetected = this.detectScreenReader();
@@ -9907,10 +9925,12 @@
                         this.processingFrame = false;
                     }
 
-                    // Continue loop at ~10 FPS (100ms delay)
+                    // Continue loop at configured FPS
+                    const fps = this.config.analysis_fps || 10;
+                    const delay = Math.round(1000 / fps);
                     setTimeout(() => {
                         this.analysisLoopId = requestAnimationFrame(processFrame);
-                    }, 100);
+                    }, delay);
                 };
 
                 console.log('[A11y] Calling processFrame() for first time');
@@ -10091,16 +10111,19 @@
                 const canvasArea = this.analysisCanvas.width * this.analysisCanvas.height;
                 const areaRatio = area / canvasArea;
 
-                // Accept documents from 10-90% of frame (more forgiving for partial documents)
-                // This allows blind users to capture even when document is only 1/3 of frame
+                // Accept documents based on configured area range
+                const minArea = this.config.confidence_min_area || 0.10;
+                const maxArea = this.config.confidence_max_area || 0.90;
+                const peakArea = this.config.confidence_peak_area || 0.40;
+
                 let confidence = 0;
-                if (areaRatio > 0.10 && areaRatio < 0.90) {
-                    // Peak confidence at 40% coverage (typical good centering)
-                    // Scale linearly: 10% -> 0.25 conf, 40% -> 1.0 conf, 90% -> 0.5 conf
-                    if (areaRatio <= 0.40) {
-                        confidence = 0.25 + (areaRatio - 0.10) * (0.75 / 0.30); // 0.25 to 1.0
+                if (areaRatio > minArea && areaRatio < maxArea) {
+                    // Peak confidence at configured coverage
+                    // Scale linearly from minArea to peakArea (0.25 -> 1.0), then from peakArea to maxArea (1.0 -> 0.5)
+                    if (areaRatio <= peakArea) {
+                        confidence = 0.25 + (areaRatio - minArea) * (0.75 / (peakArea - minArea));
                     } else {
-                        confidence = 1.0 - (areaRatio - 0.40) * (0.5 / 0.50); // 1.0 to 0.5
+                        confidence = 1.0 - (areaRatio - peakArea) * (0.5 / (maxArea - peakArea));
                     }
                     confidence = Math.max(0, Math.min(1.0, confidence));
                 }
@@ -10128,8 +10151,8 @@
 
             provideFeedback(confidence, result) {
                 // Hysteresis thresholds to prevent flip-flopping
-                const upperThreshold = 0.45; // Need 45% confidence to transition to "detected"
-                const lowerThreshold = 0.35; // Need to drop below 35% to transition to "lost"
+                const upperThreshold = this.config.hysteresis_upper || 0.45;
+                const lowerThreshold = this.config.hysteresis_lower || 0.35;
 
                 // Determine current state based on hysteresis
                 const wasDetected = this.edgeState === 'detected';
@@ -10237,7 +10260,7 @@
 
                 const corners = result.corners;
                 const canvas = this.analysisCanvas;
-                const margin = 20; // pixels from edge to consider "too close"
+                const margin = this.config.edge_margin_pixels || 20;
                 const missingEdges = [];
 
                 // Validate all corners
@@ -10321,7 +10344,9 @@
                 const countdownInterval = setInterval(() => {
                     if (countdown > 0) {
                         // Beep for each second
-                        this.playTone(523, 100); // C5 - short beep
+                        const freq = this.config.tone_countdown_freq || 523;
+                        const duration = this.config.tone_countdown_duration || 100;
+                        this.playTone(freq, duration);
                         this.announce(countdown.toString()); // "2", "1"
                         countdown--;
                     } else {
@@ -10450,17 +10475,15 @@
             }
 
             playSuccessTone() {
-                // Ascending notes for "edges detected"
-                this.playTone(523, 100); // C5
-                setTimeout(() => this.playTone(659, 100), 120); // E5
-                setTimeout(() => this.playTone(784, 100), 240); // G5
+                const freq = this.config.tone_success_freq || 880;
+                const duration = this.config.tone_success_duration || 200;
+                this.playTone(freq, duration);
             }
 
             playWarningTone() {
-                // Descending notes for "edges lost"
-                this.playTone(784, 100); // G5
-                setTimeout(() => this.playTone(659, 100), 120); // E5
-                setTimeout(() => this.playTone(523, 100), 240); // C5
+                const freq = this.config.tone_warning_freq || 440;
+                const duration = this.config.tone_warning_duration || 150;
+                this.playTone(freq, duration);
             }
 
             playContinuousFeedbackTone(confidence) {
