@@ -10873,7 +10873,21 @@
 
                     if (!debugConsole || !debugContent) return;
 
-                    let isVisible = true;
+                    // Check if debug mode is enabled from config
+                    const config = window.a11yCameraConfig || {};
+                    const debugEnabled = config.debug_enabled || false;
+
+                    // Initialize visibility based on config
+                    let isVisible = debugEnabled;
+
+                    // Hide console initially if debug is disabled
+                    if (!debugEnabled) {
+                        debugConsole.classList.add('hidden');
+                        toggleBtn.textContent = 'Show';
+                        console.log('[A11y] Debug console hidden (A11Y_CAMERA_DEBUG=false)');
+                    } else {
+                        console.log('[A11y] Debug console visible (A11Y_CAMERA_DEBUG=true)');
+                    }
 
                     // Toggle visibility
                     toggleBtn.addEventListener('click', () => {
