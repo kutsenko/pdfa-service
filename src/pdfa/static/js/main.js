@@ -205,6 +205,78 @@ function initTabNavigation() {
 }
 
 // ============================================================================
+// File Upload Handlers
+// ============================================================================
+
+function initFileUpload() {
+    const fileInput = document.getElementById('file');
+    const uploadArea = document.getElementById('uploadArea');
+    const fileName = document.getElementById('fileName');
+
+    if (!fileInput || !uploadArea || !fileName) {
+        console.error('[FileUpload] Required elements not found');
+        return;
+    }
+
+    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+
+    function updateFileName() {
+        if (fileInput.files.length > 0) {
+            const file = fileInput.files[0];
+
+            // Validate file size
+            if (file.size > MAX_FILE_SIZE) {
+                showStatus(t('status.fileTooLarge', {
+                    size: formatFileSize(file.size),
+                    max: formatFileSize(MAX_FILE_SIZE)
+                }), 'error');
+                fileInput.value = '';
+                fileName.textContent = '';
+                return;
+            }
+
+            fileName.textContent = '✓ ' + file.name + ' (' + formatFileSize(file.size) + ')';
+        } else {
+            fileName.textContent = '';
+        }
+    }
+
+    // File upload area click
+    uploadArea.addEventListener('click', () => fileInput.click());
+
+    // Keyboard accessibility for upload area
+    uploadArea.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            fileInput.click();
+        }
+    });
+
+    // Drag and drop
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            updateFileName();
+        }
+    });
+
+    // File selection change
+    fileInput.addEventListener('change', updateFileName);
+}
+
+// ============================================================================
 // WebSocket Form Submission Handler
 // ============================================================================
 
@@ -233,9 +305,23 @@ function initFormSubmission() {
         const file = fileInput.files[0];
         const formData = new FormData(form);
 
+        // Build config object from form data
+        const config = {
+            ocr_enabled: formData.get('ocr_enabled') === 'on',
+            ocr_language: formData.get('ocr_language') || 'deu',
+            pdfa_level: formData.get('pdfa_level') || 'pdfa-2b',
+            compression_profile: formData.get('compression_profile') || 'default',
+            skip_ocr_on_tagged_pdfs: formData.get('skip_ocr_on_tagged_pdfs') === 'on'
+        };
+
         // Convert to WebSocket job submission
         if (window.conversionClient) {
-            window.conversionClient.submitJob(formData, file);
+            try {
+                await window.conversionClient.submitJob(file, config);
+            } catch (error) {
+                console.error('[Form] Submission error:', error);
+                showStatus(error.message || 'Submission failed', 'error');
+            }
         } else {
             showStatus('WebSocket client not initialized', 'error');
         }
@@ -382,6 +468,9 @@ async function initializeApp() {
         accountManager.init();
         jobsManager.init();
         cameraManager.init();
+
+        // Initialize file upload handlers
+        initFileUpload();
 
         // Initialize form submission handler
         initFormSubmission();
