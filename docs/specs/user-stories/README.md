@@ -13,7 +13,7 @@ This directory contains formal User Stories in **INVEST** format for major featu
 | US-001 | MongoDB-Integration | ✅ Implementiert | 2024-12-21 | [US-001-mongodb-integration.md](US-001-mongodb-integration.md) | [Feature](../features/gherkin-mongodb-integration.feature) |
 | US-002 | Job Event Logging | ✅ Implementiert | 2024-12-25 | [US-002-job-event-logging.md](US-002-job-event-logging.md) | [Feature](../features/gherkin-job-event-logging.feature) |
 | US-003 | Lokaler Standardbenutzer | ✅ Implementiert | 2024-12-25 | [US-003-local-default-user.md](US-003-local-default-user.md) | [Feature](../features/gherkin-local-default-user.feature) |
-| US-008 | Accessibility Camera Assistance | ✅ Implementiert | 2026-01-01 | [US-008-accessibility-camera-assistance.md](US-008-accessibility-camera-assistance.md) | [Feature](../features/gherkin-accessibility-camera-assistance.feature) |
+| US-008 | Accessibility Camera Assistance | ✅ Implemented | 2026-01-01 | [US-008-accessibility-camera-assistance.md](US-008-accessibility-camera-assistance.md) | [Feature](../features/gherkin-accessibility-camera-assistance.feature) |
 
 ---
 
@@ -147,22 +147,22 @@ Versions-Tracking mit:
 
 ### [US-008: Accessibility Camera Assistance](US-008-accessibility-camera-assistance.md)
 
-**Story**: Als blinder oder sehbehinderter Benutzer möchte ich Dokumente mittels Audio-Führung fotografieren können, damit ich ohne visuelle Kontrolle hochwertige Dokumentenscans erstellen kann.
+**Story**: As a blind or visually impaired user I want to photograph documents using audio guidance so that I can create high-quality document scans without visual control with automatic cropping and perspective correction.
 
-**Kernpunkte**:
-- Echtzeit-Kantenerkennung mit jscanify v1.4.0 und OpenCV.js 4.7.0
-- Audio-Feedback via Web Audio API (Töne) und Speech Synthesis API (TTS)
-- iOS Safari Kompatibilität (AudioContext + SpeechSynthesis Unlock)
-- Automatische Auslösung bei stabiler Dokumentenerkennung (10 Frames)
-- Auto-Crop und Perspektivkorrektur mit Full-Resolution
-- Edge-Based Guidance ("Oberer Rand nicht sichtbar" statt "Kamera nach unten")
-- Teilerfassung (10-90% der Fläche, optimiert für 1/3 Dokumente)
-- Hysterese zur Flacker-Vermeidung (45%/35% Thresholds)
-- 4-sprachig (de, en, es, fr)
+**Key Points**:
+- Real-time edge detection with jscanify v1.4.0 and OpenCV.js 4.7.0
+- Audio feedback via Web Audio API (tones) and Speech Synthesis API (TTS)
+- iOS Safari compatibility (AudioContext + SpeechSynthesis unlock)
+- Automatic capture on stable document recognition (10 frames)
+- Auto-crop and perspective correction with full resolution
+- Edge-based guidance ("Top edge not visible" instead of "Move camera down")
+- Partial capture (10-90% of area, optimized for 1/3 documents)
+- Hysteresis to prevent flickering (45%/35% thresholds)
+- Multilingual (de, en, es, fr)
 
-**Status**: ✅ Implementiert (2026-01-01)
+**Status**: ✅ Implemented (2026-01-01)
 
-**Gherkin Feature**: [65 Szenarien](../features/gherkin-accessibility-camera-assistance.feature)
+**Gherkin Feature**: [65 scenarios](../features/gherkin-accessibility-camera-assistance.feature)
 
 ---
 

@@ -1,488 +1,488 @@
-# language: de
-Funktionalität: Barrierefreie Kamera-Unterstützung für Blinde
-  Als blinder oder sehbehinderter Benutzer
-  möchte ich Dokumente mittels Audio-Führung fotografieren können
-  damit ich ohne visuelle Kontrolle hochwertige Dokumentenscans erstellen kann
+# language: en
+Feature: Accessibility Camera Assistance for Blind Users
+  As a blind or visually impaired user
+  I want to photograph documents using audio guidance
+  So that I can create high-quality document scans without visual control
 
-  Hintergrund:
-    Angenommen der Benutzer öffnet die Kamera-Seite
-    Und der Browser unterstützt Web Audio API
-    Und der Browser unterstützt getUserMedia
+  Background:
+    Given the user opens the camera page
+    And the browser supports Web Audio API
+    And the browser supports getUserMedia
 
   # ============================================================================
   # Feature 1: Screen Reader Auto-Detection & Initialization
   # ============================================================================
 
-  Szenario: Screen Reader wird automatisch erkannt und Feature aktiviert
-    Angenommen ein Screen Reader ist aktiv (VoiceOver, NVDA, JAWS)
-    Wenn die Kamera-Seite geladen wird
-    Dann sollte die Accessibility-Checkbox automatisch aktiviert werden
-    Und die Audio-Führung sollte initialisiert werden
-    Und eine Sprachansage "Camera assistance enabled" sollte erfolgen
+  Scenario: Screen reader is automatically detected and feature enabled
+    Given a screen reader is active (VoiceOver, NVDA, JAWS)
+    When the camera page is loaded
+    Then the Accessibility checkbox should be automatically enabled
+    And audio guidance should be initialized
+    And a voice announcement "Camera assistance enabled" should occur
 
-  Szenario: Kein Screen Reader erkannt - Feature bleibt deaktiviert
-    Angenommen kein Screen Reader ist aktiv
-    Wenn die Kamera-Seite geladen wird
-    Dann sollte die Accessibility-Checkbox deaktiviert bleiben
-    Und keine automatische Initialisierung erfolgen
+  Scenario: No screen reader detected - feature remains disabled
+    Given no screen reader is active
+    When the camera page is loaded
+    Then the Accessibility checkbox should remain disabled
+    And no automatic initialization should occur
 
-  Szenario: Manuelle Aktivierung ohne Screen Reader
-    Angenommen kein Screen Reader ist aktiv
-    Und die Accessibility-Checkbox ist deaktiviert
-    Wenn der Benutzer die Checkbox aktiviert
-    Dann sollte die Audio-Führung initialisiert werden
-    Und eine Sprachansage "Kamera-Unterstützung aktiviert" sollte erfolgen
+  Scenario: Manual activation without screen reader
+    Given no screen reader is active
+    And the Accessibility checkbox is disabled
+    When the user enables the checkbox
+    Then audio guidance should be initialized
+    And a voice announcement "Camera assistance enabled" should occur
 
   # ============================================================================
   # Feature 2: iOS Safari Audio/TTS Unlock
   # ============================================================================
 
-  Szenario: iOS Safari AudioContext Unlock in User-Gesture
-    Angenommen der Benutzer verwendet iOS Safari
-    Und die Accessibility-Checkbox ist deaktiviert
-    Wenn der Benutzer die Checkbox aktiviert
-    Dann sollte AudioContext im direkten User-Gesture erstellt werden
-    Und AudioContext sollte sofort resumed werden
-    Und der AudioContext State sollte "running" sein
-    Und keine "AudioContext not available" Fehlermeldung sollte erscheinen
+  Scenario: iOS Safari AudioContext unlock in user gesture
+    Given the user is using iOS Safari
+    And the Accessibility checkbox is disabled
+    When the user enables the checkbox
+    Then AudioContext should be created in direct user gesture
+    And AudioContext should be immediately resumed
+    And the AudioContext state should be "running"
+    And no "AudioContext not available" error message should appear
 
-  Szenario: iOS Safari SpeechSynthesis Unlock
-    Angenommen der Benutzer verwendet iOS Safari
-    Und die Accessibility-Checkbox ist deaktiviert
-    Wenn der Benutzer die Checkbox aktiviert
-    Dann sollte speechSynthesis.cancel() aufgerufen werden
-    Und ein leeres SpeechSynthesisUtterance sollte gesprochen werden
-    Und nachfolgende Sprachansagen sollten funktionieren
+  Scenario: iOS Safari SpeechSynthesis unlock
+    Given the user is using iOS Safari
+    And the Accessibility checkbox is disabled
+    When the user enables the checkbox
+    Then speechSynthesis.cancel() should be called
+    And an empty SpeechSynthesisUtterance should be spoken
+    And subsequent voice announcements should work
 
-  Szenario: iOS Safari Unlock-Ton wird gespielt
-    Angenommen der Benutzer verwendet iOS Safari
-    Und die Accessibility-Checkbox ist deaktiviert
-    Wenn der Benutzer die Checkbox aktiviert
-    Dann sollte ein kurzer Unlock-Ton (440 Hz, 50ms) gespielt werden
-    Und der Audio-Pipeline sollte entsperrt sein
+  Scenario: iOS Safari unlock tone is played
+    Given the user is using iOS Safari
+    And the Accessibility checkbox is disabled
+    When the user enables the checkbox
+    Then a brief unlock tone (440 Hz, 50ms) should be played
+    And the audio pipeline should be unlocked
 
-  Szenario: Sofortige TTS-Ansage vor Library-Loading
-    Angenommen der Benutzer aktiviert die Audio-Führung
-    Wenn das AudioContext-Unlock abgeschlossen ist
-    Dann sollte sofort "Kamera-Unterstützung aktiviert" angesagt werden
-    Und die Ansage sollte VOR dem jscanify-Loading erfolgen
-    Und der Benutzer sollte nicht auf Library-Download warten
+  Scenario: Immediate TTS announcement before library loading
+    Given the user enables audio guidance
+    When AudioContext unlock is complete
+    Then "Camera assistance enabled" should be announced immediately
+    And the announcement should occur BEFORE jscanify loading
+    And the user should not wait for library download
 
   # ============================================================================
   # Feature 3: Page Reload AudioContext Handling
   # ============================================================================
 
-  Szenario: AudioContext nach Page Reload ist geschlossen
-    Angenommen der Benutzer hatte Audio-Führung aktiviert
-    Und die Seite wird neu geladen
-    Wenn der AudioContext State "closed" ist
-    Dann sollte ein neuer AudioContext erstellt werden
-    Und keine "Audiosystem not available" Fehlermeldung erscheinen
-    Und Audio-Führung sollte normal funktionieren
+  Scenario: AudioContext after page reload is closed
+    Given the user had audio guidance enabled
+    And the page is reloaded
+    When the AudioContext state is "closed"
+    Then a new AudioContext should be created
+    And no "Audio system not available" error message should appear
+    And audio guidance should work normally
 
-  Szenario: AudioContext existiert aber ist suspended
-    Angenommen der AudioContext existiert aber ist suspended
-    Wenn der Benutzer Audio-Führung aktiviert
-    Dann sollte der bestehende AudioContext resumed werden
-    Und kein neuer AudioContext erstellt werden
-
-  # ============================================================================
-  # Feature 4: Edge Detection mit jscanify
-  # ============================================================================
-
-  Szenario: jscanify lädt erfolgreich von CDN
-    Angenommen Audio-Führung wird aktiviert
-    Wenn jscanify von CDN geladen wird
-    Dann sollte jscanify.Scanner initialisiert werden
-    Und degradedMode sollte false sein
-    Und Edge Detection sollte verfügbar sein
-
-  Szenario: jscanify CDN fehlgeschlagen - Degraded Mode
-    Angenommen Audio-Führung wird aktiviert
-    Wenn alle jscanify CDN-URLs fehlschlagen
-    Dann sollte degradedMode auf true gesetzt werden
-    Und eine Warnung sollte in Console ausgegeben werden
-    Und Audio-Töne sollten weiterhin funktionieren
-    Aber Edge Detection sollte nicht verfügbar sein
-
-  Szenario: OpenCV.js lädt erfolgreich
-    Angenommen Audio-Führung wird aktiviert
-    Und jscanify ist geladen
-    Wenn OpenCV.js von CDN geladen wird
-    Dann sollte window.cv verfügbar sein
-    Und cv.imread und cv.imshow sollten funktionieren
-
-  Szenario: Kanten werden in Echtzeit erkannt
-    Angenommen Audio-Führung ist aktiv
-    Und ein Dokument ist im Kamerabild
-    Wenn analyzeFrame() läuft
-    Dann sollte jscanify.findPaperContour() aufgerufen werden
-    Und result.success sollte true sein
-    Und result.corners sollte 4 Ecken enthalten
-    Und jede Ecke sollte x und y Koordinaten haben
+  Scenario: AudioContext exists but is suspended
+    Given the AudioContext exists but is suspended
+    When the user enables audio guidance
+    Then the existing AudioContext should be resumed
+    And no new AudioContext should be created
 
   # ============================================================================
-  # Feature 5: Confidence-Berechnung mit Teilerfassung
+  # Feature 4: Edge Detection with jscanify
   # ============================================================================
 
-  Szenario: Dokument füllt 40% der Fläche - Optimale Confidence
-    Angenommen Dokumentenkanten sind erkannt
-    Wenn das Dokument 40% der Canvas-Fläche füllt
-    Dann sollte die Confidence 1.0 (100%) sein
+  Scenario: jscanify loads successfully from CDN
+    Given audio guidance is enabled
+    When jscanify is loaded from CDN
+    Then jscanify.Scanner should be initialized
+    And degradedMode should be false
+    And edge detection should be available
 
-  Szenario: Dokument füllt 33% der Fläche - Akzeptable Confidence
-    Angenommen Dokumentenkanten sind erkannt
-    Wenn das Dokument 33% der Canvas-Fläche füllt
-    Dann sollte die Confidence > 0.5 sein
-    Und Auto-Capture sollte möglich sein
+  Scenario: jscanify CDN failed - degraded mode
+    Given audio guidance is enabled
+    When all jscanify CDN URLs fail
+    Then degradedMode should be set to true
+    And a warning should be output to console
+    And audio tones should still work
+    But edge detection should not be available
 
-  Szenario: Dokument füllt 10% der Fläche - Minimale Confidence
-    Angenommen Dokumentenkanten sind erkannt
-    Wenn das Dokument 10% der Canvas-Fläche füllt
-    Dann sollte die Confidence ≈ 0.25 sein
-    Und Edge Detection sollte funktionieren
+  Scenario: OpenCV.js loads successfully
+    Given audio guidance is enabled
+    And jscanify is loaded
+    When OpenCV.js is loaded from CDN
+    Then window.cv should be available
+    And cv.imread and cv.imshow should work
 
-  Szenario: Dokument füllt 5% der Fläche - Zu klein
-    Angenommen ein sehr kleines Objekt ist im Bild
-    Wenn das Objekt nur 5% der Canvas-Fläche füllt
-    Dann sollte die Confidence 0 sein
-    Und keine Kantenerkennung erfolgen
-
-  Szenario: Dokument füllt 95% der Fläche - Zu nah
-    Angenommen das Dokument ist zu nah an der Kamera
-    Wenn das Dokument 95% der Canvas-Fläche füllt
-    Dann sollte die Confidence 0 sein
-    Und "Weiter weg vom Dokument" sollte angesagt werden
-
-  # ============================================================================
-  # Feature 6: Hysterese zur Flacker-Vermeidung
-  # ============================================================================
-
-  Szenario: Confidence steigt über Upper Threshold - Transition zu "detected"
-    Angenommen edgeState ist "lost"
-    Und die Confidence ist 0.30
-    Wenn die Confidence auf 0.45 steigt
-    Dann sollte edgeState zu "detected" wechseln
-    Und ein Erfolgston (880 Hz) sollte gespielt werden
-    Und "Dokumentränder erkannt" sollte angesagt werden
-
-  Szenario: Confidence schwankt um 40% - Bleibt "detected" (Hysterese)
-    Angenommen edgeState ist "detected"
-    Und die Confidence ist 0.45
-    Wenn die Confidence auf 0.38 sinkt (zwischen 35% und 45%)
-    Dann sollte edgeState "detected" bleiben
-    Und keine Statusänderung erfolgen
-    Und kein Warnton gespielt werden
-
-  Szenario: Confidence fällt unter Lower Threshold - Transition zu "lost"
-    Angenommen edgeState ist "detected"
-    Und die Confidence ist 0.38
-    Wenn die Confidence auf 0.33 fällt
-    Dann sollte edgeState zu "lost" wechseln
-    Und ein Warnton (440 Hz) sollte gespielt werden
-    Und "Ränder verloren. Kameraposition anpassen." sollte angesagt werden
+  Scenario: Edges are detected in real-time
+    Given audio guidance is active
+    And a document is in the camera view
+    When analyzeFrame() runs
+    Then jscanify.findPaperContour() should be called
+    And result.success should be true
+    And result.corners should contain 4 corners
+    And each corner should have x and y coordinates
 
   # ============================================================================
-  # Feature 7: Audio-Feedback (Töne + TTS)
+  # Feature 5: Confidence Calculation with Partial Capture
   # ============================================================================
 
-  Szenario: Erfolgston bei Kantenerkennung
-    Angenommen Kanten werden erstmalig erkannt
-    Wenn edgeState zu "detected" wechselt
-    Dann sollte ein Erfolgston (880 Hz, 200ms) gespielt werden
+  Scenario: Document fills 40% of area - optimal confidence
+    Given document edges are detected
+    When the document fills 40% of canvas area
+    Then confidence should be 1.0 (100%)
 
-  Szenario: Warnton bei Kanten verloren
-    Angenommen edgeState wechselt zu "lost"
-    Wenn Kanten verloren gehen
-    Dann sollte ein Warnton (440 Hz, 150ms) gespielt werden
+  Scenario: Document fills 33% of area - acceptable confidence
+    Given document edges are detected
+    When the document fills 33% of canvas area
+    Then confidence should be > 0.5
+    And auto-capture should be possible
 
-  Szenario: Kontinuierlicher Ton zeigt Confidence an
-    Angenommen edgeState ist "detected"
-    Und Confidence ist 0.8
-    Wenn kontinuierliches Feedback läuft
-    Dann sollte Tonhöhe confidence-abhängig sein (300-800 Hz)
-    Und höhere Confidence sollte höhere Tonhöhe erzeugen
+  Scenario: Document fills 10% of area - minimum confidence
+    Given document edges are detected
+    When the document fills 10% of canvas area
+    Then confidence should be ≈ 0.25
+    And edge detection should work
 
-  Szenario: TTS-Ansage wird gedrosselt (Throttling)
-    Angenommen eine Ansage wurde vor 1 Sekunde gemacht
-    Wenn eine neue Ansage angefordert wird (priority != 'force')
-    Dann sollte die Ansage unterdrückt werden
-    Und announcementThrottle (2000ms) sollte eingehalten werden
+  Scenario: Document fills 5% of area - too small
+    Given a very small object is in the image
+    When the object fills only 5% of canvas area
+    Then confidence should be 0
+    And no edge detection should occur
 
-  Szenario: Force-Priority Ansage umgeht Throttling
-    Angenommen eine Ansage wurde vor 1 Sekunde gemacht
-    Wenn eine Ansage mit priority='force' angefordert wird
-    Dann sollte die Ansage sofort erfolgen
-    Und Throttling sollte umgangen werden
-
-  # ============================================================================
-  # Feature 8: Edge-Based Guidance (nicht direktional)
-  # ============================================================================
-
-  Szenario: Oberer Rand zu nah am Bildrand
-    Angenommen Kanten sind erkannt
-    Wenn eine Dokumentenecke y < 20 hat
-    Dann sollte getMissingEdges() "Oberer Rand" zurückgeben
-    Und "Oberer Rand nicht sichtbar" sollte angesagt werden
-
-  Szenario: Mehrere Ränder nicht sichtbar
-    Angenommen Kanten sind erkannt
-    Wenn Ecken bei x < 20 und y > 460 sind (640x480 Canvas)
-    Dann sollte getMissingEdges() ["Linker Rand", "Unterer Rand"] zurückgeben
-    Und "Linker Rand, Unterer Rand nicht sichtbar" sollte angesagt werden
-
-  Szenario: Alle Ränder sichtbar - Zentriertes Dokument
-    Angenommen Kanten sind erkannt
-    Wenn alle Ecken > 20px vom Rand entfernt sind
-    Dann sollte getMissingEdges() leeres Array zurückgeben
-    Und isDocumentCentered() sollte true zurückgeben
-    Und keine Edge-Warnings sollten erfolgen
-
-  Szenario: Periodisches Guidance-Update (alle 10 Sekunden)
-    Angenommen Kanten sind erkannt aber nicht zentriert
-    Und lastStatusTime ist 11 Sekunden her
-    Wenn provideFeedback() läuft
-    Dann sollten fehlende Ränder angesagt werden
-    Und lastStatusTime sollte aktualisiert werden
+  Scenario: Document fills 95% of area - too close
+    Given the document is too close to camera
+    When the document fills 95% of canvas area
+    Then confidence should be 0
+    And "Move farther from document" should be announced
 
   # ============================================================================
-  # Feature 9: Auto-Capture bei stabiler Erkennung
+  # Feature 6: Hysteresis to Prevent Flickering
   # ============================================================================
 
-  Szenario: Stabilitätszähler inkrementiert bei gutem Frame
-    Angenommen edgeState ist "detected"
-    Und Dokument ist zentriert
-    Und Auto-Capture ist aktiviert
-    Wenn ein stabiler Frame erkannt wird
-    Dann sollte stableFrameCount um 1 erhöht werden
+  Scenario: Confidence rises above upper threshold - transition to "detected"
+    Given edgeState is "lost"
+    And confidence is 0.30
+    When confidence rises to 0.45
+    Then edgeState should change to "detected"
+    And a success tone (880 Hz) should be played
+    And "Document edges detected" should be announced
 
-  Szenario: Auto-Capture Countdown startet nach 10 stabilen Frames
-    Angenommen stableFrameCount erreicht 10
-    Und Auto-Capture ist aktiviert
-    Wenn der nächste stabile Frame kommt
-    Dann sollte initiateAutoCapture() aufgerufen werden
-    Und "Kamera ruhig halten" sollte angesagt werden
-    Und ein 2-Sekunden Countdown sollte starten
+  Scenario: Confidence fluctuates around 40% - stays "detected" (hysteresis)
+    Given edgeState is "detected"
+    And confidence is 0.45
+    When confidence drops to 0.38 (between 35% and 45%)
+    Then edgeState should remain "detected"
+    And no state change should occur
+    And no warning tone should be played
 
-  Szenario: Countdown-Ansagen "2", "1"
-    Angenommen Auto-Capture Countdown läuft
-    Wenn jede Sekunde vergeht
-    Dann sollte ein Beep (523 Hz, 100ms) gespielt werden
-    Und "2" bzw. "1" sollte angesagt werden
-
-  Szenario: Foto wird nach Countdown aufgenommen
-    Angenommen Countdown ist abgelaufen
-    Wenn performAutoCapture() ausgeführt wird
-    Dann sollte ein Kamera-Shutter-Ton gespielt werden (880 Hz + 440 Hz)
-    Und "Foto aufgenommen" sollte angesagt werden
-    Und cameraManager.capturePhoto() sollte aufgerufen werden
-
-  Szenario: Auto-Capture wird abgebrochen bei Kanten-Verlust
-    Angenommen Countdown läuft
-    Wenn Kanten verloren gehen (edgeState → "lost")
-    Dann sollte cancelAutoCapture() aufgerufen werden
-    Und Countdown sollte gestoppt werden
-    Und stableFrameCount sollte auf 0 zurückgesetzt werden
+  Scenario: Confidence falls below lower threshold - transition to "lost"
+    Given edgeState is "detected"
+    And confidence is 0.38
+    When confidence drops to 0.33
+    Then edgeState should change to "lost"
+    And a warning tone (440 Hz) should be played
+    And "Edges lost. Adjust camera position." should be announced
 
   # ============================================================================
-  # Feature 10: Auto-Crop und Perspektivkorrektur
+  # Feature 7: Audio Feedback (Tones + TTS)
   # ============================================================================
 
-  Szenario: lastDetectedCorners werden beim Frame-Analyse gespeichert
-    Angenommen analyzeFrame() erkennt Kanten
-    Wenn Ecken extrahiert werden
-    Dann sollte lastDetectedCorners aktualisiert werden
-    Und Ecken sollten für Auto-Crop verfügbar sein
+  Scenario: Success tone on edge detection
+    Given edges are detected for the first time
+    When edgeState changes to "detected"
+    Then a success tone (880 Hz, 200ms) should be played
 
-  Szenario: Auto-Crop wird angewendet wenn Ecken verfügbar
-    Angenommen capturePhoto() wird aufgerufen
-    Und lastDetectedCorners ist gesetzt
-    Und degradedMode ist false
-    Wenn das Foto verarbeitet wird
-    Dann sollte autoCropAndCorrect() aufgerufen werden
-    Und Ecken sollten von Analysis-Canvas auf Full-Resolution skaliert werden
+  Scenario: Warning tone on edges lost
+    Given edgeState changes to "lost"
+    When edges are lost
+    Then a warning tone (440 Hz, 150ms) should be played
 
-  Szenario: Ecken-Skalierung von 640x480 auf Full-Resolution
-    Angenommen Analysis-Canvas ist 640x480
-    Und Video-Resolution ist 1920x1080
-    Wenn Ecken {x: 320, y: 240} sind
-    Dann sollten skalierte Ecken {x: 960, y: 540} sein (3x Faktor)
+  Scenario: Continuous tone indicates confidence
+    Given edgeState is "detected"
+    And confidence is 0.8
+    When continuous feedback runs
+    Then tone pitch should be confidence-dependent (300-800 Hz)
+    And higher confidence should produce higher pitch
 
-  Szenario: OpenCV.js Perspektivkorrektur
-    Angenommen autoCropAndCorrect() läuft
-    Und skalierte Ecken sind berechnet
-    Wenn cv.imread(canvas) ausgeführt wird
-    Dann sollte ein cv.Mat erstellt werden
-    Und scanner.extractPaper(mat, corners) sollte aufgerufen werden
-    Und ein perspektivkorrigiertes Mat sollte zurückgegeben werden
+  Scenario: TTS announcement is throttled
+    Given an announcement was made 1 second ago
+    When a new announcement is requested (priority != 'force')
+    Then the announcement should be suppressed
+    And announcementThrottle (2000ms) should be enforced
 
-  Szenario: Mat zu Canvas Konvertierung und Cleanup
-    Angenommen extractPaper() hat korrigiertes Mat zurückgegeben
-    Wenn cv.imshow(outputCanvas, correctedMat) ausgeführt wird
-    Dann sollte outputCanvas das korrigierte Bild enthalten
-    Und mat.delete() sollte aufgerufen werden (Memory Cleanup)
-    Und correctedImage.delete() sollte aufgerufen werden
-
-  Szenario: High-Quality JPEG für Auto-Crop Bilder
-    Angenommen Auto-Crop war erfolgreich
-    Wenn outputCanvas.toDataURL() aufgerufen wird
-    Dann sollte JPEG-Qualität 90% sein
-    Und Bild sollte höhere Qualität haben als nicht-gecroppt (85%)
-
-  Szenario: Fallback bei Auto-Crop Fehler
-    Angenommen autoCropAndCorrect() schlägt fehl (Exception)
-    Wenn ein Fehler während Perspektivkorrektur auftritt
-    Dann sollte Original-Canvas verwendet werden
-    Und canvas.toDataURL('image/jpeg', 0.85) sollte zurückgegeben werden
-    Und Fehler sollte in Console geloggt werden
+  Scenario: Force-priority announcement bypasses throttling
+    Given an announcement was made 1 second ago
+    When an announcement with priority='force' is requested
+    Then the announcement should occur immediately
+    And throttling should be bypassed
 
   # ============================================================================
-  # Feature 11: Mehrsprachigkeit (i18n)
+  # Feature 8: Edge-Based Guidance (not directional)
   # ============================================================================
 
-  Szenario: Deutsche Ansagen
-    Angenommen window.currentLang ist "de"
-    Wenn Audio-Ansagen gemacht werden
-    Dann sollten Ansagen auf Deutsch erfolgen
-    Und "Oberer Rand nicht sichtbar" sollte angesagt werden
-    Und speechSynthesis.lang sollte "de-DE" sein
+  Scenario: Top edge too close to frame edge
+    Given edges are detected
+    When a document corner has y < 20
+    Then getMissingEdges() should return "Top edge"
+    And "Top edge not visible" should be announced
 
-  Szenario: Englische Ansagen
-    Angenommen window.currentLang ist "en"
-    Wenn Audio-Ansagen gemacht werden
-    Dann sollten Ansagen auf Englisch erfolgen
-    Und "Top edge not visible" sollte angesagt werden
-    Und speechSynthesis.lang sollte "en-US" sein
+  Scenario: Multiple edges not visible
+    Given edges are detected
+    When corners are at x < 20 and y > 460 (640x480 canvas)
+    Then getMissingEdges() should return ["Left edge", "Bottom edge"]
+    And "Left edge, Bottom edge not visible" should be announced
 
-  Szenario: Spanische Ansagen
-    Angenommen window.currentLang ist "es"
-    Wenn Audio-Ansagen gemacht werden
-    Dann sollten Ansagen auf Spanisch erfolgen
-    Und "Borde superior no visible" sollte angesagt werden
-    Und speechSynthesis.lang sollte "es-ES" sein
+  Scenario: All edges visible - centered document
+    Given edges are detected
+    When all corners are > 20px from edge
+    Then getMissingEdges() should return empty array
+    And isDocumentCentered() should return true
+    And no edge warnings should occur
 
-  Szenario: Französische Ansagen
-    Angenommen window.currentLang ist "fr"
-    Wenn Audio-Ansagen gemacht werden
-    Dann sollten Ansagen auf Französisch erfolgen
-    Und "Bord supérieur non visible" sollte angesagt werden
-    Und speechSynthesis.lang sollte "fr-FR" sein
+  Scenario: Periodic guidance update (every 10 seconds)
+    Given edges are detected but not centered
+    And lastStatusTime was 11 seconds ago
+    When provideFeedback() runs
+    Then missing edges should be announced
+    And lastStatusTime should be updated
 
   # ============================================================================
-  # Feature 12: Visuelle Indikatoren für Sehbehinderte
+  # Feature 9: Auto-Capture on Stable Recognition
   # ============================================================================
 
-  Szenario: Grüner Overlay bei erfolgreicher Erkennung
-    Angenommen Kanten werden erkannt
-    Wenn showVisualIndicator('success') aufgerufen wird
-    Dann sollte ein grüner Farb-Overlay angezeigt werden
-    Und Overlay sollte nach 500ms verschwinden
+  Scenario: Stability counter increments on good frame
+    Given edgeState is "detected"
+    And document is centered
+    And auto-capture is enabled
+    When a stable frame is detected
+    Then stableFrameCount should increase by 1
 
-  Szenario: Gelber Overlay bei Warnung
-    Angenommen Kanten gehen verloren
-    Wenn showVisualIndicator('warning') aufgerufen wird
-    Dann sollte ein gelber Farb-Overlay angezeigt werden
-    Und Overlay sollte nach 500ms verschwinden
+  Scenario: Auto-capture countdown starts after 10 stable frames
+    Given stableFrameCount reaches 10
+    And auto-capture is enabled
+    When the next stable frame occurs
+    Then initiateAutoCapture() should be called
+    And "Hold camera steady" should be announced
+    And a 2-second countdown should start
+
+  Scenario: Countdown announcements "2", "1"
+    Given auto-capture countdown is running
+    When each second passes
+    Then a beep (523 Hz, 100ms) should be played
+    And "2" or "1" should be announced
+
+  Scenario: Photo taken after countdown
+    Given countdown has elapsed
+    When performAutoCapture() is executed
+    Then a camera shutter tone should be played (880 Hz + 440 Hz)
+    And "Photo captured" should be announced
+    And cameraManager.capturePhoto() should be called
+
+  Scenario: Auto-capture canceled on edge loss
+    Given countdown is running
+    When edges are lost (edgeState → "lost")
+    Then cancelAutoCapture() should be called
+    And countdown should be stopped
+    And stableFrameCount should be reset to 0
 
   # ============================================================================
-  # Feature 13: ARIA Live Regions für Screen Reader
+  # Feature 10: Auto-Crop and Perspective Correction
   # ============================================================================
 
-  Szenario: ARIA Live Region wird aktualisiert
-    Angenommen ein Screen Reader ist aktiv
-    Wenn announce() aufgerufen wird
-    Dann sollte <div id="srAnnouncements"> aktualisiert werden
-    Und Screen Reader sollte Text vorlesen
-    Und aria-live="polite" sollte eingehalten werden
+  Scenario: lastDetectedCorners are stored during frame analysis
+    Given analyzeFrame() detects edges
+    When corners are extracted
+    Then lastDetectedCorners should be updated
+    And corners should be available for auto-crop
+
+  Scenario: Auto-crop is applied when corners are available
+    Given capturePhoto() is called
+    And lastDetectedCorners is set
+    And degradedMode is false
+    When the photo is processed
+    Then autoCropAndCorrect() should be called
+    And corners should be scaled from analysis canvas to full resolution
+
+  Scenario: Corner scaling from 640x480 to full resolution
+    Given analysis canvas is 640x480
+    And video resolution is 1920x1080
+    When corners are {x: 320, y: 240}
+    Then scaled corners should be {x: 960, y: 540} (3x factor)
+
+  Scenario: OpenCV.js perspective correction
+    Given autoCropAndCorrect() is running
+    And scaled corners are calculated
+    When cv.imread(canvas) is executed
+    Then a cv.Mat should be created
+    And scanner.extractPaper(mat, corners) should be called
+    And a perspective-corrected Mat should be returned
+
+  Scenario: Mat to Canvas conversion and cleanup
+    Given extractPaper() returned corrected Mat
+    When cv.imshow(outputCanvas, correctedMat) is executed
+    Then outputCanvas should contain the corrected image
+    And mat.delete() should be called (memory cleanup)
+    And correctedImage.delete() should be called
+
+  Scenario: High-quality JPEG for auto-crop images
+    Given auto-crop was successful
+    When outputCanvas.toDataURL() is called
+    Then JPEG quality should be 90%
+    And image should have higher quality than non-cropped (85%)
+
+  Scenario: Fallback on auto-crop error
+    Given autoCropAndCorrect() fails (exception)
+    When an error occurs during perspective correction
+    Then original canvas should be used
+    And canvas.toDataURL('image/jpeg', 0.85) should be returned
+    And error should be logged to console
 
   # ============================================================================
-  # Feature 14: Volume-Kontrolle
+  # Feature 11: Multilingualism (i18n)
   # ============================================================================
 
-  Szenario: Volume-Slider ändert Lautstärke
-    Angenommen Audio-Führung ist aktiv
-    Wenn Volume-Slider auf 50% gesetzt wird
-    Dann sollte this.volume auf 0.5 gesetzt werden
-    Und GainNode.gain sollte 0.5 * 0.3 sein (30% max für Töne)
-    Und SpeechSynthesisUtterance.volume sollte 0.5 sein
+  Scenario: German announcements
+    Given window.currentLang is "de"
+    When audio announcements are made
+    Then announcements should be in German
+    And "Oberer Rand nicht sichtbar" should be announced
+    And speechSynthesis.lang should be "de-DE"
+
+  Scenario: English announcements
+    Given window.currentLang is "en"
+    When audio announcements are made
+    Then announcements should be in English
+    And "Top edge not visible" should be announced
+    And speechSynthesis.lang should be "en-US"
+
+  Scenario: Spanish announcements
+    Given window.currentLang is "es"
+    When audio announcements are made
+    Then announcements should be in Spanish
+    And "Borde superior no visible" should be announced
+    And speechSynthesis.lang should be "es-ES"
+
+  Scenario: French announcements
+    Given window.currentLang is "fr"
+    When audio announcements are made
+    Then announcements should be in French
+    And "Bord supérieur non visible" should be announced
+    And speechSynthesis.lang should be "fr-FR"
 
   # ============================================================================
-  # Feature 15: Test-Audio Button
+  # Feature 12: Visual Indicators for Visually Impaired
   # ============================================================================
 
-  Szenario: Test-Audio spielt Ton und TTS
-    Angenommen Audio-Führung ist aktiv
-    Wenn "Test Audio" Button geklickt wird
-    Dann sollte testAudio() aufgerufen werden
-    Und ein Erfolgston sollte gespielt werden
-    Und "Audio test. If you can hear this, audio is working." sollte angesagt werden
+  Scenario: Green overlay on successful recognition
+    Given edges are detected
+    When showVisualIndicator('success') is called
+    Then a green color overlay should be displayed
+    And overlay should disappear after 500ms
+
+  Scenario: Yellow overlay on warning
+    Given edges are lost
+    When showVisualIndicator('warning') is called
+    Then a yellow color overlay should be displayed
+    And overlay should disappear after 500ms
+
+  # ============================================================================
+  # Feature 13: ARIA Live Regions for Screen Readers
+  # ============================================================================
+
+  Scenario: ARIA Live Region is updated
+    Given a screen reader is active
+    When announce() is called
+    Then <div id="srAnnouncements"> should be updated
+    And screen reader should read text
+    And aria-live="polite" should be enforced
+
+  # ============================================================================
+  # Feature 14: Volume Control
+  # ============================================================================
+
+  Scenario: Volume slider changes volume
+    Given audio guidance is active
+    When volume slider is set to 50%
+    Then this.volume should be set to 0.5
+    And GainNode.gain should be 0.5 * 0.3 (30% max for tones)
+    And SpeechSynthesisUtterance.volume should be 0.5
+
+  # ============================================================================
+  # Feature 15: Test Audio Button
+  # ============================================================================
+
+  Scenario: Test audio plays tone and TTS
+    Given audio guidance is active
+    When "Test Audio" button is clicked
+    Then testAudio() should be called
+    And a success tone should be played
+    And "Audio test. If you can hear this, audio is working." should be announced
 
   # ============================================================================
   # Feature 16: Disable Feature
   # ============================================================================
 
-  Szenario: Audio-Führung wird deaktiviert
-    Angenommen Audio-Führung ist aktiv
-    Wenn Checkbox deaktiviert wird
-    Dann sollte disable() aufgerufen werden
-    Und analysisLoopId sollte gestoppt werden (clearInterval)
-    Und "Kamera-Unterstützung deaktiviert" sollte angesagt werden
-    Und enabled sollte false sein
+  Scenario: Audio guidance is disabled
+    Given audio guidance is active
+    When checkbox is disabled
+    Then disable() should be called
+    And analysisLoopId should be stopped (clearInterval)
+    And "Camera assistance disabled" should be announced
+    And enabled should be false
 
-  Szenario: AudioContext wird bei Deaktivierung geschlossen
-    Angenommen Audio-Führung ist aktiv
-    Wenn disable() aufgerufen wird
-    Dann sollte AudioContext.close() aufgerufen werden
-    Und audioContext sollte auf null gesetzt werden
+  Scenario: AudioContext is closed on disable
+    Given audio guidance is active
+    When disable() is called
+    Then AudioContext.close() should be called
+    And audioContext should be set to null
 
   # ============================================================================
   # Feature 17: Error Handling
   # ============================================================================
 
-  Szenario: Browser unterstützt keine Web Audio API
-    Angenommen window.AudioContext ist undefined
-    Wenn Audio-Führung aktiviert wird
-    Dann sollte ein Fehler geworfen werden
-    Und "AudioContext not supported in this browser" sollte die Fehlermeldung sein
-    Und Checkbox sollte deaktiviert werden
+  Scenario: Browser does not support Web Audio API
+    Given window.AudioContext is undefined
+    When audio guidance is enabled
+    Then an error should be thrown
+    And "AudioContext not supported in this browser" should be the error message
+    And checkbox should be disabled
 
-  Szenario: getUserMedia fehlgeschlagen
-    Angenommen Kamera-Permission wird verweigert
-    Wenn Kamera-Zugriff angefordert wird
-    Dann sollte CameraManager einen Fehler werfen
-    Aber Audio-Führung sollte trotzdem initialisiert werden können
+  Scenario: getUserMedia failed
+    Given camera permission is denied
+    When camera access is requested
+    Then CameraManager should throw an error
+    But audio guidance should still be initializable
 
-  Szenario: Canvas 2D Context Fehler
-    Angenommen Canvas.getContext('2d') schlägt fehl
-    Wenn Analysis-Canvas erstellt wird
-    Dann sollte ein Fehler geworfen werden
-    Und "Failed to create canvas 2d context" sollte die Fehlermeldung sein
+  Scenario: Canvas 2D Context error
+    Given Canvas.getContext('2d') fails
+    When analysis canvas is created
+    Then an error should be thrown
+    And "Failed to create canvas 2d context" should be the error message
 
   # ============================================================================
   # Feature 18: Performance & Memory
   # ============================================================================
 
-  Szenario: Frame-Analyse läuft mit 10 FPS
-    Angenommen Audio-Führung ist aktiv
-    Wenn startAnalysis() aufgerufen wird
-    Dann sollte analysisLoopId ein Intervall von 100ms haben
-    Und analyzeFrame() sollte alle 100ms aufgerufen werden
+  Scenario: Frame analysis runs at 10 FPS
+    Given audio guidance is active
+    When startAnalysis() is called
+    Then analysisLoopId should have an interval of 100ms
+    And analyzeFrame() should be called every 100ms
 
-  Szenario: Analysis-Canvas ist Performance-optimiert
-    Angenommen analyzeFrame() läuft
-    Wenn Video-Frame auf Canvas gezeichnet wird
-    Dann sollte Analysis-Canvas 640x480 Pixel sein (nicht Full-Resolution)
-    Und Performance sollte auf älteren Geräten akzeptabel sein
+  Scenario: Analysis canvas is performance-optimized
+    Given analyzeFrame() is running
+    When video frame is drawn to canvas
+    Then analysis canvas should be 640x480 pixels (not full resolution)
+    And performance should be acceptable on older devices
 
-  Szenario: Capture-Canvas nutzt Full-Resolution für Qualität
-    Angenommen capturePhoto() wird aufgerufen
-    Wenn Video-Frame erfasst wird
-    Dann sollte Capture-Canvas video.videoWidth × video.videoHeight sein
-    Und maximale Qualität sollte gewährleistet sein
+  Scenario: Capture canvas uses full resolution for quality
+    Given capturePhoto() is called
+    When video frame is captured
+    Then capture canvas should be video.videoWidth × video.videoHeight
+    And maximum quality should be ensured
 
-  Szenario: OpenCV Mat wird explizit freigegeben
-    Angenommen autoCropAndCorrect() wird aufgerufen
-    Wenn cv.Mat Objekte erstellt werden
-    Dann sollte mat.delete() in finally-Block aufgerufen werden
-    Und correctedImage.delete() sollte ebenfalls aufgerufen werden
-    Und keine Memory-Leaks sollten entstehen
+  Scenario: OpenCV Mat is explicitly freed
+    Given autoCropAndCorrect() is called
+    When cv.Mat objects are created
+    Then mat.delete() should be called in finally block
+    And correctedImage.delete() should also be called
+    And no memory leaks should occur
