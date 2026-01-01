@@ -197,7 +197,7 @@ class TestLiveEventBroadcasting:
         msg = JobEventMessage(
             job_id="test-job-123",
             event_type="ocr_decision",
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             message="OCR skipped: tagged PDF detected",
             details={
                 "decision": "skip",

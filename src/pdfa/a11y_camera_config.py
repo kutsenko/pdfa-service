@@ -155,6 +155,18 @@ class A11yCameraConfig:
     # Edge Detection
     edge_margin_pixels: int = 20
 
+    def __post_init__(self) -> None:
+        """Validate configuration after initialization.
+
+        This ensures that invalid configurations cannot be created.
+        Automatically called by dataclass after __init__.
+
+        Raises:
+            ValueError: If any parameter is out of valid range.
+
+        """
+        self.validate()
+
     @classmethod
     def from_env(cls) -> A11yCameraConfig:
         """Load accessibility camera configuration from environment variables.

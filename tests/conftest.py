@@ -85,7 +85,7 @@ def valid_jwt_token(auth_config_enabled, test_user):
 @pytest.fixture
 def expired_jwt_token(auth_config_enabled, test_user):
     """Generate an expired JWT token for testing."""
-    from datetime import datetime, timedelta
+    from datetime import UTC, datetime, timedelta
 
     # Create token with past expiry
     import jose.jwt
@@ -95,8 +95,8 @@ def expired_jwt_token(auth_config_enabled, test_user):
         "email": test_user.email,
         "name": test_user.name,
         "picture": test_user.picture,
-        "iat": int((datetime.utcnow() - timedelta(days=2)).timestamp()),
-        "exp": int((datetime.utcnow() - timedelta(days=1)).timestamp()),  # Expired
+        "iat": int((datetime.now(UTC) - timedelta(days=2)).timestamp()),
+        "exp": int((datetime.now(UTC) - timedelta(days=1)).timestamp()),  # Expired
     }
 
     return jose.jwt.encode(

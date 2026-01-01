@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import secrets
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from authlib.integrations.starlette_client import OAuth
@@ -63,7 +63,7 @@ def create_jwt_token(user: User, config: AuthConfig) -> str:
         Signed JWT token string
 
     """
-    now = datetime.utcnow()
+    now = datetime.now(UTC)
     expires_at = now + timedelta(hours=config.jwt_expiry_hours)
 
     payload = {
@@ -237,7 +237,7 @@ class GoogleOAuthClient:
         oauth_repo = OAuthStateRepository()
         state_doc = OAuthStateDocument(
             state=state,
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             ip_address=get_client_ip(request),
             user_agent=request.headers.get("user-agent"),
         )
@@ -386,7 +386,7 @@ class GoogleOAuthClient:
                 AuditLogDocument(
                     event_type="auth_failure",
                     user_id=None,
-                    timestamp=datetime.utcnow(),
+                    timestamp=datetime.now(UTC),
                     ip_address=get_client_ip(request),
                     user_agent=request.headers.get("user-agent"),
                     details={"reason": "invalid_state", "state": state[:16] + "..."},
@@ -412,8 +412,8 @@ class GoogleOAuthClient:
                 email=user.email,
                 name=user.name,
                 picture=user.picture,
-                created_at=datetime.utcnow(),
-                last_login_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
+                last_login_at=datetime.now(UTC),
                 login_count=1,  # Will be incremented by repository
             )
             await user_repo.create_or_update_user(user_doc)
@@ -427,7 +427,7 @@ class GoogleOAuthClient:
                 AuditLogDocument(
                     event_type="user_login",
                     user_id=user.user_id,
-                    timestamp=datetime.utcnow(),
+                    timestamp=datetime.now(UTC),
                     ip_address=get_client_ip(request),
                     user_agent=request.headers.get("user-agent"),
                     details={"email": user.email, "method": "google_oauth"},

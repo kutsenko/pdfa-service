@@ -3568,6 +3568,16 @@
                         </div>
 
                         <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="voiceOverOverride" name="voiceover_override">
+                                <span data-i18n="camera.a11y.voiceOverOverride">I'm using VoiceOver (iOS/macOS)</span>
+                            </label>
+                            <p class="help-text" data-i18n="camera.a11y.voiceOverHelp">
+                                Check this if using VoiceOver screen reader to disable Web Speech API (prevents conflicts)
+                            </p>
+                        </div>
+
+                        <div class="form-group">
                             <button id="testA11yAudioBtn" class="btn btn-secondary" data-i18n="camera.a11y.test">
                                 Test Audio
                             </button>
@@ -9311,15 +9321,17 @@
                 this.screenReaderDetected = false;
                 this.volume = 0.8; // 80% default volume
 
-                // Load configuration from environment variables (injected by backend)
-                this.config = window.a11yCameraConfig || {};
-                this.debugEnabled = this.config.debug_enabled || false;
+                // Configuration loaded from API endpoint (see loadConfig())
+                this.config = {};
+                this.configLoaded = false;
+                this.debugEnabled = false;
 
                 // Audio components
                 this.audioContext = null;
                 // Note: oscillators are created on-demand for each tone (iOS compatibility)
 
                 // VoiceOver detection and speech synthesis
+                this.voiceOverManualOverride = null; // null = auto-detect, true/false = manual override
                 this.voiceOverActive = this.detectVoiceOver();
                 this.synth = window.speechSynthesis;
                 this.currentLang = 'en-US';
@@ -9328,7 +9340,7 @@
                 // Detection state
                 this.lastEdgeConfidence = 0;
                 this.lastAnnouncementTime = 0;
-                this.announcementThrottle = this.config.announcement_throttle_ms || 2000;
+                this.announcementThrottle = 2000; // Will be updated from config in init()
                 this.edgeState = 'lost'; // Current state: 'detected' or 'lost'
                 this.lastStatusTime = 0; // For periodic status updates
 
@@ -9345,18 +9357,14 @@
                 // Auto-capture state
                 this.autoCaptureEnabled = true;
                 this.stableFrameCount = 0;
-                this.stableThreshold = this.config.stable_frame_count || 10;
+                this.stableThreshold = 10; // Will be updated from config in init()
                 this.captureCountdown = null;
                 this.isCountingDown = false;
 
                 // Auto-crop feature
                 this.lastDetectedCorners = null; // Store last detected corners for perspective correction
 
-                if (this.debugEnabled) {
-                    console.log('[A11y] AccessibleCameraAssistant created with config:', this.config);
-                } else {
-                    console.log('[A11y] AccessibleCameraAssistant created');
-                }
+                console.log('[A11y] AccessibleCameraAssistant created (config will be loaded in init)');
             }
 
             log(...args) {
@@ -9366,8 +9374,43 @@
                 }
             }
 
+            /**
+             * Load accessibility camera configuration from API endpoint.
+             * This replaces the previous approach of injecting config via window object.
+             */
+            async loadConfig() {
+                try {
+                    this.log('[A11y] Loading config from API...');
+                    const response = await fetch('/api/config/a11y-camera');
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+
+                    this.config = await response.json();
+                    this.configLoaded = true;
+
+                    // Update config-dependent properties
+                    this.debugEnabled = this.config.debug_enabled || false;
+                    this.announcementThrottle = this.config.announcement_throttle_ms || 2000;
+                    this.stableThreshold = this.config.stable_frame_count || 10;
+
+                    console.log('[A11y] Config loaded successfully:', this.config);
+                } catch (error) {
+                    console.error('[A11y] Failed to load config, using defaults:', error);
+                    // Keep default values set in constructor
+                    this.config = {};
+                    this.configLoaded = true; // Mark as loaded even if it failed
+                }
+            }
+
             async init() {
-                this.log('[A11y] Initializing AccessibleCameraAssistant');
+                console.log('[A11y] Initializing AccessibleCameraAssistant');
+
+                // Load configuration from API first
+                await this.loadConfig();
+
+                this.log('[A11y] Initialization continuing after config load');
 
                 // Log VoiceOver detection status
                 console.log('[A11y] VoiceOver active:', this.voiceOverActive);
@@ -9422,11 +9465,30 @@
                  * we rely solely on ARIA live regions which VoiceOver reads natively.
                  *
                  * Detection methods:
-                 * 1. Check for iOS Safari user agent
-                 * 2. Check for accessibility features enabled
-                 * 3. Heuristic: iOS + screen reader hints = likely VoiceOver
+                 * 1. Check manual override from localStorage (user preference)
+                 * 2. Check for iOS Safari user agent
+                 * 3. Check for accessibility features enabled
+                 * 4. Heuristic: iOS + screen reader hints = likely VoiceOver
                  */
 
+                // Check for manual override first
+                const manualOverride = localStorage.getItem('voiceOverManualOverride');
+                if (manualOverride !== null) {
+                    const isManuallyEnabled = manualOverride === 'true';
+                    console.log('[A11y] VoiceOver manual override:', isManuallyEnabled);
+                    this.voiceOverManualOverride = isManuallyEnabled;
+
+                    if (isManuallyEnabled) {
+                        console.log('[A11y] ⚠️ VoiceOver MANUALLY ENABLED - Web Speech API will be DISABLED');
+                        console.log('[A11y] Using ARIA live regions only (VoiceOver reads these natively)');
+                    } else {
+                        console.log('[A11y] VoiceOver MANUALLY DISABLED - Web Speech API will be ENABLED');
+                    }
+
+                    return isManuallyEnabled;
+                }
+
+                // Auto-detect if no manual override
                 // Check if iOS Safari
                 const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) &&
                                    /Safari/.test(navigator.userAgent) &&
@@ -9441,7 +9503,7 @@
                 // - OR explicitly detected via other means
                 const likelyVoiceOver = isIOSSafari && (prefersReducedMotion || invertedColors);
 
-                console.log('[A11y] VoiceOver detection:', {
+                console.log('[A11y] VoiceOver auto-detection:', {
                     isIOSSafari,
                     prefersReducedMotion,
                     invertedColors,
@@ -9449,7 +9511,7 @@
                 });
 
                 if (likelyVoiceOver) {
-                    console.log('[A11y] ⚠️ VoiceOver detected - Web Speech API will be DISABLED');
+                    console.log('[A11y] ⚠️ VoiceOver AUTO-DETECTED - Web Speech API will be DISABLED');
                     console.log('[A11y] Using ARIA live regions only (VoiceOver reads these natively)');
                 }
 
@@ -9581,7 +9643,7 @@
                                 // Clean up if AudioContext was created
                                 if (this.audioContext) {
                                     try {
-                                        this.audioContext.close();
+                                        await this.audioContext.close();
                                     } catch (closeError) {
                                         console.error('[A11y] Failed to close AudioContext:', closeError);
                                     }
@@ -9589,7 +9651,7 @@
                                 }
                             }
                         } else {
-                            this.disable();
+                            await this.disable();
                         }
                     });
                 }
@@ -9623,8 +9685,53 @@
                     });
                 }
 
-                // Hide Web Speech API controls if VoiceOver is detected
-                // VoiceOver uses ARIA live regions only, no Web Speech API needed
+                // VoiceOver manual override toggle
+                const voiceOverCheckbox = document.getElementById('voiceOverOverride');
+                if (voiceOverCheckbox) {
+                    // Set initial state from localStorage
+                    const savedOverride = localStorage.getItem('voiceOverManualOverride');
+                    if (savedOverride !== null) {
+                        voiceOverCheckbox.checked = savedOverride === 'true';
+                    }
+
+                    // Handle changes
+                    voiceOverCheckbox.addEventListener('change', (e) => {
+                        const isEnabled = e.target.checked;
+
+                        // Save to localStorage
+                        localStorage.setItem('voiceOverManualOverride', String(isEnabled));
+
+                        // Update VoiceOver detection
+                        this.voiceOverManualOverride = isEnabled;
+                        this.voiceOverActive = isEnabled;
+                        this.useTTS = !isEnabled;
+
+                        console.log('[A11y] VoiceOver manual override:', isEnabled);
+                        console.log('[A11y] Web Speech API (TTS):', this.useTTS ? 'ENABLED' : 'DISABLED');
+
+                        // Show/hide Web Speech API controls based on override
+                        this.updateVoiceOverUI();
+
+                        // Notify user
+                        const message = isEnabled
+                            ? 'VoiceOver mode enabled. Web Speech API disabled.'
+                            : 'VoiceOver mode disabled. Web Speech API enabled.';
+                        this.announce(message, 'assertive');
+                    });
+                }
+
+                // Update UI based on VoiceOver status (initial state)
+                this.updateVoiceOverUI();
+            }
+
+            /**
+             * Update UI to show/hide Web Speech API controls based on VoiceOver status.
+             * Called on initialization and when user toggles VoiceOver override.
+             */
+            updateVoiceOverUI() {
+                const volumeSlider = document.getElementById('a11yVolume');
+                const testBtn = document.getElementById('testA11yAudioBtn');
+
                 if (this.voiceOverActive) {
                     console.log('[A11y] Hiding Web Speech API controls (VoiceOver mode - ARIA only)');
 
@@ -9641,6 +9748,24 @@
                         const testGroup = testBtn.closest('.form-group');
                         if (testGroup) {
                             testGroup.style.display = 'none';
+                        }
+                    }
+                } else {
+                    console.log('[A11y] Showing Web Speech API controls');
+
+                    // Show volume control
+                    if (volumeSlider) {
+                        const volumeGroup = volumeSlider.closest('.form-group');
+                        if (volumeGroup) {
+                            volumeGroup.style.display = '';
+                        }
+                    }
+
+                    // Show test audio button
+                    if (testBtn) {
+                        const testGroup = testBtn.closest('.form-group');
+                        if (testGroup) {
+                            testGroup.style.display = '';
                         }
                     }
                 }
@@ -9797,7 +9922,7 @@
                 }
             }
 
-            disable() {
+            async disable() {
                 if (!this.enabled) return;
 
                 console.log('[A11y] Disabling camera assistance');
@@ -9812,7 +9937,7 @@
                 if (this.audioContext) {
                     console.log('[A11y] Closing AudioContext...');
                     try {
-                        this.audioContext.close();
+                        await this.audioContext.close();
                         console.log('[A11y] AudioContext closed successfully');
                     } catch (error) {
                         console.error('[A11y] Error closing AudioContext:', error);
@@ -10865,7 +10990,7 @@
                 cameraManager.init();
 
                 // Initialize Debug Console (for iOS debugging without Mac)
-                (function initDebugConsole() {
+                (async function initDebugConsole() {
                     const debugConsole = document.getElementById('debugConsole');
                     const debugContent = document.getElementById('debugConsoleContent');
                     const toggleBtn = document.getElementById('toggleDebugBtn');
@@ -10873,21 +10998,29 @@
 
                     if (!debugConsole || !debugContent) return;
 
-                    // Check if debug mode is enabled from config
-                    const config = window.a11yCameraConfig || {};
-                    const debugEnabled = config.debug_enabled || false;
-
-                    // Initialize visibility based on config
-                    let isVisible = debugEnabled;
-
-                    // Hide console initially if debug is disabled
-                    if (!debugEnabled) {
-                        debugConsole.classList.add('hidden');
-                        toggleBtn.textContent = 'Show';
-                        console.log('[A11y] Debug console hidden (A11Y_CAMERA_DEBUG=false)');
-                    } else {
-                        console.log('[A11y] Debug console visible (A11Y_CAMERA_DEBUG=true)');
+                    // Check if debug mode is enabled from config API
+                    let debugEnabled = false;
+                    try {
+                        const response = await fetch('/api/config/a11y-camera');
+                        if (response.ok) {
+                            const config = await response.json();
+                            debugEnabled = config.debug_enabled || false;
+                        }
+                    } catch (error) {
+                        console.error('[Debug] Failed to load config:', error);
                     }
+
+                    // If debug is disabled, completely remove debug console from DOM
+                    if (!debugEnabled) {
+                        console.log('[A11y] Debug console DISABLED (A11Y_CAMERA_DEBUG=false) - removing from DOM');
+                        debugConsole.remove();
+                        return; // Exit early - no console functionality when disabled
+                    }
+
+                    // Debug is enabled - initialize console functionality
+                    console.log('[A11y] Debug console ENABLED (A11Y_CAMERA_DEBUG=true)');
+
+                    let isVisible = true; // Start visible when debug is enabled
 
                     // Toggle visibility
                     toggleBtn.addEventListener('click', () => {

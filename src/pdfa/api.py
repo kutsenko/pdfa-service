@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import os
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Literal
@@ -160,8 +160,8 @@ async def ensure_default_user() -> None:
         email=auth_config.default_user_email,
         name=auth_config.default_user_name,
         picture=None,
-        created_at=datetime.utcnow(),
-        last_login_at=datetime.utcnow(),
+        created_at=datetime.now(UTC),
+        last_login_at=datetime.now(UTC),
         login_count=1,
     )
 
@@ -254,6 +254,23 @@ async def health_check() -> dict[str, str]:
     return {"status": "healthy", "database": "connected"}
 
 
+@app.get("/api/config/a11y-camera")
+async def get_a11y_camera_config() -> dict[str, Any]:
+    """Get accessibility camera configuration.
+
+    This endpoint returns the accessibility camera configuration loaded from
+    environment variables. The configuration controls edge detection, audio
+    feedback, and auto-capture behavior.
+
+    Returns:
+        Dictionary with accessibility camera configuration
+
+    """
+    config = A11yCameraConfig.from_env()
+    # Validation happens automatically in __post_init__
+    return config.to_dict()
+
+
 @app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 async def web_ui() -> str:
     """Serve the web-based conversion interface with browser language detection.
@@ -267,15 +284,7 @@ async def web_ui() -> str:
         html_content = html_content.replace(
             '<html lang="en" data-lang="en">', '<html lang="en" data-lang="auto">'
         )
-        # Inject accessibility camera configuration
-        import json
-
-        config_json = json.dumps(a11y_camera_config.to_dict(), indent=2)
-        config_injection = (
-            f"\n        // Accessibility camera configuration from environment variables\n"
-            f"        window.a11yCameraConfig = {config_json};\n"
-        )
-        html_content = html_content.replace("<script>", f"<script>{config_injection}")
+        # Config is now loaded via /api/config/a11y-camera endpoint (no injection)
         return html_content
     except FileNotFoundError:
         logger.warning("Web UI file not found at %s", ui_path)
@@ -627,7 +636,7 @@ async def delete_user_account(
         AuditLogDocument(
             event_type="user_logout",  # Closest available event type
             user_id=current_user.user_id,
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             ip_address=get_client_ip(request),
             details={"reason": "account_deleted"},
         )

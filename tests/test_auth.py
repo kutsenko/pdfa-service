@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -519,7 +519,7 @@ async def test_google_oauth_callback_success(
 
     # Mock OAuth state validation (simulating state was created during initiate_login)
     mock_mongodb.oauth_states.find_one_and_delete = AsyncMock(
-        return_value={"state": "state_123", "created_at": datetime.utcnow()}
+        return_value={"state": "state_123", "created_at": datetime.now(UTC)}
     )
 
     # Mock OAuth token exchange
