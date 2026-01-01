@@ -9622,6 +9622,28 @@
                         console.log('[A11y] Auto-capture', this.autoCaptureEnabled ? 'enabled' : 'disabled');
                     });
                 }
+
+                // Hide Web Speech API controls if VoiceOver is detected
+                // VoiceOver uses ARIA live regions only, no Web Speech API needed
+                if (this.voiceOverActive) {
+                    console.log('[A11y] Hiding Web Speech API controls (VoiceOver mode - ARIA only)');
+
+                    // Hide volume control (not needed for ARIA)
+                    if (volumeSlider) {
+                        const volumeGroup = volumeSlider.closest('.form-group');
+                        if (volumeGroup) {
+                            volumeGroup.style.display = 'none';
+                        }
+                    }
+
+                    // Hide test audio button (Web Speech API test)
+                    if (testBtn) {
+                        const testGroup = testBtn.closest('.form-group');
+                        if (testGroup) {
+                            testGroup.style.display = 'none';
+                        }
+                    }
+                }
             }
 
             async enable() {
@@ -9782,13 +9804,21 @@
 
                 this.stopAnalysis();
 
-                if (this.audioContext) {
-                    this.audioContext.close();
-                    this.audioContext = null;
-                }
-
+                // Announce BEFORE closing AudioContext to avoid "Audio System not available" error
                 this.enabled = false;
                 this.announce(this.translate('camera.a11y.disabled'));
+
+                // Now close AudioContext (after announcement)
+                if (this.audioContext) {
+                    console.log('[A11y] Closing AudioContext...');
+                    try {
+                        this.audioContext.close();
+                        console.log('[A11y] AudioContext closed successfully');
+                    } catch (error) {
+                        console.error('[A11y] Error closing AudioContext:', error);
+                    }
+                    this.audioContext = null;
+                }
 
                 // Hide status indicator
                 const statusEl = document.getElementById('edgeDetectionStatus');
@@ -10490,8 +10520,14 @@
             }
 
             async playTone(frequency, duration = 200) {
+                // Check if AudioContext is available and not closed
                 if (!this.audioContext || !this.enabled) {
                     console.warn('[A11y] playTone: AudioContext not available or not enabled');
+                    return;
+                }
+
+                if (this.audioContext.state === 'closed') {
+                    console.warn('[A11y] playTone: AudioContext is closed, cannot play tone');
                     return;
                 }
 
