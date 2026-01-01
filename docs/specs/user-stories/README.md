@@ -13,6 +13,8 @@ This directory contains formal User Stories in **INVEST** format for major featu
 | US-001 | MongoDB-Integration | ✅ Implementiert | 2024-12-21 | [US-001-mongodb-integration.md](US-001-mongodb-integration.md) | [Feature](../features/gherkin-mongodb-integration.feature) |
 | US-002 | Job Event Logging | ✅ Implementiert | 2024-12-25 | [US-002-job-event-logging.md](US-002-job-event-logging.md) | [Feature](../features/gherkin-job-event-logging.feature) |
 | US-003 | Lokaler Standardbenutzer | ✅ Implementiert | 2024-12-25 | [US-003-local-default-user.md](US-003-local-default-user.md) | [Feature](../features/gherkin-local-default-user.feature) |
+| US-004 | Camera Tab for Multi-Page Document Capture | ✅ Implemented | 2025-12-30 | [US-004-camera-tab.md](US-004-camera-tab.md) | [Feature](../features/gherkin-camera-tab.feature) |
+| US-005 | Accessibility Camera Assistance | ✅ Implemented | 2026-01-01 | [US-005-accessibility-camera-assistance.md](US-005-accessibility-camera-assistance.md) | [Feature](../features/gherkin-accessibility-camera-assistance.feature) |
 
 ---
 
@@ -141,6 +143,45 @@ Versions-Tracking mit:
 **Status**: ✅ Implementiert (2024-12-25)
 
 **Gherkin Feature**: [18 Szenarien](../features/gherkin-local-default-user.feature)
+
+---
+
+### [US-004: Camera Tab for Multi-Page Document Capture](US-004-camera-tab.md)
+
+**Story**: As a user of the PDF/A service, I want to capture multi-page documents using my device's camera directly in the browser so that I can create searchable PDF/A documents without needing a physical scanner or separate app.
+
+**Key Points**:
+- Browser-based camera interface using getUserMedia API
+- Multi-page document capture with page management
+- Built-in photo editor (rotation, brightness, contrast)
+- Direct submission to PDF/A conversion pipeline
+- Integration with accessibility features (US-005)
+- Progressive Web App capabilities (works offline)
+
+**Status**: ✅ Implemented (2025-12-30)
+
+**Gherkin Feature**: [57 scenarios](../features/gherkin-camera-tab.feature)
+
+---
+
+### [US-005: Accessibility Camera Assistance](US-005-accessibility-camera-assistance.md)
+
+**Story**: As a blind or visually impaired user I want to photograph documents using audio guidance so that I can create high-quality document scans without visual control with automatic cropping and perspective correction.
+
+**Key Points**:
+- Real-time edge detection with jscanify v1.4.0 and OpenCV.js 4.7.0
+- Audio feedback via Web Audio API (tones) and Speech Synthesis API (TTS)
+- iOS Safari compatibility (AudioContext + SpeechSynthesis unlock)
+- Automatic capture on stable document recognition (10 frames)
+- Auto-crop and perspective correction with full resolution
+- Edge-based guidance ("Top edge not visible" instead of "Move camera down")
+- Partial capture (10-90% of area, optimized for 1/3 documents)
+- Hysteresis to prevent flickering (45%/35% thresholds)
+- Multilingual (de, en, es, fr)
+
+**Status**: ✅ Implemented (2026-01-01)
+
+**Gherkin Feature**: [65 scenarios](../features/gherkin-accessibility-camera-assistance.feature)
 
 ---
 

@@ -25,6 +25,7 @@ from fastapi.responses import FileResponse, HTMLResponse, Response
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
 import pdfa.auth
+from pdfa.a11y_camera_config import A11yCameraConfig
 from pdfa.auth import (
     GoogleOAuthClient,
     WebSocketAuthenticator,
@@ -81,6 +82,14 @@ logger.info(
     f"Loaded compression config: DPI={compression_config.image_dpi}, "
     f"JPG quality={compression_config.jpg_quality}, "
     f"Optimize={compression_config.optimize}"
+)
+
+# Load accessibility camera configuration from environment variables
+a11y_camera_config = A11yCameraConfig.from_env()
+logger.info(
+    f"Loaded a11y camera config: Debug={a11y_camera_config.debug_enabled}, "
+    f"Hysteresis={a11y_camera_config.hysteresis_lower}/{a11y_camera_config.hysteresis_upper}, "
+    f"FPS={a11y_camera_config.analysis_fps}"
 )
 
 # Database configuration - loaded during startup to allow testing without MongoDB
@@ -258,6 +267,15 @@ async def web_ui() -> str:
         html_content = html_content.replace(
             '<html lang="en" data-lang="en">', '<html lang="en" data-lang="auto">'
         )
+        # Inject accessibility camera configuration
+        import json
+
+        config_json = json.dumps(a11y_camera_config.to_dict(), indent=2)
+        config_injection = (
+            f"\n        // Accessibility camera configuration from environment variables\n"
+            f"        window.a11yCameraConfig = {config_json};\n"
+        )
+        html_content = html_content.replace("<script>", f"<script>{config_injection}")
         return html_content
     except FileNotFoundError:
         logger.warning("Web UI file not found at %s", ui_path)
@@ -288,6 +306,15 @@ async def web_ui_lang(lang: str) -> str:
             '<html lang="en" data-lang="en">',
             f'<html lang="{lang}" data-lang="{lang}">',
         )
+        # Inject accessibility camera configuration
+        import json
+
+        config_json = json.dumps(a11y_camera_config.to_dict(), indent=2)
+        config_injection = (
+            f"\n        // Accessibility camera configuration from environment variables\n"
+            f"        window.a11yCameraConfig = {config_json};\n"
+        )
+        html_content = html_content.replace("<script>", f"<script>{config_injection}")
         return html_content
     except FileNotFoundError:
         logger.warning("Web UI file not found at %s", ui_path)
@@ -370,6 +397,15 @@ async def oauth_callback(request: Request):
     if not is_json_request:
         ui_path = Path(__file__).parent / "web_ui.html"
         html_content = ui_path.read_text(encoding="utf-8")
+        # Inject accessibility camera configuration
+        import json
+
+        config_json = json.dumps(a11y_camera_config.to_dict(), indent=2)
+        config_injection = (
+            f"\n        // Accessibility camera configuration from environment variables\n"
+            f"        window.a11yCameraConfig = {config_json};\n"
+        )
+        html_content = html_content.replace("<script>", f"<script>{config_injection}")
         return HTMLResponse(content=html_content)
 
     # Otherwise, handle the OAuth callback and return JSON

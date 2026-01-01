@@ -13,8 +13,10 @@ This directory contains **Gherkin Feature files** in BDD format (Behavior Driven
 | MongoDB-Integration | 36 | Deutsch | [gherkin-mongodb-integration.feature](gherkin-mongodb-integration.feature) | [US-001](../user-stories/US-001-mongodb-integration.md) |
 | Job Event Logging | 21 | Deutsch | [gherkin-job-event-logging.feature](gherkin-job-event-logging.feature) | [US-002](../user-stories/US-002-job-event-logging.md) |
 | Lokaler Standardbenutzer | 18 | Deutsch | [gherkin-local-default-user.feature](gherkin-local-default-user.feature) | [US-003](../user-stories/US-003-local-default-user.md) |
+| Camera Tab for Multi-Page Document Capture | 57 | English | [gherkin-camera-tab.feature](gherkin-camera-tab.feature) | [US-004](../user-stories/US-004-camera-tab.md) |
+| Accessibility Camera Assistance | 65 | English | [gherkin-accessibility-camera-assistance.feature](gherkin-accessibility-camera-assistance.feature) | [US-005](../user-stories/US-005-accessibility-camera-assistance.md) |
 
-**Gesamt**: 75 Szenarien in 3 Features
+**Gesamt**: 197 Szenarien in 5 Features
 
 ---
 
@@ -226,6 +228,204 @@ Funktionalität: [Feature-Name]
    - Multi-Instance-Deployment
 
 **Zugehörige User Story**: [US-003: Lokaler Standardbenutzer](../user-stories/US-003-local-default-user.md)
+
+---
+
+### [gherkin-camera-tab.feature](gherkin-camera-tab.feature)
+
+**Feature**: Camera Tab for Multi-Page Document Capture
+
+**Description**: Browser-based camera interface for multi-page document scanning using getUserMedia API
+
+**Scenarios**: 57 in 10 groups
+
+**Scenario Groups**:
+1. **Camera Access and Preview** (7 scenarios)
+   - Permission request and grant
+   - Live camera preview
+   - Rear camera default on mobile
+   - Camera selection dropdown
+   - Camera switching
+   - Permission denied error
+   - No camera available fallback
+
+2. **Photo Capture** (6 scenarios)
+   - Capture button and Space bar
+   - Full camera resolution
+   - Camera shutter sound
+   - Photo editor opening
+   - Portrait and landscape support
+
+3. **Photo Editor** (10 scenarios)
+   - Image display
+   - Rotation controls (left/right, multiple rotations)
+   - Brightness and contrast adjustments
+   - Combined adjustments
+   - Accept and Retake buttons
+   - Escape key handling
+
+4. **Multi-Page Support** (8 scenarios)
+   - First and subsequent pages
+   - Page counter updates
+   - Thumbnail generation
+   - Unlimited pages
+   - Camera preview between captures
+   - Convert button states
+
+5. **Page Management** (6 scenarios)
+   - Drag and drop reordering
+   - Page deletion
+   - Delete all pages
+   - Retake page
+   - Thumbnail updates
+   - Page renumbering
+
+6. **Document Submission** (8 scenarios)
+   - Single and multi-page submission
+   - Progress indicator
+   - PDF/A settings application
+   - Compression profile
+   - Successful conversion
+   - Conversion errors
+   - Network failure handling
+
+7. **Accessibility Integration** (6 scenarios)
+   - Accessibility checkbox visibility
+   - Screen reader auto-enable
+   - Manual activation
+   - Auto-capture workflow
+   - Auto-crop application
+   - Multi-page accessibility
+
+8. **Camera Settings** (3 scenarios)
+   - Camera preference persistence
+   - Seamless camera switching
+   - Preference survival across sessions
+
+9. **Error Handling** (4 scenarios)
+   - Permission error instructions
+   - getUserMedia error
+   - Canvas error
+   - API error with retry
+
+10. **Responsive Design** (6 scenarios)
+    - Desktop browser support
+    - Mobile device support
+    - Tablet support
+    - Portrait orientation
+    - Landscape orientation
+    - Orientation change handling
+
+**Related User Story**: [US-004: Camera Tab for Multi-Page Document Capture](../user-stories/US-004-camera-tab.md)
+
+---
+
+### [gherkin-accessibility-camera-assistance.feature](gherkin-accessibility-camera-assistance.feature)
+
+**Feature**: Accessibility Camera Assistance for Blind Users
+
+**Description**: Audio-guided document capture with automatic edge detection, auto-crop and perspective correction
+
+**Scenarios**: 65 in 18 groups
+
+**Scenario Groups**:
+1. **Screen Reader Auto-Detection & Initialization** (3 scenarios)
+   - Screen reader automatically detected
+   - No screen reader - feature disabled
+   - Manual activation
+
+2. **iOS Safari Audio/TTS Unlock** (4 scenarios)
+   - AudioContext unlock in user gesture
+   - SpeechSynthesis unlock
+   - Unlock tone is played
+   - Immediate TTS announcement before library loading
+
+3. **Page Reload AudioContext Handling** (2 scenarios)
+   - AudioContext closed after reload
+   - AudioContext suspended is resumed
+
+4. **Edge Detection with jscanify** (4 scenarios)
+   - jscanify loads successfully
+   - CDN failed - degraded mode
+   - OpenCV.js loads successfully
+   - Real-time edge detection
+
+5. **Confidence Calculation with Partial Capture** (5 scenarios)
+   - 40% area - optimal confidence
+   - 33% area - acceptable (1/3 document)
+   - 10% area - minimal
+   - 5% area - too small
+   - 95% area - too close
+
+6. **Hysteresis to Prevent Flickering** (3 scenarios)
+   - Transition to "detected" (upper threshold)
+   - Stays "detected" despite fluctuation
+   - Transition to "lost" (lower threshold)
+
+7. **Audio Feedback (Tones + TTS)** (5 scenarios)
+   - Success tone on edge detection
+   - Warning tone on edges lost
+   - Continuous tone indicates confidence
+   - TTS announcement throttling
+   - Force-priority bypasses throttling
+
+8. **Edge-Based Guidance** (4 scenarios)
+   - Top edge too close
+   - Multiple edges not visible
+   - All edges visible - centered
+   - Periodic guidance update
+
+9. **Auto-Capture on Stable Recognition** (5 scenarios)
+   - Stability counter increments
+   - Countdown starts after 10 frames
+   - Countdown announcements "2", "1"
+   - Photo taken after countdown
+   - Auto-capture canceled on loss
+
+10. **Auto-Crop and Perspective Correction** (7 scenarios)
+    - lastDetectedCorners stored
+    - Auto-crop applied
+    - Corner scaling to full resolution
+    - OpenCV.js perspective correction
+    - Mat to Canvas conversion
+    - High-quality JPEG (90%)
+    - Fallback on error
+
+11. **Multilingualism (i18n)** (4 scenarios)
+    - German announcements
+    - English announcements
+    - Spanish announcements
+    - French announcements
+
+12. **Visual Indicators** (2 scenarios)
+    - Green overlay on success
+    - Yellow overlay on warning
+
+13. **ARIA Live Regions** (1 scenario)
+    - Screen reader receives updates
+
+14. **Volume Control** (1 scenario)
+    - Volume slider changes volume
+
+15. **Test Audio Button** (1 scenario)
+    - Test audio plays tone and TTS
+
+16. **Disable Feature** (2 scenarios)
+    - Audio guidance disabled
+    - AudioContext closed
+
+17. **Error Handling** (3 scenarios)
+    - Browser without Web Audio API
+    - getUserMedia failed
+    - Canvas 2D Context error
+
+18. **Performance & Memory** (4 scenarios)
+    - 10 FPS frame analysis
+    - Analysis canvas 640x480
+    - Capture canvas full resolution
+    - OpenCV Mat memory cleanup
+
+**Related User Story**: [US-005: Accessibility Camera Assistance](../user-stories/US-005-accessibility-camera-assistance.md)
 
 ---
 
