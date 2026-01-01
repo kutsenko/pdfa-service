@@ -13,8 +13,8 @@ This directory contains **Gherkin Feature files** in BDD format (Behavior Driven
 | MongoDB-Integration | 36 | Deutsch | [gherkin-mongodb-integration.feature](gherkin-mongodb-integration.feature) | [US-001](../user-stories/US-001-mongodb-integration.md) |
 | Job Event Logging | 21 | Deutsch | [gherkin-job-event-logging.feature](gherkin-job-event-logging.feature) | [US-002](../user-stories/US-002-job-event-logging.md) |
 | Lokaler Standardbenutzer | 18 | Deutsch | [gherkin-local-default-user.feature](gherkin-local-default-user.feature) | [US-003](../user-stories/US-003-local-default-user.md) |
-| Camera Tab for Multi-Page Document Capture | 57 | English | [gherkin-camera-tab.feature](gherkin-camera-tab.feature) | [US-007](../user-stories/US-007-camera-tab.md) |
-| Accessibility Camera Assistance | 65 | English | [gherkin-accessibility-camera-assistance.feature](gherkin-accessibility-camera-assistance.feature) | [US-008](../user-stories/US-008-accessibility-camera-assistance.md) |
+| Camera Tab for Multi-Page Document Capture | 57 | English | [gherkin-camera-tab.feature](gherkin-camera-tab.feature) | [US-004](../user-stories/US-004-camera-tab.md) |
+| Accessibility Camera Assistance | 65 | English | [gherkin-accessibility-camera-assistance.feature](gherkin-accessibility-camera-assistance.feature) | [US-005](../user-stories/US-005-accessibility-camera-assistance.md) |
 
 **Gesamt**: 197 Szenarien in 5 Features
 
@@ -316,7 +316,7 @@ Funktionalität: [Feature-Name]
     - Landscape orientation
     - Orientation change handling
 
-**Related User Story**: [US-007: Camera Tab for Multi-Page Document Capture](../user-stories/US-007-camera-tab.md)
+**Related User Story**: [US-004: Camera Tab for Multi-Page Document Capture](../user-stories/US-004-camera-tab.md)
 
 ---
 
@@ -425,7 +425,7 @@ Funktionalität: [Feature-Name]
     - Capture canvas full resolution
     - OpenCV Mat memory cleanup
 
-**Related User Story**: [US-008: Accessibility Camera Assistance](../user-stories/US-008-accessibility-camera-assistance.md)
+**Related User Story**: [US-005: Accessibility Camera Assistance](../user-stories/US-005-accessibility-camera-assistance.md)
 
 ---
 

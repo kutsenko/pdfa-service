@@ -1,6 +1,6 @@
 # User Story: Accessibility Camera Assistance for Blind Users
 
-**ID**: US-008
+**ID**: US-005
 **Title**: Audio-Guided Document Capture with Automatic Edge Detection
 **Status**: ✅ Implemented
 **Date**: 2026-01-01
@@ -309,7 +309,7 @@ const isDetected = wasDetected
 
 ### i18n Translations
 
-**New Keys (US-008)**:
+**New Keys (US-005)**:
 ```javascript
 'camera.a11y.topEdge': 'Top edge' / 'Oberer Rand' / ...
 'camera.a11y.bottomEdge': 'Bottom edge' / 'Unterer Rand' / ...

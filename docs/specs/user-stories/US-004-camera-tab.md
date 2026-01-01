@@ -1,6 +1,6 @@
 # User Story: Camera Tab for Multi-Page Document Capture
 
-**ID**: US-007
+**ID**: US-004
 **Title**: Browser-based camera interface for multi-page document scanning
 **Status**: ✅ Implemented
 **Date**: 2025-12-30
@@ -36,7 +36,7 @@
 - Multi-page document capture with page management
 - Built-in photo editor for adjustments (rotation, brightness, contrast)
 - Direct submission to PDF/A conversion pipeline
-- Accessibility features for blind users (US-008)
+- Accessibility features for blind users (US-005)
 - Progressive Web App capabilities (works offline)
 
 ---
@@ -96,7 +96,7 @@
 - **And** should handle conversion errors gracefully
 
 ### 7. Accessibility Integration
-- **Given** accessibility assistance is available (US-008)
+- **Given** accessibility assistance is available (US-005)
 - **When** user enables accessibility features
 - **Then** should provide audio guidance for camera alignment
 - **And** should detect document edges automatically
@@ -139,7 +139,7 @@
 - [x] Page reordering (drag and drop)
 - [x] Page deletion and retake
 - [x] Submission to conversion API
-- [x] Integration with accessibility features (US-008)
+- [x] Integration with accessibility features (US-005)
 - [x] Keyboard shortcuts (Space for capture, Esc to cancel)
 - [x] Responsive design for all devices
 - [x] Error handling for camera permissions
@@ -167,7 +167,7 @@
 │  │  - openEditor()                                       │  │
 │  └──────────────────────────────────────────────────────┘  │
 │  ┌──────────────────────────────────────────────────────┐  │
-│  │  AccessibleCameraAssistant (US-008)                  │  │
+│  │  AccessibleCameraAssistant (US-005)                  │  │
 │  │  - Audio guidance, edge detection, auto-crop         │  │
 │  └──────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
@@ -283,9 +283,9 @@ FormData {
 6. OCRmyPDF processes multi-page document
 7. Return PDF/A compliant file
 
-### Accessibility Integration (US-008)
+### Accessibility Integration (US-005)
 
-**Reference**: [US-008: Accessibility Camera Assistance](US-008-accessibility-camera-assistance.md)
+**Reference**: [US-005: Accessibility Camera Assistance](US-005-accessibility-camera-assistance.md)
 
 **Integration Points**:
 1. **Auto-Detection**: Accessible assistant detects screen readers and auto-enables
@@ -356,7 +356,7 @@ FormData {
 | Memory issues with many pages | Low | Medium | ✅ Limit to 20 pages, compress images |
 | Browser compatibility | Low | High | ✅ Feature detection, graceful degradation |
 | Poor lighting conditions | High | Medium | ✅ Brightness/contrast controls, tips for users |
-| Unsteady hand (blurry photos) | High | Medium | ✅ Auto-capture feature (US-008) helps stabilize |
+| Unsteady hand (blurry photos) | High | Medium | ✅ Auto-capture feature (US-005) helps stabilize |
 | Large upload size | Medium | Low | ✅ JPEG compression, progress indicator |
 
 ---
@@ -364,7 +364,7 @@ FormData {
 ## Related Specifications
 
 **User Stories**:
-- [US-008: Accessibility Camera Assistance](US-008-accessibility-camera-assistance.md) - Audio guidance and auto-capture
+- [US-005: Accessibility Camera Assistance](US-005-accessibility-camera-assistance.md) - Audio guidance and auto-capture
 
 **Gherkin Features**:
 - [Camera Tab](../features/gherkin-camera-tab.feature) (50+ scenarios)
@@ -388,7 +388,7 @@ FormData {
 | Date | Version | Change | Commits |
 |------|---------|--------|---------|
 | 2025-12-30 | 1.0 | Initial camera tab implementation | Multiple commits |
-| 2025-12-31 | 1.1 | Added accessibility features integration (US-008) | f523eee, ed0b81b |
+| 2025-12-31 | 1.1 | Added accessibility features integration (US-005) | f523eee, ed0b81b |
 | 2026-01-01 | 1.2 | iOS Safari fixes and auto-crop enhancement | 420d874, 1e07b3c, 2e10297 |
 | 2026-01-01 | 2.0 | Retrospective user story documentation | 8dca73d |
 
