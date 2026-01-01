@@ -9485,32 +9485,20 @@
                                     console.error('[A11y] ✗ Audio unlock tone failed:', audioError);
                                 }
 
-                                // iOS Safari TTS Fix: Initialize speech synthesis in user gesture
-                                // iOS Safari requires ACTUAL speech (not empty) to unlock
+                                // iOS Safari TTS Fix: Just initialize/cancel, don't speak yet
+                                // We'll speak the actual announcement in enable() - that will unlock it
+                                // Speaking here often hangs or blocks in iOS Safari
                                 if (window.speechSynthesis) {
-                                    console.log('[A11y] Unlocking iOS Safari speech synthesis in user gesture...');
+                                    console.log('[A11y] Preparing speech synthesis for iOS Safari...');
                                     try {
-                                        window.speechSynthesis.cancel(); // Clear any pending speech
+                                        // Cancel any pending speech
+                                        window.speechSynthesis.cancel();
 
-                                        // Speak actual word - iOS Safari ignores empty utterances
-                                        const unlockUtterance = new SpeechSynthesisUtterance('Ready');
-                                        unlockUtterance.volume = 0.8;
-                                        unlockUtterance.rate = 1.2; // Speak faster to reduce delay
-                                        unlockUtterance.lang = this.currentLang;
-
-                                        // Promise-based speech to ensure it completes
-                                        await new Promise((resolve) => {
-                                            unlockUtterance.onend = resolve;
-                                            unlockUtterance.onerror = (e) => {
-                                                console.warn('[A11y] TTS unlock error (may be OK):', e);
-                                                resolve();
-                                            };
-                                            window.speechSynthesis.speak(unlockUtterance);
-                                        });
-
-                                        console.log('[A11y] ✓ Speech synthesis unlocked for iOS Safari');
+                                        // Just touching speechSynthesis in user gesture is enough preparation
+                                        // The actual unlock will happen with the first real announcement
+                                        console.log('[A11y] ✓ Speech synthesis prepared (will unlock on first announcement)');
                                     } catch (speechError) {
-                                        console.warn('[A11y] Could not unlock speech synthesis:', speechError);
+                                        console.warn('[A11y] Could not prepare speech synthesis:', speechError);
                                     }
                                 }
 
@@ -10602,29 +10590,41 @@
                     liveRegion.textContent = text;
                 }
 
-                // Try Web Speech API (may not work on iOS Safari)
+                // Try Web Speech API
                 if (this.synth && window.speechSynthesis) {
                     try {
-                        // Cancel any ongoing speech
-                        this.synth.cancel();
+                        // Only cancel if actually speaking (iOS Safari: preserve user gesture context)
+                        if (this.synth.speaking) {
+                            console.log('[A11y] Cancelling previous speech...');
+                            this.synth.cancel();
+                        }
 
                         const utterance = new SpeechSynthesisUtterance(text);
                         utterance.lang = this.getLangCode();
                         utterance.volume = this.volume;
                         utterance.rate = 1.2; // Slightly faster
 
-                        utterance.onerror = (e) => {
-                            console.warn('[A11y] Speech synthesis error (may be normal on iOS):', e.error);
+                        // iOS Safari: Add detailed event logging
+                        utterance.onstart = () => {
+                            console.log('[A11y] ✓ Speech started:', text.substring(0, 50));
                         };
 
+                        utterance.onend = () => {
+                            console.log('[A11y] ✓ Speech completed');
+                        };
+
+                        utterance.onerror = (e) => {
+                            console.error('[A11y] ✗ Speech error:', e.error, '-', e.message);
+                        };
+
+                        console.log('[A11y] Speaking:', text.substring(0, 50) + '...');
                         this.synth.speak(utterance);
-                        console.log('[A11y] Speech announced:', text);
                     } catch (error) {
-                        console.warn('[A11y] Speech synthesis failed (may be normal on iOS):', error);
-                        // Fallback: tone only (already played by caller if needed)
+                        console.error('[A11y] ✗ Speech failed:', error);
+                        // Fallback: ARIA only
                     }
                 } else {
-                    console.log('[A11y] Announced (text only, no speech):', text);
+                    console.log('[A11y] Announced (ARIA only, no TTS):', text);
                 }
             }
 
