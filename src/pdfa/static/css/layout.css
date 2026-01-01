@@ -1,0 +1,42 @@
+
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 22px;
+            }
+
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .language-switcher {
+                position: static;
+                justify-content: center;
+                margin-bottom: 15px;
+            }
+
+            .progress-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }

@@ -1,0 +1,157 @@
+
+        /* Section Styling */
+        .account-section {
+            margin-bottom: 40px;
+        }
+
+
+        .account-section h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+
+        /* Card Grid */
+        .account-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+
+        .account-card {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+
+        .account-card h3 {
+            font-size: 18px;
+            color: #111827;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+
+        .account-card-full {
+            grid-column: 1 / -1;
+        }
+
+
+        /* Profile Info */
+        .profile-info {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+
+        .profile-picture-large {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+
+        .profile-details {
+            flex: 1;
+        }
+
+
+        /* Stats Grid */
+        .stats-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+
+        /* Danger Zone */
+        .danger-zone {
+            border: 2px solid #fecaca;
+            border-radius: 12px;
+            padding: 24px;
+            background: #fef2f2;
+        }
+
+
+        .danger-zone h2 {
+            color: #dc2626;
+        }
+
+
+        /* Tablet Responsive */
+        @media (min-width: 601px) and (max-width: 800px) {
+            .account-grid {
+                gap: 16px;
+            }
+
+            .account-card {
+                padding: 20px;
+            }
+        }
+
+
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            .account-section h2 {
+                color: #e5e7eb;
+            }
+
+            .account-card {
+                background: #1f2937;
+                color: #e5e7eb;
+            }
+
+            .account-card h3 {
+                color: #f3f4f6;
+            }
+
+            .info-value,
+            .stat-value,
+            .activity-type {
+                color: #f3f4f6;
+            }
+
+            .stat-item,
+            .activity-item {
+                background: #111827;
+            }
+
+            .danger-zone {
+                background: #7f1d1d;
+                border-color: #991b1b;
+            }
+
+            .danger-card {
+                background: #991b1b;
+                border-color: #b91c1c;
+            }
+
+            .modal-content {
+                background: #1f2937;
+            }
+
+            .modal-header {
+                border-bottom-color: #374151;
+            }
+
+            .modal-header h2 {
+                color: #f3f4f6;
+            }
+
+            .modal-footer {
+                border-top-color: #374151;
+            }
+
+            .email-confirm-input {
+                background: #111827;
+                border-color: #374151;
+                color: #f3f4f6;
+            }
+        }

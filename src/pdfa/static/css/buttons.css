@@ -1,0 +1,481 @@
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+
+
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+
+        .btn-convert {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+
+        .btn-convert:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+
+        .btn-convert:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+
+        .btn-reset {
+            background-color: #ecf0f1;
+            color: #333;
+        }
+
+
+        .btn-reset:hover {
+            background-color: #d5dbdb;
+        }
+
+
+        .jobs-controls .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+
+        .jobs-controls .btn:hover {
+            background: #f5f5f5;
+            border-color: #ccc;
+        }
+
+
+        .jobs-controls .btn:active {
+            transform: scale(0.98);
+        }
+
+
+        .jobs-controls .btn-icon span[aria-hidden="true"] {
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+
+        .jobs-controls .btn-toggle[aria-pressed="true"] {
+            background: #4caf50;
+            color: white;
+            border-color: #45a049;
+        }
+
+
+        .jobs-controls .btn-toggle[aria-pressed="true"]:hover {
+            background: #45a049;
+        }
+
+
+        .jobs-controls .btn-toggle[aria-pressed="false"] {
+            background: #f44336;
+            color: white;
+            border-color: #da190b;
+        }
+
+
+        .jobs-controls .btn-toggle[aria-pressed="false"]:hover {
+            background: #da190b;
+        }
+
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .jobs-controls .btn {
+                background: #2d2d2d;
+                border-color: #444;
+                color: #e0e0e0;
+            }
+
+            .jobs-controls .btn:hover {
+                background: #3d3d3d;
+                border-color: #555;
+            }
+        }
+
+
+        @media (max-width: 800px) {
+            .jobs-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .jobs-controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .jobs-controls .btn {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .jobs-filter {
+                width: 100%;
+            }
+
+            .filter-btn {
+                flex: 1;
+                text-align: center;
+            }
+
+            .jobs-table {
+                font-size: 0.875rem;
+            }
+
+            .jobs-table th,
+            .jobs-table td {
+                padding: 0.5rem 0.75rem;
+            }
+
+            .jobs-table .actions {
+                flex-direction: column;
+            }
+
+            .action-btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+
+
+        .btn-logout {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+
+        .btn-google-login {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 14px 28px;
+            background: white;
+            border: 2px solid #dadce0;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+
+        .btn-google-login:hover {
+            background-color: #f8f9fa;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+
+        .tab-button {
+            flex: 1;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+
+        .btn-capture {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+
+        .btn-capture:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+
+        .btn-capture:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+
+        .staging-actions .btn {
+            min-width: 140px;
+        }
+
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+        }
+
+
+        .btn-tool {
+            flex: 1;
+            padding: 10px 16px;
+            font-size: 14px;
+            background: #f0f2ff;
+            color: #667eea;
+            border: 1px solid #667eea;
+        }
+
+
+        .btn-tool:hover:not(:disabled) {
+            background: #667eea;
+            color: white;
+        }
+
+
+        .btn-tool:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+
+        .btn-large {
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+
+        /* Mobile Responsive - Image Editor */
+        @media (max-width: 768px) {
+            .editor-container {
+                flex-direction: column;
+            }
+
+            .editing-tools {
+                flex: 1;
+            }
+
+            .editor-actions {
+                flex-direction: row;
+            }
+
+            .editor-actions .btn {
+                flex: 1;
+            }
+        }
+
+
+        /* Mobile Responsive - Camera Tab */
+        @media (max-width: 600px) {
+            .camera-preview-container {
+                aspect-ratio: 3/4;
+            }
+
+            .camera-buttons {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .camera-buttons .btn {
+                width: 100%;
+            }
+
+            .page-list {
+                grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+                gap: 12px;
+            }
+
+            .staging-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .staging-actions .btn {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+
+
+        /* Mobile Responsive - Scrollable tabs */
+        @media (max-width: 600px) {
+            .tab-navigation {
+                overflow-x: auto;
+                overflow-y: hidden;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+                gap: 2px;
+            }
+
+            .tab-button {
+                flex: 0 0 auto;
+                min-width: 90px;
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+        }
+
+
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            .tab-navigation {
+                border-bottom-color: #374151;
+            }
+
+            .tab-button {
+                color: #9ca3af;
+            }
+
+            .tab-button:hover {
+                background: rgba(102, 126, 234, 0.1);
+                color: #818cf8;
+            }
+
+            .tab-button.active {
+                color: #818cf8;
+                border-bottom-color: #818cf8;
+                background: rgba(102, 126, 234, 0.15);
+            }
+
+            .placeholder-content h2 {
+                color: #e5e7eb;
+            }
+
+            .placeholder-content p {
+                color: #6b7280;
+            }
+        }
+
+
+        .btn-retry {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+
+        .btn-retry:hover {
+            background: #5568d3;
+        }
+
+
+        /* Buttons */
+        .btn-save {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+
+        .btn-save:hover {
+            background: #5568d3;
+        }
+
+
+        .btn-reset {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+
+        .btn-reset:hover {
+            background: #d1d5db;
+        }
+
+
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+
+
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+
+        .btn-danger:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
