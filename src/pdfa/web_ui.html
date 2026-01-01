@@ -9458,15 +9458,56 @@
                                     }
                                 }
 
+                                // iOS Safari Audio Unlock: Play audible tone IMMEDIATELY in user gesture
+                                // This is CRITICAL - iOS Safari requires actual sound in user gesture
+                                console.log('[A11y] Playing unlock tone in user gesture (iOS Safari requirement)...');
+                                try {
+                                    const now = this.audioContext.currentTime;
+                                    const unlockOsc = this.audioContext.createOscillator();
+                                    const unlockGain = this.audioContext.createGain();
+
+                                    unlockOsc.connect(unlockGain);
+                                    unlockGain.connect(this.audioContext.destination);
+
+                                    // Audible tone (not silent) - iOS Safari needs to hear something
+                                    unlockOsc.frequency.setValueAtTime(523, now); // C5
+                                    unlockGain.gain.setValueAtTime(0.3, now); // Audible volume
+                                    unlockGain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+
+                                    unlockOsc.start(now);
+                                    unlockOsc.stop(now + 0.15);
+
+                                    console.log('[A11y] ✓ Unlock tone playing...');
+
+                                    // Wait for tone to finish
+                                    await new Promise(resolve => setTimeout(resolve, 200));
+                                } catch (audioError) {
+                                    console.error('[A11y] ✗ Audio unlock tone failed:', audioError);
+                                }
+
                                 // iOS Safari TTS Fix: Initialize speech synthesis in user gesture
-                                // iOS Safari requires speechSynthesis to be "unlocked" with a user gesture
+                                // iOS Safari requires ACTUAL speech (not empty) to unlock
                                 if (window.speechSynthesis) {
                                     console.log('[A11y] Unlocking iOS Safari speech synthesis in user gesture...');
                                     try {
-                                        // Speak empty text to unlock iOS Safari TTS
                                         window.speechSynthesis.cancel(); // Clear any pending speech
-                                        const unlockUtterance = new SpeechSynthesisUtterance('');
-                                        window.speechSynthesis.speak(unlockUtterance);
+
+                                        // Speak actual word - iOS Safari ignores empty utterances
+                                        const unlockUtterance = new SpeechSynthesisUtterance('Ready');
+                                        unlockUtterance.volume = 0.8;
+                                        unlockUtterance.rate = 1.2; // Speak faster to reduce delay
+                                        unlockUtterance.lang = this.currentLang;
+
+                                        // Promise-based speech to ensure it completes
+                                        await new Promise((resolve) => {
+                                            unlockUtterance.onend = resolve;
+                                            unlockUtterance.onerror = (e) => {
+                                                console.warn('[A11y] TTS unlock error (may be OK):', e);
+                                                resolve();
+                                            };
+                                            window.speechSynthesis.speak(unlockUtterance);
+                                        });
+
                                         console.log('[A11y] ✓ Speech synthesis unlocked for iOS Safari');
                                     } catch (speechError) {
                                         console.warn('[A11y] Could not unlock speech synthesis:', speechError);
@@ -9558,41 +9599,19 @@
                     // Instead, each tone creates its own oscillator (see playTone method)
                     console.log('[A11y] Step 3: Audio setup ready (using on-demand oscillators for iOS compatibility)');
 
-                    // iOS Audio Unlock: Play a brief tone to unlock audio on iOS
-                    // AudioContext was already resumed in setupControls() user gesture
-                    // This tone further ensures audio pipeline is ready
-                    console.log('[A11y] Step 4: Unlocking iOS audio with test tone...');
-                    try {
-                        // Play very brief, barely audible tone using on-demand oscillator
-                        const now = this.audioContext.currentTime;
-                        const unlockOsc = this.audioContext.createOscillator();
-                        const unlockGain = this.audioContext.createGain();
-
-                        unlockOsc.connect(unlockGain);
-                        unlockGain.connect(this.audioContext.destination);
-
-                        unlockOsc.frequency.setValueAtTime(440, now);
-                        unlockGain.gain.setValueAtTime(0.01, now); // Very quiet
-                        unlockGain.gain.setValueAtTime(0, now + 0.05); // 50ms
-
-                        unlockOsc.start(now);
-                        unlockOsc.stop(now + 0.05);
-
-                        console.log('[A11y] ✓ iOS audio unlock tone played');
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                    } catch (unlockError) {
-                        console.warn('[A11y] iOS audio unlock failed (may be OK):', unlockError);
-                    }
+                    // Audio and TTS were already unlocked in setupControls() user gesture
+                    // (This is critical - iOS Safari requires unlock to happen IN the user gesture)
+                    console.log('[A11y] Step 4: Audio and TTS already unlocked in user gesture');
 
                     // IMMEDIATELY announce to user (before loading libraries)
                     // This gives instant feedback instead of waiting for jscanify to load
                     this.enabled = true; // Enable now so announce() works
-                    console.log('[A11y] Step 4b: Immediate user announcement');
+                    console.log('[A11y] Step 5: Immediate user announcement');
                     this.announce(this.translate('camera.a11y.enabled'), 'force');
                     console.log('[A11y] ✓ User notified (loading libraries in background...)');
 
                     // Create analysis canvas
-                    console.log('[A11y] Step 5: Creating analysis canvas');
+                    console.log('[A11y] Step 6: Creating analysis canvas');
                     this.analysisCanvas = document.createElement('canvas');
                     this.analysisCtx = this.analysisCanvas.getContext('2d');
                     if (!this.analysisCtx) {
@@ -9601,7 +9620,7 @@
                     console.log('[A11y] ✓ Canvas created');
 
                     // Load edge detection library (jscanify)
-                    console.log('[A11y] Step 6: Loading jscanify library from CDN (with fallbacks)');
+                    console.log('[A11y] Step 7: Loading jscanify library from CDN (with fallbacks)');
                     await this.loadEdgeDetectionLibrary();
 
                     if (this.degradedMode) {
