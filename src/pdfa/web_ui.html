@@ -9485,20 +9485,38 @@
                                     console.error('[A11y] ✗ Audio unlock tone failed:', audioError);
                                 }
 
-                                // iOS Safari TTS Fix: Just initialize/cancel, don't speak yet
-                                // We'll speak the actual announcement in enable() - that will unlock it
-                                // Speaking here often hangs or blocks in iOS Safari
+                                // iOS Safari TTS Fix: SPEAK IMMEDIATELY in user gesture to unlock
+                                // This is CRITICAL - must happen SYNCHRONOUSLY in the click handler
                                 if (window.speechSynthesis) {
-                                    console.log('[A11y] Preparing speech synthesis for iOS Safari...');
+                                    console.log('[A11y] Unlocking TTS by speaking in user gesture...');
                                     try {
-                                        // Cancel any pending speech
+                                        // Clear any pending speech
                                         window.speechSynthesis.cancel();
 
-                                        // Just touching speechSynthesis in user gesture is enough preparation
-                                        // The actual unlock will happen with the first real announcement
-                                        console.log('[A11y] ✓ Speech synthesis prepared (will unlock on first announcement)');
+                                        // Speak SHORT word IMMEDIATELY in user gesture
+                                        // This unlocks TTS for all subsequent announcements
+                                        const unlockUtterance = new SpeechSynthesisUtterance('Aktiviert');
+                                        unlockUtterance.lang = this.currentLang;
+                                        unlockUtterance.volume = 0.8;
+                                        unlockUtterance.rate = 1.5; // Fast
+
+                                        unlockUtterance.onstart = () => {
+                                            console.log('[A11y] ✓ TTS unlock speech started');
+                                        };
+
+                                        unlockUtterance.onend = () => {
+                                            console.log('[A11y] ✓ TTS unlocked successfully');
+                                        };
+
+                                        unlockUtterance.onerror = (e) => {
+                                            console.error('[A11y] ✗ TTS unlock failed:', e.error);
+                                        };
+
+                                        // CRITICAL: Speak BEFORE any async operations
+                                        window.speechSynthesis.speak(unlockUtterance);
+                                        console.log('[A11y] TTS unlock utterance queued');
                                     } catch (speechError) {
-                                        console.warn('[A11y] Could not prepare speech synthesis:', speechError);
+                                        console.error('[A11y] ✗ Could not unlock TTS:', speechError);
                                     }
                                 }
 
