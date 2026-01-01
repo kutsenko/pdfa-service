@@ -10593,12 +10593,6 @@
                 // Try Web Speech API
                 if (this.synth && window.speechSynthesis) {
                     try {
-                        // Only cancel if actually speaking (iOS Safari: preserve user gesture context)
-                        if (this.synth.speaking) {
-                            console.log('[A11y] Cancelling previous speech...');
-                            this.synth.cancel();
-                        }
-
                         const utterance = new SpeechSynthesisUtterance(text);
                         utterance.lang = this.getLangCode();
                         utterance.volume = this.volume;
@@ -10615,9 +10609,23 @@
 
                         utterance.onerror = (e) => {
                             console.error('[A11y] ✗ Speech error:', e.error, '-', e.message);
+                            // iOS Safari: If "not-allowed", try to resume and retry
+                            if (e.error === 'not-allowed' && priority === 'force') {
+                                console.log('[A11y] Retrying speech after "not-allowed" error...');
+                                setTimeout(() => {
+                                    this.synth.cancel();
+                                    this.synth.speak(utterance);
+                                }, 100);
+                            }
                         };
 
                         console.log('[A11y] Speaking:', text.substring(0, 50) + '...');
+
+                        // iOS Safari: Cancel any previous speech and give it time to clear
+                        if (this.synth.speaking || this.synth.pending) {
+                            this.synth.cancel();
+                        }
+
                         this.synth.speak(utterance);
                     } catch (error) {
                         console.error('[A11y] ✗ Speech failed:', error);
