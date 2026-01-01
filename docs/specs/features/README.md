@@ -13,8 +13,9 @@ This directory contains **Gherkin Feature files** in BDD format (Behavior Driven
 | MongoDB-Integration | 36 | Deutsch | [gherkin-mongodb-integration.feature](gherkin-mongodb-integration.feature) | [US-001](../user-stories/US-001-mongodb-integration.md) |
 | Job Event Logging | 21 | Deutsch | [gherkin-job-event-logging.feature](gherkin-job-event-logging.feature) | [US-002](../user-stories/US-002-job-event-logging.md) |
 | Lokaler Standardbenutzer | 18 | Deutsch | [gherkin-local-default-user.feature](gherkin-local-default-user.feature) | [US-003](../user-stories/US-003-local-default-user.md) |
+| Accessibility Camera Assistance | 65 | Deutsch | [gherkin-accessibility-camera-assistance.feature](gherkin-accessibility-camera-assistance.feature) | [US-008](../user-stories/US-008-accessibility-camera-assistance.md) |
 
-**Gesamt**: 75 Szenarien in 3 Features
+**Gesamt**: 140 Szenarien in 4 Features
 
 ---
 
@@ -226,6 +227,115 @@ Funktionalität: [Feature-Name]
    - Multi-Instance-Deployment
 
 **Zugehörige User Story**: [US-003: Lokaler Standardbenutzer](../user-stories/US-003-local-default-user.md)
+
+---
+
+### [gherkin-accessibility-camera-assistance.feature](gherkin-accessibility-camera-assistance.feature)
+
+**Feature**: Barrierefreie Kamera-Unterstützung für Blinde
+
+**Beschreibung**: Audio-geführte Dokumentenerfassung mit automatischer Kantenerkennung, Auto-Crop und Perspektivkorrektur
+
+**Szenarien**: 65 in 18 Gruppen
+
+**Szenario-Gruppen**:
+1. **Screen Reader Auto-Detection & Initialization** (3 Szenarien)
+   - Screen Reader automatisch erkannt
+   - Kein Screen Reader - Feature deaktiviert
+   - Manuelle Aktivierung
+
+2. **iOS Safari Audio/TTS Unlock** (4 Szenarien)
+   - AudioContext Unlock in User-Gesture
+   - SpeechSynthesis Unlock
+   - Unlock-Ton wird gespielt
+   - Sofortige TTS-Ansage vor Library-Loading
+
+3. **Page Reload AudioContext Handling** (2 Szenarien)
+   - AudioContext nach Reload geschlossen
+   - AudioContext suspended wird resumed
+
+4. **Edge Detection mit jscanify** (4 Szenarien)
+   - jscanify lädt erfolgreich
+   - CDN fehlgeschlagen - Degraded Mode
+   - OpenCV.js lädt erfolgreich
+   - Echtzeit-Kantenerkennung
+
+5. **Confidence-Berechnung mit Teilerfassung** (5 Szenarien)
+   - 40% Fläche - Optimale Confidence
+   - 33% Fläche - Akzeptabel (1/3 Dokument)
+   - 10% Fläche - Minimal
+   - 5% Fläche - Zu klein
+   - 95% Fläche - Zu nah
+
+6. **Hysterese zur Flacker-Vermeidung** (3 Szenarien)
+   - Transition zu "detected" (Upper Threshold)
+   - Bleibt "detected" trotz Schwankung
+   - Transition zu "lost" (Lower Threshold)
+
+7. **Audio-Feedback (Töne + TTS)** (5 Szenarien)
+   - Erfolgston bei Kantenerkennung
+   - Warnton bei Kanten verloren
+   - Kontinuierlicher Ton zeigt Confidence
+   - TTS-Ansage Throttling
+   - Force-Priority umgeht Throttling
+
+8. **Edge-Based Guidance** (4 Szenarien)
+   - Oberer Rand zu nah
+   - Mehrere Ränder nicht sichtbar
+   - Alle Ränder sichtbar - zentriert
+   - Periodisches Guidance-Update
+
+9. **Auto-Capture bei stabiler Erkennung** (4 Szenarien)
+   - Stabilitätszähler inkrementiert
+   - Countdown startet nach 10 Frames
+   - Countdown-Ansagen "2", "1"
+   - Foto nach Countdown aufgenommen
+   - Auto-Capture abgebrochen bei Verlust
+
+10. **Auto-Crop und Perspektivkorrektur** (7 Szenarien)
+    - lastDetectedCorners gespeichert
+    - Auto-Crop angewendet
+    - Ecken-Skalierung auf Full-Resolution
+    - OpenCV.js Perspektivkorrektur
+    - Mat zu Canvas Konvertierung
+    - High-Quality JPEG (90%)
+    - Fallback bei Fehler
+
+11. **Mehrsprachigkeit (i18n)** (4 Szenarien)
+    - Deutsche Ansagen
+    - Englische Ansagen
+    - Spanische Ansagen
+    - Französische Ansagen
+
+12. **Visuelle Indikatoren** (2 Szenarien)
+    - Grüner Overlay bei Erfolg
+    - Gelber Overlay bei Warnung
+
+13. **ARIA Live Regions** (1 Szenario)
+    - Screen Reader erhält Updates
+
+14. **Volume-Kontrolle** (1 Szenario)
+    - Volume-Slider ändert Lautstärke
+
+15. **Test-Audio Button** (1 Szenario)
+    - Test-Audio spielt Ton und TTS
+
+16. **Disable Feature** (2 Szenarien)
+    - Audio-Führung deaktiviert
+    - AudioContext geschlossen
+
+17. **Error Handling** (3 Szenarien)
+    - Browser ohne Web Audio API
+    - getUserMedia fehlgeschlagen
+    - Canvas 2D Context Fehler
+
+18. **Performance & Memory** (4 Szenarien)
+    - 10 FPS Frame-Analyse
+    - Analysis-Canvas 640x480
+    - Capture-Canvas Full-Resolution
+    - OpenCV Mat Memory-Cleanup
+
+**Zugehörige User Story**: [US-008: Accessibility Camera Assistance](../user-stories/US-008-accessibility-camera-assistance.md)
 
 ---
 
