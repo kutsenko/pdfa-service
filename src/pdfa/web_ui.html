@@ -9319,9 +9319,11 @@
                 this.audioContext = null;
                 // Note: oscillators are created on-demand for each tone (iOS compatibility)
 
-                // Speech synthesis
+                // VoiceOver detection and speech synthesis
+                this.voiceOverActive = this.detectVoiceOver();
                 this.synth = window.speechSynthesis;
                 this.currentLang = 'en-US';
+                this.useTTS = !this.voiceOverActive; // Disable TTS if VoiceOver is active
 
                 // Detection state
                 this.lastEdgeConfidence = 0;
@@ -9367,6 +9369,10 @@
             async init() {
                 this.log('[A11y] Initializing AccessibleCameraAssistant');
 
+                // Log VoiceOver detection status
+                console.log('[A11y] VoiceOver active:', this.voiceOverActive);
+                console.log('[A11y] Web Speech API enabled:', this.useTTS);
+
                 // Detect screen reader
                 this.screenReaderDetected = this.detectScreenReader();
 
@@ -9405,6 +9411,49 @@
                 });
 
                 return detected;
+            }
+
+            detectVoiceOver() {
+                /**
+                 * Detect if VoiceOver (iOS/macOS screen reader) is active.
+                 *
+                 * VoiceOver may conflict with Web Speech Synthesis API on iOS Safari,
+                 * causing TTS not to start or interrupting speech. When detected,
+                 * we rely solely on ARIA live regions which VoiceOver reads natively.
+                 *
+                 * Detection methods:
+                 * 1. Check for iOS Safari user agent
+                 * 2. Check for accessibility features enabled
+                 * 3. Heuristic: iOS + screen reader hints = likely VoiceOver
+                 */
+
+                // Check if iOS Safari
+                const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+                                   /Safari/.test(navigator.userAgent) &&
+                                   !/CriOS|FxiOS/.test(navigator.userAgent); // Exclude Chrome/Firefox on iOS
+
+                // Check for accessibility hints
+                const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                const invertedColors = window.matchMedia('(inverted-colors: inverted)').matches;
+
+                // VoiceOver is likely if:
+                // - iOS Safari AND (reduced motion OR inverted colors)
+                // - OR explicitly detected via other means
+                const likelyVoiceOver = isIOSSafari && (prefersReducedMotion || invertedColors);
+
+                console.log('[A11y] VoiceOver detection:', {
+                    isIOSSafari,
+                    prefersReducedMotion,
+                    invertedColors,
+                    detected: likelyVoiceOver
+                });
+
+                if (likelyVoiceOver) {
+                    console.log('[A11y] ⚠️ VoiceOver detected - Web Speech API will be DISABLED');
+                    console.log('[A11y] Using ARIA live regions only (VoiceOver reads these natively)');
+                }
+
+                return likelyVoiceOver;
             }
 
             setupControls() {
@@ -9487,7 +9536,8 @@
 
                                 // iOS Safari TTS Fix: SPEAK IMMEDIATELY in user gesture to unlock
                                 // This is CRITICAL - must happen SYNCHRONOUSLY in the click handler
-                                if (window.speechSynthesis) {
+                                // SKIP if VoiceOver detected (VoiceOver conflicts with Web Speech API)
+                                if (window.speechSynthesis && this.useTTS) {
                                     console.log('[A11y] Unlocking TTS by speaking in user gesture...');
                                     try {
                                         // Clear any pending speech
@@ -9518,6 +9568,8 @@
                                     } catch (speechError) {
                                         console.error('[A11y] ✗ Could not unlock TTS:', speechError);
                                     }
+                                } else if (this.voiceOverActive) {
+                                    console.log('[A11y] Skipping TTS unlock (VoiceOver detected - using ARIA only)');
                                 }
 
                                 // Now call enable() which can assume AudioContext is ready
@@ -10603,12 +10655,20 @@
                 this.lastAnnouncementTime = now;
 
                 // Update ARIA live region (for screen readers)
+                // This is CRITICAL for VoiceOver - it reads ARIA live regions natively
                 const liveRegion = document.getElementById('srAnnouncements');
                 if (liveRegion) {
                     liveRegion.textContent = text;
                 }
 
-                // Try Web Speech API
+                // Skip Web Speech API if VoiceOver is detected
+                // VoiceOver reads ARIA live regions natively and may conflict with Web Speech API
+                if (!this.useTTS) {
+                    console.log('[A11y] Announced (ARIA only, VoiceOver mode):', text.substring(0, 50) + '...');
+                    return;
+                }
+
+                // Try Web Speech API (only if VoiceOver not detected)
                 if (this.synth && window.speechSynthesis) {
                     try {
                         const utterance = new SpeechSynthesisUtterance(text);
