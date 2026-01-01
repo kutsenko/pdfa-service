@@ -22,6 +22,7 @@ from fastapi import (
     WebSocket,
 )
 from fastapi.responses import FileResponse, HTMLResponse, Response
+from fastapi.staticfiles import StaticFiles
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 
 import pdfa.auth
@@ -126,6 +127,14 @@ app = FastAPI(
 
 # Initialize job manager
 job_manager = get_job_manager()
+
+# Mount static files for modular web UI
+static_path = Path(__file__).parent / "static"
+if static_path.exists():
+    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+    logger.info(f"Mounted static files from {static_path}")
+else:
+    logger.warning(f"Static files directory not found at {static_path}")
 
 # Global auth config (loaded in startup_event)
 auth_config = None
