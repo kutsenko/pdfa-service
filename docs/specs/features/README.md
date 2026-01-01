@@ -13,9 +13,10 @@ This directory contains **Gherkin Feature files** in BDD format (Behavior Driven
 | MongoDB-Integration | 36 | Deutsch | [gherkin-mongodb-integration.feature](gherkin-mongodb-integration.feature) | [US-001](../user-stories/US-001-mongodb-integration.md) |
 | Job Event Logging | 21 | Deutsch | [gherkin-job-event-logging.feature](gherkin-job-event-logging.feature) | [US-002](../user-stories/US-002-job-event-logging.md) |
 | Lokaler Standardbenutzer | 18 | Deutsch | [gherkin-local-default-user.feature](gherkin-local-default-user.feature) | [US-003](../user-stories/US-003-local-default-user.md) |
+| Camera Tab for Multi-Page Document Capture | 57 | English | [gherkin-camera-tab.feature](gherkin-camera-tab.feature) | [US-007](../user-stories/US-007-camera-tab.md) |
 | Accessibility Camera Assistance | 65 | English | [gherkin-accessibility-camera-assistance.feature](gherkin-accessibility-camera-assistance.feature) | [US-008](../user-stories/US-008-accessibility-camera-assistance.md) |
 
-**Gesamt**: 140 Szenarien in 4 Features
+**Gesamt**: 197 Szenarien in 5 Features
 
 ---
 
@@ -227,6 +228,95 @@ Funktionalität: [Feature-Name]
    - Multi-Instance-Deployment
 
 **Zugehörige User Story**: [US-003: Lokaler Standardbenutzer](../user-stories/US-003-local-default-user.md)
+
+---
+
+### [gherkin-camera-tab.feature](gherkin-camera-tab.feature)
+
+**Feature**: Camera Tab for Multi-Page Document Capture
+
+**Description**: Browser-based camera interface for multi-page document scanning using getUserMedia API
+
+**Scenarios**: 57 in 10 groups
+
+**Scenario Groups**:
+1. **Camera Access and Preview** (7 scenarios)
+   - Permission request and grant
+   - Live camera preview
+   - Rear camera default on mobile
+   - Camera selection dropdown
+   - Camera switching
+   - Permission denied error
+   - No camera available fallback
+
+2. **Photo Capture** (6 scenarios)
+   - Capture button and Space bar
+   - Full camera resolution
+   - Camera shutter sound
+   - Photo editor opening
+   - Portrait and landscape support
+
+3. **Photo Editor** (10 scenarios)
+   - Image display
+   - Rotation controls (left/right, multiple rotations)
+   - Brightness and contrast adjustments
+   - Combined adjustments
+   - Accept and Retake buttons
+   - Escape key handling
+
+4. **Multi-Page Support** (8 scenarios)
+   - First and subsequent pages
+   - Page counter updates
+   - Thumbnail generation
+   - Unlimited pages
+   - Camera preview between captures
+   - Convert button states
+
+5. **Page Management** (6 scenarios)
+   - Drag and drop reordering
+   - Page deletion
+   - Delete all pages
+   - Retake page
+   - Thumbnail updates
+   - Page renumbering
+
+6. **Document Submission** (8 scenarios)
+   - Single and multi-page submission
+   - Progress indicator
+   - PDF/A settings application
+   - Compression profile
+   - Successful conversion
+   - Conversion errors
+   - Network failure handling
+
+7. **Accessibility Integration** (6 scenarios)
+   - Accessibility checkbox visibility
+   - Screen reader auto-enable
+   - Manual activation
+   - Auto-capture workflow
+   - Auto-crop application
+   - Multi-page accessibility
+
+8. **Camera Settings** (3 scenarios)
+   - Camera preference persistence
+   - Seamless camera switching
+   - Preference survival across sessions
+
+9. **Error Handling** (4 scenarios)
+   - Permission error instructions
+   - getUserMedia error
+   - Canvas error
+   - API error with retry
+
+10. **Responsive Design** (6 scenarios)
+    - Desktop browser support
+    - Mobile device support
+    - Tablet support
+    - Portrait orientation
+    - Landscape orientation
+    - Orientation change handling
+
+**Related User Story**: [US-007: Camera Tab for Multi-Page Document Capture](../user-stories/US-007-camera-tab.md)
 
 ---
 

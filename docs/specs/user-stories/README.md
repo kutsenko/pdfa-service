@@ -13,6 +13,7 @@ This directory contains formal User Stories in **INVEST** format for major featu
 | US-001 | MongoDB-Integration | ✅ Implementiert | 2024-12-21 | [US-001-mongodb-integration.md](US-001-mongodb-integration.md) | [Feature](../features/gherkin-mongodb-integration.feature) |
 | US-002 | Job Event Logging | ✅ Implementiert | 2024-12-25 | [US-002-job-event-logging.md](US-002-job-event-logging.md) | [Feature](../features/gherkin-job-event-logging.feature) |
 | US-003 | Lokaler Standardbenutzer | ✅ Implementiert | 2024-12-25 | [US-003-local-default-user.md](US-003-local-default-user.md) | [Feature](../features/gherkin-local-default-user.feature) |
+| US-007 | Camera Tab for Multi-Page Document Capture | ✅ Implemented | 2025-12-30 | [US-007-camera-tab.md](US-007-camera-tab.md) | [Feature](../features/gherkin-camera-tab.feature) |
 | US-008 | Accessibility Camera Assistance | ✅ Implemented | 2026-01-01 | [US-008-accessibility-camera-assistance.md](US-008-accessibility-camera-assistance.md) | [Feature](../features/gherkin-accessibility-camera-assistance.feature) |
 
 ---
@@ -142,6 +143,24 @@ Versions-Tracking mit:
 **Status**: ✅ Implementiert (2024-12-25)
 
 **Gherkin Feature**: [18 Szenarien](../features/gherkin-local-default-user.feature)
+
+---
+
+### [US-007: Camera Tab for Multi-Page Document Capture](US-007-camera-tab.md)
+
+**Story**: As a user of the PDF/A service, I want to capture multi-page documents using my device's camera directly in the browser so that I can create searchable PDF/A documents without needing a physical scanner or separate app.
+
+**Key Points**:
+- Browser-based camera interface using getUserMedia API
+- Multi-page document capture with page management
+- Built-in photo editor (rotation, brightness, contrast)
+- Direct submission to PDF/A conversion pipeline
+- Integration with accessibility features (US-008)
+- Progressive Web App capabilities (works offline)
+
+**Status**: ✅ Implemented (2025-12-30)
+
+**Gherkin Feature**: [57 scenarios](../features/gherkin-camera-tab.feature)
 
 ---
 
