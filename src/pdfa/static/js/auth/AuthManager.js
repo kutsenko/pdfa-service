@@ -1,0 +1,186 @@
+/**
+ * AuthManager - OAuth authentication and session management
+ * Handles Google OAuth login, token storage, and user session state
+ */
+
+import { t } from '../utils/helpers.js';
+
+export class AuthManager {
+    constructor() {
+        this.token = localStorage.getItem('auth_token');
+        this.user = null;
+        this.authEnabled = null;
+        console.log('[Auth] AuthManager initialized, token:', this.token ? 'present' : 'missing');
+    }
+
+    async init() {
+        console.log('[Auth] Initializing authentication...');
+
+        // Try to get user info to detect if auth is enabled
+        try {
+            const response = await fetch('/auth/user', {
+                headers: this.getAuthHeaders()
+            });
+
+            if (response.status === 404) {
+                // Auth endpoint doesn't exist - auth is disabled
+                this.authEnabled = false;
+                console.log('[Auth] Authentication is DISABLED');
+                this.showMainUI();
+            } else if (response.status === 401) {
+                // Auth is enabled but user is not authenticated
+                this.authEnabled = true;
+                console.log('[Auth] Authentication is ENABLED - user not logged in');
+                this.showLoginScreen();
+            } else if (response.ok) {
+                // Auth is enabled and user is authenticated
+                this.authEnabled = true;
+                this.user = await response.json();
+                console.log('[Auth] Authentication is ENABLED - user logged in:', this.user.email);
+                this.showAuthBar();
+                this.showMainUI();
+            } else {
+                // Unexpected status
+                console.warn('[Auth] Unexpected auth status:', response.status);
+                this.authEnabled = false;
+                this.showMainUI();
+            }
+        } catch (error) {
+            console.error('[Auth] Error detecting auth status:', error);
+            // On error, assume auth is disabled
+            this.authEnabled = false;
+            this.showMainUI();
+        }
+    }
+
+    parseJWT(token) {
+        try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            console.error('[Auth] Failed to parse JWT:', e);
+            return null;
+        }
+    }
+
+    getAuthHeaders() {
+        if (!this.token) return {};
+        return {
+            'Authorization': `Bearer ${this.token}`
+        };
+    }
+
+    async login() {
+        console.log('[Auth] Redirecting to login...');
+        window.location.href = '/auth/login';
+    }
+
+    logout() {
+        console.log('[Auth] Logging out...');
+        localStorage.removeItem('auth_token');
+        this.token = null;
+        this.user = null;
+        window.location.reload();
+    }
+
+    showAuthBar() {
+        const authBar = document.getElementById('authBar');
+        const userPicture = document.getElementById('userPicture');
+        const userName = document.getElementById('userName');
+        const userEmail = document.getElementById('userEmail');
+        const container = document.querySelector('.container');
+
+        if (authBar && this.user) {
+            authBar.classList.add('visible');
+            userName.textContent = this.user.name || '';
+            userEmail.textContent = this.user.email || '';
+
+            if (this.user.picture) {
+                userPicture.src = this.user.picture;
+                userPicture.style.display = 'block';
+            }
+
+            // Add top margin to container for fixed auth bar
+            if (container) {
+                container.classList.add('auth-enabled');
+            }
+        }
+    }
+
+    showLoginScreen() {
+        const loginScreen = document.getElementById('loginScreen');
+        const converterForm = document.getElementById('converterForm');
+        const container = document.querySelector('.container');
+
+        if (loginScreen) {
+            loginScreen.classList.add('visible');
+        }
+
+        if (converterForm) {
+            converterForm.style.display = 'none';
+        }
+
+        if (container) {
+            container.style.display = 'block';
+        }
+    }
+
+    showMainUI() {
+        const loginScreen = document.getElementById('loginScreen');
+        const converterForm = document.getElementById('converterForm');
+        const container = document.querySelector('.container');
+
+        if (loginScreen) {
+            loginScreen.classList.remove('visible');
+        }
+
+        if (converterForm) {
+            converterForm.style.display = 'block';
+        }
+
+        if (container) {
+            container.style.display = 'block';
+        }
+    }
+
+    handleOAuthCallback() {
+        // Check if we're on the callback page
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        const state = urlParams.get('state');
+
+        if (code && window.location.pathname === '/auth/callback') {
+            console.log('[Auth] Handling OAuth callback...');
+            // Let the backend handle the callback
+            // IMPORTANT: Set Accept header to get JSON instead of HTML
+            fetch('/auth/callback' + window.location.search, {
+                headers: {
+                    'Accept': 'application/json'
+                }
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.access_token) {
+                        localStorage.setItem('auth_token', data.access_token);
+                        console.log('[Auth] Token saved, redirecting to home...');
+                        window.location.href = '/';
+                    } else {
+                        console.error('[Auth] No access token in callback response');
+                        alert(t('auth.loginFailed'));
+                        window.location.href = '/';
+                    }
+                })
+                .catch(error => {
+                    console.error('[Auth] OAuth callback error:', error);
+                    alert(t('auth.loginFailed'));
+                    window.location.href = '/';
+                });
+            return true;
+        }
+        return false;
+    }
+}
