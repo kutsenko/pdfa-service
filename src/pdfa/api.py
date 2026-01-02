@@ -533,16 +533,20 @@ async def get_user_info(current_user: User = Depends(get_current_user_optional))
     """Get current user information.
 
     Returns:
-        User information (email, name, picture)
-        - If auth is enabled: returns authenticated OAuth user
-        - If auth is disabled: returns default local user
+        User information (email, name, picture) if auth is enabled
+        404 if auth is disabled
 
     Raises:
-        HTTPException: If auth is enabled and user is not authenticated (401)
+        HTTPException:
+            - 404 if auth is disabled
+            - 401 if auth is enabled and user is not authenticated
 
     """
-    # get_current_user_optional handles both auth-enabled and auth-disabled cases
+    # Return 404 if auth is disabled (so frontend can detect it)
+    if not auth_config_instance.enabled:
+        raise HTTPException(status_code=404, detail="Authentication is disabled")
 
+    # get_current_user_optional handles auth validation for enabled auth
     return {
         "email": current_user.email,
         "name": current_user.name,
