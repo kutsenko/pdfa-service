@@ -244,6 +244,42 @@ class AuditLogDocument(BaseModel):
     model_config = {"arbitrary_types_allowed": True}
 
 
+class PairingSessionDocument(BaseModel):
+    """Pairing session for mobile-desktop camera sync.
+
+    Stores temporary pairing sessions that link a desktop browser session to a mobile
+    device for real-time image transfer during camera capture workflows.
+
+    TTL: Sessions are automatically deleted after expiration via MongoDB TTL index.
+
+    Attributes:
+        session_id: Unique session identifier (UUID)
+        pairing_code: Short pairing code for manual entry (6-8 alphanumeric chars)
+        desktop_user_id: User who created the session on desktop
+        mobile_user_id: User who joined from mobile (None until joined)
+        status: Session status (pending, active, expired, cancelled)
+        created_at: Session creation timestamp
+        expires_at: Expiration timestamp (created_at + TTL)
+        joined_at: When mobile device joined (None until joined)
+        last_activity_at: Last sync activity timestamp
+        images_synced: Count of images synced in this session
+
+    """
+
+    session_id: str
+    pairing_code: str
+    desktop_user_id: str
+    mobile_user_id: str | None = None
+    status: Literal["pending", "active", "expired", "cancelled"]
+    created_at: datetime
+    expires_at: datetime
+    joined_at: datetime | None = None
+    last_activity_at: datetime
+    images_synced: int = 0
+
+    model_config = {"arbitrary_types_allowed": True}
+
+
 # Type aliases for convenience
 JobStatus = Literal["queued", "processing", "completed", "failed", "cancelled"]
 EventType = Literal[

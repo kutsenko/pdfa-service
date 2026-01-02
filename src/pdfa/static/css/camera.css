@@ -127,3 +127,161 @@
             background: #f8f9fa;
             border-radius: 12px;
         }
+
+
+        /* ================================================== */
+        /* Mobile Pairing Styles                             */
+        /* ================================================== */
+
+        .mobile-pairing {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+        }
+
+        .mobile-pairing h3 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+        }
+
+        .pairing-active {
+            text-align: center;
+        }
+
+        .pairing-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: #fff3cd;
+            border-radius: 24px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #856404;
+        }
+
+        .status-badge.connected {
+            background: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ffc107;
+            animation: pulse 2s infinite;
+        }
+
+        .status-badge.connected .status-dot {
+            background: #28a745;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .countdown {
+            font-size: 14px;
+            color: #6c757d;
+            font-weight: 500;
+        }
+
+        .pairing-code-display {
+            margin: 24px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .code-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .code-value {
+            font-size: 36px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            color: #212529;
+            font-family: 'Courier New', monospace;
+            margin: 12px 0;
+        }
+
+        .code-hint {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 12px;
+        }
+
+        .qr-container {
+            display: flex;
+            justify-content: center;
+            margin: 24px 0;
+            padding: 24px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .qr-container img {
+            max-width: 220px;
+            height: auto;
+        }
+
+        .pairing-stats {
+            margin: 24px 0;
+            padding: 16px;
+            background: white;
+            border-radius: 8px;
+            font-size: 15px;
+            color: #495057;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .pairing-stats strong {
+            color: #667eea;
+            font-size: 18px;
+            margin-left: 8px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .pairing-header {
+                flex-direction: column;
+                gap: 12px;
+                text-align: center;
+            }
+
+            .code-value {
+                font-size: 28px;
+                letter-spacing: 6px;
+            }
+
+            .qr-container img {
+                max-width: 180px;
+            }
+        }

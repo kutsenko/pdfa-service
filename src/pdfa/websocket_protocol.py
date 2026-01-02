@@ -175,6 +175,75 @@ class PingMessage(ClientMessage):
 
 
 @dataclass
+class RegisterPairingMessage(ClientMessage):
+    """Register WebSocket for pairing session.
+
+    Associates this WebSocket connection with a mobile-desktop pairing session.
+
+    Attributes:
+        type: Always "register_pairing"
+        session_id: Pairing session UUID
+        role: Device role ("desktop" or "mobile")
+
+    """
+
+    type: Literal["register_pairing"] = "register_pairing"
+    session_id: str = ""
+    role: Literal["desktop", "mobile"] = "desktop"
+
+    def validate(self) -> None:
+        """Validate the register pairing message.
+
+        Raises:
+            ValueError: If validation fails
+
+        """
+        if not self.session_id:
+            raise ValueError("session_id is required")
+        if self.role not in ["desktop", "mobile"]:
+            raise ValueError("role must be 'desktop' or 'mobile'")
+
+
+@dataclass
+class SyncImageMessage(ClientMessage):
+    """Sync image from mobile to desktop.
+
+    Transfers a captured image from mobile device to desktop session.
+
+    Attributes:
+        type: Always "sync_image"
+        session_id: Pairing session UUID
+        image_data: Base64-encoded JPEG image data
+        image_index: Sequential image number (0, 1, 2, ...)
+        metadata: Optional image metadata (timestamp, dimensions, etc.)
+
+    """
+
+    type: Literal["sync_image"] = "sync_image"
+    session_id: str = ""
+    image_data: str = ""
+    image_index: int = 0
+    metadata: dict[str, Any] | None = None
+
+    def validate(self) -> None:
+        """Validate the sync image message.
+
+        Raises:
+            ValueError: If validation fails
+
+        """
+        if not self.session_id:
+            raise ValueError("session_id is required")
+        if not self.image_data:
+            raise ValueError("image_data is required")
+        # Validate base64 encoding
+        try:
+            base64.b64decode(self.image_data, validate=True)
+        except Exception as e:
+            raise ValueError(f"Invalid base64 encoding: {e}") from e
+
+
+@dataclass
 class ServerMessage:
     """Base class for server-to-client messages."""
 
@@ -320,6 +389,66 @@ class JobEventMessage(ServerMessage):
     details: dict[str, Any] | None = None
 
 
+@dataclass
+class ImageSyncedMessage(ServerMessage):
+    """Image synced to desktop.
+
+    Sent from server to desktop when mobile uploads an image.
+
+    Attributes:
+        type: Always "image_synced"
+        session_id: Pairing session UUID
+        image_data: Base64-encoded JPEG image data
+        image_index: Sequential image number
+        metadata: Image metadata (timestamp, dimensions, etc.)
+
+    """
+
+    type: Literal["image_synced"] = "image_synced"
+    session_id: str = ""
+    image_data: str = ""
+    image_index: int = 0
+    metadata: dict[str, Any] | None = None
+
+
+@dataclass
+class PairingPeerStatusMessage(ServerMessage):
+    """Peer connection status update.
+
+    Notifies one device when the other connects or disconnects.
+
+    Attributes:
+        type: Always "pairing_peer_status"
+        session_id: Pairing session UUID
+        peer_role: Role of the peer ("desktop" or "mobile")
+        connected: True if peer connected, False if disconnected
+
+    """
+
+    type: Literal["pairing_peer_status"] = "pairing_peer_status"
+    session_id: str = ""
+    peer_role: str = ""
+    connected: bool = False
+
+
+@dataclass
+class PairingExpiredMessage(ServerMessage):
+    """Pairing session expired.
+
+    Sent when a pairing session expires or is cancelled.
+
+    Attributes:
+        type: Always "pairing_expired"
+        session_id: Pairing session UUID
+        reason: Expiration reason ("timeout" or "cancelled")
+
+    """
+
+    type: Literal["pairing_expired"] = "pairing_expired"
+    session_id: str = ""
+    reason: str = "timeout"
+
+
 def parse_client_message(data: dict[str, Any]) -> ClientMessage:
     """Parse a client message from a dictionary.
 
@@ -356,5 +485,20 @@ def parse_client_message(data: dict[str, Any]) -> ClientMessage:
         return msg
     elif msg_type == "ping":
         return PingMessage()
+    elif msg_type == "register_pairing":
+        msg = RegisterPairingMessage(
+            session_id=data.get("session_id", ""), role=data.get("role", "desktop")
+        )
+        msg.validate()
+        return msg
+    elif msg_type == "sync_image":
+        msg = SyncImageMessage(
+            session_id=data.get("session_id", ""),
+            image_data=data.get("image_data", ""),
+            image_index=data.get("image_index", 0),
+            metadata=data.get("metadata"),
+        )
+        msg.validate()
+        return msg
     else:
         raise ValueError(f"Unknown message type: {msg_type}")
