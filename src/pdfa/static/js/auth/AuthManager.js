@@ -132,17 +132,34 @@ export class AuthManager {
 
     showLoginScreen() {
         const loginScreen = document.getElementById('loginScreen');
-        const converterForm = document.getElementById('converterForm');
+        const welcomeScreen = document.getElementById('welcomeScreen');
         const container = document.querySelector('.container');
+        const tabNavigation = document.querySelector('.tab-navigation');
+        const tabPanels = document.querySelectorAll('.tab-panel');
 
+        // Show login screen
         if (loginScreen) {
             loginScreen.classList.add('visible');
         }
 
-        if (converterForm) {
-            converterForm.style.display = 'none';
+        // Show welcome description instead of tabs
+        if (welcomeScreen) {
+            welcomeScreen.style.display = 'block';
+            console.log('[Auth] Showing welcome screen');
         }
 
+        // Hide tabs when not authenticated
+        if (tabNavigation) {
+            tabNavigation.style.display = 'none';
+            console.log('[Auth] Hiding tabs - user not authenticated');
+        }
+
+        // Hide all tab panels
+        tabPanels.forEach(panel => {
+            panel.style.display = 'none';
+        });
+
+        // Keep container visible for header
         if (container) {
             container.style.display = 'block';
         }
@@ -150,17 +167,36 @@ export class AuthManager {
 
     showMainUI() {
         const loginScreen = document.getElementById('loginScreen');
-        const converterForm = document.getElementById('converterForm');
+        const welcomeScreen = document.getElementById('welcomeScreen');
         const container = document.querySelector('.container');
+        const tabNavigation = document.querySelector('.tab-navigation');
+        const tabPanels = document.querySelectorAll('.tab-panel');
 
+        // Hide login screen
         if (loginScreen) {
             loginScreen.classList.remove('visible');
         }
 
-        if (converterForm) {
-            converterForm.style.display = 'block';
+        // Hide welcome screen - user is authenticated or auth is disabled
+        if (welcomeScreen) {
+            welcomeScreen.style.display = 'none';
+            console.log('[Auth] Hiding welcome screen');
         }
 
+        // Show tabs when authenticated or auth is disabled
+        if (tabNavigation) {
+            tabNavigation.style.display = 'flex';
+            console.log('[Auth] Showing tabs');
+        }
+
+        // Show the active tab panel (first one by default)
+        tabPanels.forEach((panel, index) => {
+            if (index === 0 || panel.classList.contains('active')) {
+                panel.style.display = 'block';
+            }
+        });
+
+        // Show container
         if (container) {
             container.style.display = 'block';
         }

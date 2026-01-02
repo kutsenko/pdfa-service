@@ -637,6 +637,123 @@
         }
 
 
+        /* Welcome Screen (shown when not authenticated) */
+        .welcome-screen {
+            display: none;
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+
+        .welcome-content {
+            text-align: center;
+        }
+
+
+        .welcome-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+
+        .welcome-content h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+
+        .welcome-description {
+            color: #555;
+            font-size: 1.15rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+        .welcome-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+            text-align: left;
+        }
+
+
+        .feature-item {
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(59, 130, 246, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+
+        .feature-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        }
+
+
+        .feature-icon {
+            font-size: 2rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+
+        .feature-item h3 {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+
+        .feature-item p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+
+        .welcome-cta {
+            color: #3b82f6;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-top: 40px;
+        }
+
+
+        /* Dark mode support for welcome screen */
+        body.dark-mode .welcome-content h1,
+        body.dark-mode .feature-item h3 {
+            color: #e5e7eb;
+        }
+
+
+        body.dark-mode .welcome-description,
+        body.dark-mode .feature-item p {
+            color: #9ca3af;
+        }
+
+
+        body.dark-mode .feature-item {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: rgba(59, 130, 246, 0.2);
+        }
+
+
+        body.dark-mode .welcome-cta {
+            color: #60a5fa;
+        }
+
+
         @keyframes fadeIn {
             from {
                 opacity: 0;
