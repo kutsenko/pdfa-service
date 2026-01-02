@@ -15,6 +15,14 @@ export class AccountManager {
     }
 
     /**
+     * Security: Validate email format
+     */
+    isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    /**
      * Initialize account tab
      */
     async init() {

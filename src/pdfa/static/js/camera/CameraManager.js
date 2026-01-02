@@ -28,6 +28,17 @@ export class CameraManager {
             return;
         }
 
+        // Security: Add cleanup on page unload to prevent resource leaks
+        window.addEventListener('beforeunload', () => this.cleanup());
+
+        // Pause camera when tab becomes hidden
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && this.stream) {
+                console.log('[Camera] Tab hidden, stopping camera to save resources');
+                this.stopCamera();
+            }
+        });
+
         // Enumerate cameras
         await this.enumerateCameras();
 
@@ -224,6 +235,17 @@ export class CameraManager {
         document.getElementById('captureBtn').hidden = true;
         document.getElementById('switchCameraBtn').hidden = true;
         document.querySelector('.camera-selector').hidden = true;
+    }
+
+    /**
+     * Security: Cleanup resources to prevent leaks
+     */
+    cleanup() {
+        console.log('[Camera] Cleaning up resources...');
+        this.stopCamera();
+        if (this.a11yAssistant) {
+            this.a11yAssistant.cleanup?.();
+        }
     }
 
     async switchCamera() {

@@ -148,7 +148,8 @@ export function showStatus(message, type, action = null) {
         return;
     }
 
-    statusDiv.innerHTML = message;
+    // Security: Use textContent to prevent XSS
+    statusDiv.textContent = message;
     statusDiv.className = 'status ' + type;
 
     // Add action button if provided

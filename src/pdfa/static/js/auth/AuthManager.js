@@ -11,6 +11,16 @@ export class AuthManager {
         this.user = null;
         this.authEnabled = null;
         console.log('[Auth] AuthManager initialized, token:', this.token ? 'present' : 'missing');
+
+        // Security: Validate token on initialization
+        if (this.token) {
+            const payload = this.parseJWT(this.token);
+            if (!payload) {
+                // Token invalid or expired, remove it
+                this.token = null;
+                localStorage.removeItem('auth_token');
+            }
+        }
     }
 
     async init() {
@@ -60,7 +70,16 @@ export class AuthManager {
             const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
-            return JSON.parse(jsonPayload);
+            const payload = JSON.parse(jsonPayload);
+
+            // Security: Validate token expiration
+            if (payload.exp && payload.exp * 1000 < Date.now()) {
+                console.warn('[Auth] Token expired, logging out');
+                this.logout();
+                return null;
+            }
+
+            return payload;
         } catch (e) {
             console.error('[Auth] Failed to parse JWT:', e);
             return null;

@@ -400,10 +400,17 @@ async function initDebugConsole() {
         debugContent.innerHTML = '';
     });
 
-    // Intercept console.log, console.warn, console.error
+    // Security: Store original console methods for cleanup
     const originalLog = console.log;
     const originalWarn = console.warn;
     const originalError = console.error;
+
+    // Store cleanup function globally for potential cleanup
+    window._debugConsoleCleanup = () => {
+        console.log = originalLog;
+        console.warn = originalWarn;
+        console.error = originalError;
+    };
 
     function logToDebugConsole(message, type = 'log') {
         const entry = document.createElement('div');

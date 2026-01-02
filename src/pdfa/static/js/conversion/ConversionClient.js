@@ -200,6 +200,15 @@ export class ConversionClient {
                     throw new Error(t('error.ws_connection'));
                 }
 
+                // Security: Validate file size before encoding
+                const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+                if (file.size > MAX_FILE_SIZE) {
+                    throw new Error(t('status.fileTooLarge', {
+                        size: formatFileSize(file.size),
+                        max: formatFileSize(MAX_FILE_SIZE)
+                    }));
+                }
+
                 // Show progress container
                 this.showProgress();
 
