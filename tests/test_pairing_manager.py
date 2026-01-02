@@ -1,11 +1,12 @@
 """Unit tests for pairing manager."""
 
-import pytest
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from src.pdfa.pairing_manager import PairingManager
+import pytest
+
 from src.pdfa.models import PairingSessionDocument
+from src.pdfa.pairing_manager import PairingManager
 
 
 class TestPairingCodeGeneration:
@@ -160,7 +161,7 @@ class TestPairingSessionCreation:
         manager = PairingManager()
         manager.repo = mock_repo
 
-        session = await manager.create_session("user-123")
+        await manager.create_session("user-123")
 
         mock_repo.create_session.assert_called_once()
         call_args = mock_repo.create_session.call_args[0][0]

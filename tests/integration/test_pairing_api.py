@@ -1,9 +1,10 @@
 """Integration tests for pairing API endpoints."""
 
-import pytest
 from datetime import UTC, datetime, timedelta
-from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
+
+import pytest
+from fastapi.testclient import TestClient
 
 from src.pdfa.api import app
 from src.pdfa.models import PairingSessionDocument
@@ -151,6 +152,7 @@ class TestGetPairingStatusEndpoint:
     def test_get_pairing_status_success(self, mock_pairing_manager):
         """Should return session status."""
         from fastapi.testclient import TestClient
+
         from src.pdfa.api import app, get_current_user_optional
 
         # Override dependency
@@ -207,6 +209,7 @@ class TestCancelPairingSessionEndpoint:
     def test_cancel_pairing_session_success(self, mock_pairing_manager):
         """Should cancel active session."""
         from fastapi.testclient import TestClient
+
         from src.pdfa.api import app, get_current_user_optional
 
         # Override dependency

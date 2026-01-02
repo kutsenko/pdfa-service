@@ -1,11 +1,10 @@
 """Integration tests for pairing WebSocket flow."""
 
-import pytest
-import asyncio
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
+
+import pytest
 from fastapi.testclient import TestClient
-from starlette.websockets import WebSocketDisconnect
 
 from src.pdfa.api import app
 from src.pdfa.models import PairingSessionDocument
@@ -160,11 +159,16 @@ class TestWebSocketImageSync:
             )
 
             # Send image sync message
+            # Base64 encoded 1x1 red pixel PNG
+            test_image_data = (
+                "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAA"
+                "DUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+            )
             websocket.send_json(
                 {
                     "type": "sync_image",
                     "session_id": "test-session-id",
-                    "image_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",  # 1x1 red pixel
+                    "image_data": test_image_data,
                     "image_index": 0,
                     "metadata": {"width": 1920, "height": 1080},
                 }
