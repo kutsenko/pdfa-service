@@ -244,14 +244,20 @@ class GoogleOAuthClient:
         await oauth_repo.create_state(state_doc)
 
         # Build authorization URL
-        redirect_uri = self.config.redirect_uri
+        # Security: URL-encode redirect_uri to prevent OAuth errors
+        from urllib.parse import quote
+
+        redirect_uri = quote(self.config.redirect_uri, safe="")
+        client_id = quote(self.config.google_client_id, safe="")
+        state_encoded = quote(state, safe="")
+
         authorize_url = (
             f"https://accounts.google.com/o/oauth2/v2/auth?"
-            f"client_id={self.config.google_client_id}&"
+            f"client_id={client_id}&"
             f"response_type=code&"
             f"scope=openid%20email%20profile&"
             f"redirect_uri={redirect_uri}&"
-            f"state={state}"
+            f"state={state_encoded}"
         )
 
         return authorize_url

@@ -128,6 +128,48 @@ class TestAuthentication:
         msg = parse_client_message(submit_data)
         assert msg.type == "submit"
 
+    def test_oauth_authorization_url_encoding(self, auth_config_enabled):
+        """Test that OAuth authorization URL properly encodes parameters."""
+        import asyncio
+        import re
+        from unittest.mock import AsyncMock, MagicMock, patch
+
+        from pdfa.auth import GoogleOAuthClient
+
+        # Create OAuth client
+        client = GoogleOAuthClient(auth_config_enabled)
+
+        # Mock request
+        request = MagicMock()
+        request.headers.get.return_value = "test-user-agent"
+
+        # Mock the repository to avoid MongoDB dependency
+        mock_repo = MagicMock()
+        mock_repo.create_state = AsyncMock()
+
+        async def test_url_encoding():
+            # Patch the repository
+            with patch("pdfa.auth.OAuthStateRepository", return_value=mock_repo):
+                with patch("pdfa.auth.get_client_ip", return_value="127.0.0.1"):
+                    auth_url = await client._get_authorization_url(request)
+
+                    # Verify URL encoding
+                    assert "redirect_uri=http%3A%2F%2F" in auth_url
+                    assert "client_id=" in auth_url
+                    assert "state=" in auth_url
+                    assert "scope=openid%20email%20profile" in auth_url
+
+                    # Extract redirect_uri parameter value
+                    match = re.search(r"redirect_uri=([^&]+)", auth_url)
+                    assert match
+                    redirect_uri_encoded = match.group(1)
+
+                    # Should not contain unencoded special characters
+                    assert "://" not in redirect_uri_encoded  # Should be %3A%2F%2F
+                    assert redirect_uri_encoded.startswith("http%3A%2F%2F")
+
+        asyncio.run(test_url_encoding())
+
 
 class TestXSSProtection:
     """Test XSS (Cross-Site Scripting) protection mechanisms."""
