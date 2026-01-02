@@ -443,26 +443,29 @@ async def login(request: Request):
         HTTPException: If authentication is disabled (404)
 
     """
-    logger.info(f"[OAuth] Login endpoint called from {request.client.host if request.client else 'unknown'}")
+    logger.info(
+        f"[OAuth] Login endpoint called from {request.client.host if request.client else 'unknown'}"
+    )
 
     if not auth_config_instance.enabled:
         logger.warning("[OAuth] Authentication is disabled - returning 404")
         raise HTTPException(status_code=404, detail="Authentication is disabled")
 
     logger.info("[OAuth] Authentication is enabled, initiating OAuth flow")
-    logger.debug(f"[OAuth] Client ID configured: {auth_config_instance.google_client_id[:20]}...")
+    logger.debug(
+        f"[OAuth] Client ID configured: {auth_config_instance.google_client_id[:20]}..."
+    )
     logger.debug(f"[OAuth] Redirect URI: {auth_config_instance.redirect_uri}")
 
     try:
         oauth_client = GoogleOAuthClient(auth_config_instance)
         response = await oauth_client.initiate_login(request)
-        logger.info(f"[OAuth] Redirecting to Google OAuth URL")
+        logger.info("[OAuth] Redirecting to Google OAuth URL")
         return response
     except Exception as e:
         logger.error(f"[OAuth] Login initiation failed: {e}", exc_info=True)
         raise HTTPException(
-            status_code=500,
-            detail=f"OAuth initialization failed: {str(e)}"
+            status_code=500, detail=f"OAuth initialization failed: {str(e)}"
         )
 
 

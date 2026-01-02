@@ -190,8 +190,6 @@ class TestLiveEventBroadcasting:
     @pytest.mark.asyncio
     async def test_event_message_structure(self) -> None:
         """Test that JobEventMessage has correct structure for frontend."""
-        from datetime import datetime
-
         from pdfa.websocket_protocol import JobEventMessage
 
         # Create a sample event message
