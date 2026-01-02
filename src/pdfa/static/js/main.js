@@ -126,6 +126,16 @@ function initTabNavigation() {
 
         currentTab = tabId;
 
+        // Load account data when switching to account tab
+        if (tabId === 'tab-account') {
+            console.log('[Tabs] Switching to account tab, loading data...');
+            if (window.accountManager) {
+                window.accountManager.loadAccountData();
+            } else {
+                console.error('[Tabs] AccountManager not available!');
+            }
+        }
+
         // Apply user preferences when switching to camera tab
         if (tabId === 'tab-kamera' && window.accountManager) {
             window.accountManager.applyPreferencesToCameraTab();

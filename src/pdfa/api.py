@@ -582,18 +582,23 @@ async def get_user_profile(
     if auth_config_instance.enabled and current_user:
         user_doc = await user_repo.get_user(current_user.user_id)
 
-    # Get job statistics
-    job_stats = await job_repo.get_job_stats(current_user.user_id)
+    # Get job statistics (only if user is logged in)
+    job_stats = {}
+    recent_activity = []
 
-    # Get recent audit events (last 20)
-    recent_activity = await audit_repo.get_user_events(current_user.user_id, limit=20)
+    if current_user:
+        job_stats = await job_repo.get_job_stats(current_user.user_id)
+        # Get recent audit events (last 20)
+        recent_activity = await audit_repo.get_user_events(
+            current_user.user_id, limit=20
+        )
 
     return {
         "user": {
-            "user_id": current_user.user_id,
-            "email": current_user.email,
-            "name": current_user.name,
-            "picture": current_user.picture,
+            "user_id": current_user.user_id if current_user else "anonymous",
+            "email": current_user.email if current_user else "anonymous@localhost",
+            "name": current_user.name if current_user else "Anonymous User",
+            "picture": current_user.picture if current_user else None,
         },
         "login_stats": {
             "created_at": user_doc.created_at.isoformat() if user_doc else None,
@@ -629,13 +634,17 @@ async def get_user_preferences(
 
     """
     user_prefs_repo = UserPreferencesRepository()
-    prefs = await user_prefs_repo.get_preferences(current_user.user_id)
+
+    # Use user_id if user is logged in, otherwise use "anonymous"
+    user_id = current_user.user_id if current_user else "anonymous"
+
+    prefs = await user_prefs_repo.get_preferences(user_id)
 
     if prefs:
         return prefs.model_dump()
     else:
         # Return system defaults
-        return UserPreferencesDocument(user_id=current_user.user_id).model_dump()
+        return UserPreferencesDocument(user_id=user_id).model_dump()
 
 
 @app.put("/api/v1/user/preferences")

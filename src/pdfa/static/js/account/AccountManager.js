@@ -69,6 +69,7 @@ export class AccountManager {
      * Load all account data
      */
     async loadAccountData() {
+        console.log('[Account] loadAccountData() called');
         const now = Date.now();
 
         // Check cache
@@ -79,36 +80,46 @@ export class AccountManager {
         }
 
         // Show loading state
+        console.log('[Account] Showing loading state and fetching data...');
         this.showLoading();
 
         try {
             // Fetch profile data
+            console.log('[Account] Fetching profile from /api/v1/user/profile...');
             const profileResponse = await fetch('/api/v1/user/profile', {
                 headers: this.authManager.getAuthHeaders()
             });
 
+            console.log('[Account] Profile response status:', profileResponse.status);
             if (!profileResponse.ok) {
-                throw new Error('Failed to fetch profile');
+                const errorText = await profileResponse.text();
+                throw new Error(`Failed to fetch profile: ${profileResponse.status} - ${errorText}`);
             }
 
             this.profileData = await profileResponse.json();
+            console.log('[Account] Profile data loaded successfully');
 
             // Fetch preferences
+            console.log('[Account] Fetching preferences from /api/v1/user/preferences...');
             const prefsResponse = await fetch('/api/v1/user/preferences', {
                 headers: this.authManager.getAuthHeaders()
             });
 
+            console.log('[Account] Preferences response status:', prefsResponse.status);
             if (!prefsResponse.ok) {
-                throw new Error('Failed to fetch preferences');
+                const errorText = await prefsResponse.text();
+                throw new Error(`Failed to fetch preferences: ${prefsResponse.status} - ${errorText}`);
             }
 
             this.preferences = await prefsResponse.json();
+            console.log('[Account] Preferences loaded successfully');
 
             this.lastFetchTime = now;
             this.renderAccountData();
 
         } catch (error) {
             console.error('[Account] Failed to load data:', error);
+            console.error('[Account] Error details:', error.message);
             this.showError();
         }
     }
