@@ -378,10 +378,7 @@ class TestImageSyncing:
 
         # Sync image
         await manager.sync_image(
-            "session-123",
-            "base64imagedata",
-            0,
-            {"width": 1920, "height": 1080}
+            "session-123", "base64imagedata", 0, {"width": 1920, "height": 1080}
         )
 
         # Verify WebSocket send

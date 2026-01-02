@@ -56,7 +56,9 @@ class TestQRCodeLibraryLoading:
         page.wait_for_load_state("networkidle")
 
         # No QR code library requests should have failed
-        assert len(failed_requests) == 0, f"QR code library failed to load: {failed_requests}"
+        assert (
+            len(failed_requests) == 0
+        ), f"QR code library failed to load: {failed_requests}"
 
 
 class TestQRCodeGeneration:
@@ -131,7 +133,9 @@ class TestQRCodeGeneration:
 
         # Pairing code should be 6 characters
         pairing_code = pairing_code_display.text_content()
-        assert len(pairing_code) == 6, f"Pairing code should be 6 characters, got {len(pairing_code)}"
+        assert (
+            len(pairing_code) == 6
+        ), f"Pairing code should be 6 characters, got {len(pairing_code)}"
 
         # Should be alphanumeric uppercase
         assert pairing_code.isalnum(), "Pairing code should be alphanumeric"
@@ -195,5 +199,9 @@ class TestQRCodeResponsiveness:
         bbox = qr_canvas.bounding_box()
         assert bbox is not None
         # Allow some tolerance for rendering
-        assert 190 <= bbox["width"] <= 210, f"QR code width should be ~200px, got {bbox['width']}"
-        assert 190 <= bbox["height"] <= 210, f"QR code height should be ~200px, got {bbox['height']}"
+        assert (
+            190 <= bbox["width"] <= 210
+        ), f"QR code width should be ~200px, got {bbox['width']}"
+        assert (
+            190 <= bbox["height"] <= 210
+        ), f"QR code height should be ~200px, got {bbox['height']}"
