@@ -137,6 +137,32 @@ class CancelJobMessage(ClientMessage):
 
 
 @dataclass
+class AuthMessage(ClientMessage):
+    """Authentication message with JWT token.
+
+    Security: Token sent in message body instead of URL to prevent logging.
+
+    Attributes:
+        type: Always "auth"
+        token: JWT authentication token
+
+    """
+
+    type: Literal["auth"] = "auth"
+    token: str = ""
+
+    def validate(self) -> None:
+        """Validate the auth message.
+
+        Raises:
+            ValueError: If validation fails
+
+        """
+        if not self.token:
+            raise ValueError("token is required")
+
+
+@dataclass
 class PingMessage(ClientMessage):
     """Keepalive ping message.
 
@@ -322,6 +348,10 @@ def parse_client_message(data: dict[str, Any]) -> ClientMessage:
         return msg
     elif msg_type == "cancel":
         msg = CancelJobMessage(job_id=data.get("job_id", ""))
+        msg.validate()
+        return msg
+    elif msg_type == "auth":
+        msg = AuthMessage(token=data.get("token", ""))
         msg.validate()
         return msg
     elif msg_type == "ping":

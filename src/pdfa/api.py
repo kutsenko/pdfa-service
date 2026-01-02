@@ -24,6 +24,9 @@ from fastapi import (
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
 from ocrmypdf import exceptions as ocrmypdf_exceptions
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
 
 import pdfa.auth
 from pdfa.a11y_camera_config import A11yCameraConfig
@@ -61,6 +64,7 @@ from pdfa.repositories import (
 )
 from pdfa.user_models import User
 from pdfa.websocket_protocol import (
+    AuthMessage,
     CancelJobMessage,
     CancelledMessage,
     CompletedMessage,
@@ -124,6 +128,57 @@ app = FastAPI(
     description="Convert PDFs to PDF/A using OCRmyPDF.",
     version="0.1.0",
 )
+
+# Security: Configure rate limiting to prevent DoS attacks
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+# Security: Add security headers middleware
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add security headers to all responses.
+
+    Headers added:
+    - Content-Security-Policy: Restrict resource loading to prevent XSS
+    - X-Content-Type-Options: Prevent MIME type sniffing
+    - X-Frame-Options: Prevent clickjacking
+    - X-XSS-Protection: Enable browser XSS protection
+    - Referrer-Policy: Control referrer information
+
+    """
+    response = await call_next(request)
+
+    # Content Security Policy - restrict resource loading
+    # Note: 'unsafe-inline' is needed for inline styles in web UI
+    # 'unsafe-eval' is NOT allowed for better security
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https:; "
+        "font-src 'self' data:; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none'; "
+        "base-uri 'self'; "
+        "form-action 'self'"
+    )
+
+    # Prevent MIME type sniffing
+    response.headers["X-Content-Type-Options"] = "nosniff"
+
+    # Prevent clickjacking
+    response.headers["X-Frame-Options"] = "DENY"
+
+    # Enable browser XSS protection
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+
+    # Control referrer information
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+
+    return response
+
 
 # Initialize job manager
 job_manager = get_job_manager()
@@ -365,6 +420,7 @@ async def web_ui_lang(lang: str) -> str:
 
 
 @app.get("/auth/login")
+@limiter.limit("5/minute")
 async def login(request: Request):
     """Initiate Google OAuth login flow.
 
@@ -467,7 +523,10 @@ async def get_user_info(current_user: User = Depends(get_current_user_optional))
 
 
 @app.get("/api/v1/user/profile")
-async def get_user_profile(current_user: User = Depends(get_current_user_optional)):
+@limiter.limit("30/minute")
+async def get_user_profile(
+    request: Request, current_user: User = Depends(get_current_user_optional)
+):
     """Get comprehensive user profile including stats and activity.
 
     Returns profile info, login stats, job stats, and recent activity.
@@ -524,7 +583,9 @@ async def get_user_profile(current_user: User = Depends(get_current_user_optiona
 
 
 @app.get("/api/v1/user/preferences")
+@limiter.limit("30/minute")
 async def get_user_preferences(
+    request: Request,
     current_user: User = Depends(get_current_user_optional),
 ):
     """Get user preferences or system defaults.
@@ -547,7 +608,9 @@ async def get_user_preferences(
 
 
 @app.put("/api/v1/user/preferences")
+@limiter.limit("30/minute")
 async def update_user_preferences(
+    request: Request,
     preferences: dict[str, Any],
     current_user: User = Depends(get_current_user_optional),
 ):
@@ -556,6 +619,7 @@ async def update_user_preferences(
     Saves user's preferred default conversion parameters.
 
     Args:
+        request: FastAPI request object (required for rate limiting)
         preferences: Dictionary with preference fields
         current_user: Authenticated user (injected by FastAPI)
 
@@ -582,6 +646,7 @@ async def update_user_preferences(
 
 
 @app.delete("/api/v1/user/account")
+@limiter.limit("30/minute")
 async def delete_user_account(
     request: Request,
     body: dict[str, str],
@@ -665,7 +730,9 @@ async def delete_user_account(
         500: {"description": "Conversion failed"},
     },
 )
+@limiter.limit("10/minute")
 async def convert_endpoint(
+    request: Request,
     file: UploadFile = File(...),
     language: str = Form("deu+eng"),
     pdfa_level: PdfaLevel = Form("2"),
@@ -681,6 +748,7 @@ async def convert_endpoint(
     are automatically converted to PDF before PDF/A conversion.
 
     Args:
+        request: FastAPI request object (required for rate limiting)
         file: PDF, Office, ODF, or image file to convert.
         language: Tesseract language codes for OCR (default: 'deu+eng').
         pdfa_level: PDF/A compliance level ('1', '2', '3') or 'pdf' for plain PDF
@@ -1151,8 +1219,12 @@ async def process_conversion_job(job_id: str) -> None:
 async def websocket_endpoint(websocket: WebSocket):
     """WebSocket endpoint for real-time conversion progress.
 
+    Security: Supports two authentication methods:
+        1. NEW (Secure): Auth message as first WebSocket message (token not in URL)
+        2. OLD (Deprecated): Token in query parameter (for backward compatibility)
+
     Protocol:
-        Client sends: SubmitJobMessage, CancelJobMessage, PingMessage
+        Client sends: AuthMessage (first), SubmitJobMessage, CancelJobMessage, PingMessage
         Server sends: JobAcceptedMessage, ProgressMessage, CompletedMessage,
                      ErrorMessage, CancelledMessage, PongMessage
 
@@ -1160,17 +1232,31 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     logger.info("WebSocket connection established")
 
-    # Authenticate WebSocket if auth is enabled
+    # Security: Check if auth is enabled
     current_user: User | None = None
+    authenticated = False
+
     if auth_config_instance.enabled:
-        try:
-            authenticator = WebSocketAuthenticator(auth_config_instance)
-            current_user = await authenticator.authenticate_websocket(websocket)
-            logger.info(f"WebSocket authenticated for user: {current_user.email}")
-        except HTTPException as e:
-            logger.warning(f"WebSocket authentication failed: {e.detail}")
-            await websocket.close(code=1008, reason=e.detail)
-            return
+        # Try query parameter first (deprecated but backward compatible)
+        token = websocket.query_params.get("token")
+        if token:
+            logger.warning(
+                "WebSocket auth via query parameter is deprecated. "
+                "Use AuthMessage instead to prevent token logging."
+            )
+            try:
+                authenticator = WebSocketAuthenticator(auth_config_instance)
+                current_user = await authenticator.authenticate_websocket(websocket)
+                authenticated = True
+                logger.info(f"WebSocket authenticated for user: {current_user.email}")
+            except HTTPException as e:
+                logger.warning(f"WebSocket authentication failed: {e.detail}")
+                await websocket.close(code=1008, reason=e.detail)
+                return
+        # If no token in query params, expect AuthMessage as first message
+        else:
+            logger.info("Waiting for AuthMessage (secure auth method)")
+            authenticated = False  # Will be set to True after AuthMessage
 
     current_job_id: str | None = None
 
@@ -1179,6 +1265,45 @@ async def websocket_endpoint(websocket: WebSocket):
             try:
                 # Parse incoming message
                 message = parse_client_message(message_data)
+
+                # Security: Handle authentication message (new secure method)
+                if isinstance(message, AuthMessage):
+                    if not auth_config_instance.enabled:
+                        logger.warning("Received AuthMessage but auth is disabled")
+                        continue  # Ignore auth message if auth is disabled
+
+                    if authenticated:
+                        logger.warning("Received AuthMessage but already authenticated")
+                        continue  # Already authenticated via query parameter
+
+                    # Authenticate using token from message body
+                    try:
+                        from pdfa.auth import decode_jwt_token
+
+                        current_user = decode_jwt_token(
+                            message.token, auth_config_instance
+                        )
+                        authenticated = True
+                        logger.info(
+                            f"WebSocket authenticated via AuthMessage for user: {current_user.email}"
+                        )
+                        # Send acknowledgment (success is implicit, errors close connection)
+                        continue
+                    except HTTPException as e:
+                        logger.warning(f"AuthMessage authentication failed: {e.detail}")
+                        await websocket.close(code=1008, reason=e.detail)
+                        return
+
+                # Security: Enforce authentication for protected operations
+                if auth_config_instance.enabled and not authenticated:
+                    error_msg = ErrorMessage(
+                        job_id="",
+                        error_code="UNAUTHORIZED",
+                        message="Authentication required. Send AuthMessage first.",
+                    )
+                    await websocket.send_json(error_msg.to_dict())
+                    logger.warning("Unauthenticated client tried to send message")
+                    continue
 
                 if isinstance(message, SubmitJobMessage):
                     # Create new job (supports both single-file and multi-file modes)

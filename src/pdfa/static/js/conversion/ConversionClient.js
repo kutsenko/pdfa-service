@@ -43,16 +43,10 @@ export class ConversionClient {
                 }
 
                 const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-                let wsUrl = `${protocol}//${window.location.host}/ws`;
+                const wsUrl = `${protocol}//${window.location.host}/ws`;
 
-                // Add auth token to WebSocket URL if available
-        if (this.authManager.token) {
-            wsUrl += `?token=${this.authManager.token}`;
-            console.log('[WebSocket] Connecting with authentication token');
-        } else {
-            console.warn('[WebSocket] No authentication token available');
-        }
-
+                // Security: Token will be sent via AuthMessage after connection
+                // (not in URL to prevent logging)
                 this.updateWSStatus('connecting');
 
                 try {
@@ -71,6 +65,17 @@ export class ConversionClient {
             handleOpen() {
                 console.log('WebSocket connected');
                 this.updateWSStatus('connected');
+
+                // Security: Send authentication token via AuthMessage (not in URL)
+                if (this.authManager.authEnabled && this.authManager.token) {
+                    console.log('[WebSocket] Sending AuthMessage for secure authentication');
+                    this.ws.send(JSON.stringify({
+                        type: 'auth',
+                        token: this.authManager.token
+                    }));
+                } else if (this.authManager.authEnabled && !this.authManager.token) {
+                    console.warn('[WebSocket] Auth enabled but no token available');
+                }
 
                 // Stop status polling if it was running
                 if (this.statusPollInterval) {
