@@ -10,26 +10,27 @@
     <!-- Pairing Screen -->
     <div id="pairingScreen" class="screen active">
         <div class="header">
-            <h1>📷 Mobile Camera</h1>
-            <p>Link to Desktop Session</p>
+            <h1 data-i18n="mobile.title">📷 Mobile Camera</h1>
+            <p data-i18n="mobile.subtitle">Link to Desktop Session</p>
         </div>
 
         <form id="pairingForm" class="pairing-form">
-            <label for="pairingCodeInput">Enter Pairing Code:</label>
+            <label for="pairingCodeInput" data-i18n="mobile.pairingCode.label">Enter Pairing Code:</label>
             <input
                 type="text"
                 id="pairingCodeInput"
+                data-i18n-placeholder="mobile.pairingCode.placeholder"
                 placeholder="ABC123"
                 maxlength="8"
                 autocomplete="off"
                 autocapitalize="characters"
                 aria-label="Pairing code"
                 required>
-            <button type="submit" class="btn-primary">Connect</button>
+            <button type="submit" class="btn-primary" data-i18n="mobile.connect">Connect</button>
         </form>
 
         <div class="help-text">
-            <p>Scan the QR code on your desktop or enter the pairing code manually.</p>
+            <p data-i18n="mobile.help">Scan the QR code on your desktop or enter the pairing code manually.</p>
         </div>
     </div>
 
@@ -37,7 +38,7 @@
     <div id="cameraScreen" class="screen">
         <div class="connection-banner connected">
             <span class="status-dot"></span>
-            <span>Connected to Desktop</span>
+            <span data-i18n="mobile.connected">Connected to Desktop</span>
         </div>
 
         <div class="camera-container">
@@ -48,20 +49,20 @@
 
             <div class="camera-overlay">
                 <div class="counter">
-                    📸 <span id="imageCount">0</span> sent
+                    📸 <span id="imageCount">0</span> <span data-i18n="mobile.imagesSent">sent</span>
                 </div>
             </div>
         </div>
 
         <div class="controls">
             <button id="switchCameraBtn" class="btn-secondary" aria-label="Switch camera">
-                🔄 Switch
+                🔄 <span data-i18n="mobile.switch">Switch</span>
             </button>
             <button id="mobileCaptureBtn" class="btn-capture" aria-label="Capture photo">
                 <span class="capture-ring"></span>
             </button>
             <button id="disconnectBtn" class="btn-secondary" aria-label="Disconnect">
-                ✕ Disconnect
+                ✕ <span data-i18n="mobile.disconnect">Disconnect</span>
             </button>
         </div>
     </div>
@@ -69,7 +70,7 @@
     <!-- Editor Screen -->
     <div id="editorScreen" class="screen">
         <div class="editor-header">
-            <h2>Edit Image</h2>
+            <h2 data-i18n="mobile.editImage">Edit Image</h2>
         </div>
 
         <div class="editor-container">
@@ -78,22 +79,42 @@
 
         <div class="controls">
             <button id="rotateLeftBtn" class="btn-icon" aria-label="Rotate left">
-                ↶ Rotate Left
+                ↶ <span data-i18n="mobile.rotateLeft">Rotate Left</span>
             </button>
             <button id="rotateRightBtn" class="btn-icon" aria-label="Rotate right">
-                ↷ Rotate Right
+                ↷ <span data-i18n="mobile.rotateRight">Rotate Right</span>
             </button>
         </div>
 
         <div class="actions">
             <button id="retakeBtn" class="btn-secondary">
-                ↻ Retake
+                ↻ <span data-i18n="mobile.retake">Retake</span>
             </button>
             <button id="sendBtn" class="btn-primary">
-                ✓ Send to Desktop
+                ✓ <span data-i18n="mobile.sendToDesktop">Send to Desktop</span>
             </button>
         </div>
     </div>
+
+    <!-- Load i18n system -->
+    <script src="/static/js/i18n/translations.js"></script>
+    <script src="/static/js/utils/helpers.js"></script>
+    <script>
+        // Initialize i18n
+        (function() {
+            // Get language from URL parameter or default to 'en'
+            const urlParams = new URLSearchParams(window.location.search);
+            const lang = urlParams.get('lang') || 'en';
+
+            // Store current language globally
+            window.currentLang = lang;
+
+            // Apply translations
+            if (window.applyTranslations) {
+                window.applyTranslations(lang);
+            }
+        })();
+    </script>
 
     <script type="module" src="/static/js/mobile/main.js"></script>
 </body>
