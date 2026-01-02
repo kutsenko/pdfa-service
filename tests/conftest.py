@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 import types
+
+# Disable rate limiting for all tests
+os.environ["PDFA_DISABLE_RATE_LIMITING"] = "true"
 
 if importlib.util.find_spec("ocrmypdf") is None:
     exceptions_module = types.ModuleType("ocrmypdf.exceptions")

@@ -130,9 +130,21 @@ app = FastAPI(
 )
 
 # Security: Configure rate limiting to prevent DoS attacks
-limiter = Limiter(key_func=get_remote_address)
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# Can be disabled for testing via PDFA_DISABLE_RATE_LIMITING=true
+rate_limiting_enabled = (
+    os.getenv("PDFA_DISABLE_RATE_LIMITING", "false").lower() != "true"
+)
+if rate_limiting_enabled:
+    limiter = Limiter(key_func=get_remote_address)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+    logger.info("Rate limiting ENABLED")
+else:
+    # Create a no-op limiter for tests
+
+    limiter = Limiter(key_func=get_remote_address, enabled=False)
+    app.state.limiter = limiter
+    logger.info("Rate limiting DISABLED (for testing)")
 
 
 # Security: Add security headers middleware
