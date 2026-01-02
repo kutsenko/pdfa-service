@@ -443,11 +443,27 @@ async def login(request: Request):
         HTTPException: If authentication is disabled (404)
 
     """
+    logger.info(f"[OAuth] Login endpoint called from {request.client.host if request.client else 'unknown'}")
+
     if not auth_config_instance.enabled:
+        logger.warning("[OAuth] Authentication is disabled - returning 404")
         raise HTTPException(status_code=404, detail="Authentication is disabled")
 
-    oauth_client = GoogleOAuthClient(auth_config_instance)
-    return await oauth_client.initiate_login(request)
+    logger.info("[OAuth] Authentication is enabled, initiating OAuth flow")
+    logger.debug(f"[OAuth] Client ID configured: {auth_config_instance.google_client_id[:20]}...")
+    logger.debug(f"[OAuth] Redirect URI: {auth_config_instance.redirect_uri}")
+
+    try:
+        oauth_client = GoogleOAuthClient(auth_config_instance)
+        response = await oauth_client.initiate_login(request)
+        logger.info(f"[OAuth] Redirecting to Google OAuth URL")
+        return response
+    except Exception as e:
+        logger.error(f"[OAuth] Login initiation failed: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"OAuth initialization failed: {str(e)}"
+        )
 
 
 @app.get("/auth/callback")
@@ -529,6 +545,70 @@ async def get_user_info(current_user: User = Depends(get_current_user_optional))
         "name": current_user.name,
         "picture": current_user.picture,
     }
+
+
+@app.get("/auth/debug")
+async def auth_debug():
+    """Debug endpoint to check OAuth configuration status.
+
+    Returns configuration status without exposing secrets.
+    Useful for troubleshooting OAuth issues.
+    """
+    config = auth_config_instance
+
+    def mask_secret(value: str, visible_chars: int = 8) -> str:
+        """Mask a secret value, showing only first few chars."""
+        if not value:
+            return "NOT_SET"
+        if len(value) <= visible_chars:
+            return "*" * len(value)
+        return value[:visible_chars] + "..." + ("*" * (len(value) - visible_chars))
+
+    return {
+        "auth_enabled": config.enabled,
+        "google_client_id": mask_secret(config.google_client_id, 20) if config.google_client_id else "NOT_SET",
+        "google_client_secret": mask_secret(config.google_client_secret, 8) if config.google_client_secret else "NOT_SET",
+        "jwt_secret_key": mask_secret(config.jwt_secret_key, 8) if config.jwt_secret_key else "NOT_SET",
+        "redirect_uri": config.redirect_uri,
+        "jwt_algorithm": config.jwt_algorithm,
+        "jwt_expiry_hours": config.jwt_expiry_hours,
+        "configuration_valid": all([
+            config.enabled,
+            config.google_client_id,
+            config.google_client_secret,
+            config.jwt_secret_key,
+            len(config.jwt_secret_key) >= 32 if config.jwt_secret_key else False,
+        ]) if config.enabled else True,
+        "validation_errors": _get_auth_validation_errors(config)
+    }
+
+
+def _get_auth_validation_errors(config) -> list[str]:
+    """Get list of validation errors for auth config."""
+    errors = []
+
+    if not config.enabled:
+        return []  # No validation needed if auth is disabled
+
+    if not config.google_client_id:
+        errors.append("GOOGLE_CLIENT_ID is not set")
+    elif not config.google_client_id.endswith(".apps.googleusercontent.com"):
+        errors.append("GOOGLE_CLIENT_ID doesn't look like a valid Google client ID")
+
+    if not config.google_client_secret:
+        errors.append("GOOGLE_CLIENT_SECRET is not set")
+
+    if not config.jwt_secret_key:
+        errors.append("JWT_SECRET_KEY is not set")
+    elif len(config.jwt_secret_key) < 32:
+        errors.append(f"JWT_SECRET_KEY is too short ({len(config.jwt_secret_key)} chars, need 32+)")
+
+    if not config.redirect_uri:
+        errors.append("OAUTH_REDIRECT_URI is not set")
+    elif not config.redirect_uri.startswith(("http://", "https://")):
+        errors.append("OAUTH_REDIRECT_URI must start with http:// or https://")
+
+    return errors
 
 
 # User profile and preferences endpoints

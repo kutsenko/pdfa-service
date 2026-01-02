@@ -26,6 +26,12 @@ export class AuthManager {
     async init() {
         console.log('[Auth] Initializing authentication...');
 
+        // Set up login button click handler
+        this.setupLoginButton();
+
+        // Set up logout button click handler
+        this.setupLogoutButton();
+
         // Try to get user info to detect if auth is enabled
         try {
             const response = await fetch('/auth/user', {
@@ -63,6 +69,34 @@ export class AuthManager {
         }
     }
 
+    setupLoginButton() {
+        const loginBtn = document.getElementById('googleLoginBtn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('[Auth] Google login button clicked');
+                this.login();
+            });
+            console.log('[Auth] Login button event listener attached');
+        } else {
+            console.warn('[Auth] Google login button not found in DOM');
+        }
+    }
+
+    setupLogoutButton() {
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('[Auth] Logout button clicked');
+                this.logout();
+            });
+            console.log('[Auth] Logout button event listener attached');
+        } else {
+            console.debug('[Auth] Logout button not found in DOM (expected if not logged in)');
+        }
+    }
+
     parseJWT(token) {
         try {
             const base64Url = token.split('.')[1];
@@ -94,8 +128,31 @@ export class AuthManager {
     }
 
     async login() {
-        console.log('[Auth] Redirecting to login...');
-        window.location.href = '/auth/login';
+        console.log('[Auth] Initiating login redirect...');
+        console.log('[Auth] Current URL:', window.location.href);
+        console.log('[Auth] Redirect target: /auth/login');
+
+        try {
+            // Check if endpoint is accessible first
+            const response = await fetch('/auth/login', {
+                method: 'HEAD',
+                redirect: 'manual'
+            });
+            console.log('[Auth] Pre-flight check status:', response.status);
+
+            if (response.status === 404) {
+                console.error('[Auth] Authentication endpoint not found (404) - auth may be disabled');
+                alert('Authentication is not available. Please check server configuration.');
+                return;
+            }
+
+            // Proceed with redirect
+            console.log('[Auth] Redirecting to login endpoint...');
+            window.location.href = '/auth/login';
+        } catch (error) {
+            console.error('[Auth] Login redirect failed:', error);
+            alert('Failed to initiate login. Please check browser console for details.');
+        }
     }
 
     logout() {
