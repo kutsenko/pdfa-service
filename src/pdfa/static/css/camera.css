@@ -252,6 +252,15 @@
             height: auto;
         }
 
+        /* Keyboard accessibility: Focus styles for QR code */
+        .qr-container canvas:focus,
+        .qr-container img:focus {
+            outline: 3px solid #667eea;
+            outline-offset: 4px;
+            border-radius: 4px;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
         .pairing-stats {
             margin: 24px 0;
             padding: 16px;
