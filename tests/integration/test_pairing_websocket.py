@@ -50,14 +50,17 @@ class TestWebSocketPairingRegistration:
         # Connect WebSocket and register
         with client.websocket_connect("/ws") as websocket:
             # Send registration message
-            websocket.send_json({
-                "type": "register_pairing",
-                "session_id": "test-session-id",
-                "role": "desktop"
-            })
+            websocket.send_json(
+                {
+                    "type": "register_pairing",
+                    "session_id": "test-session-id",
+                    "role": "desktop",
+                }
+            )
 
             # Give it time to process
             import time
+
             time.sleep(0.1)
 
         # Verify registration was called
@@ -84,14 +87,17 @@ class TestWebSocketPairingRegistration:
         # Connect WebSocket and register
         with client.websocket_connect("/ws") as websocket:
             # Send registration message
-            websocket.send_json({
-                "type": "register_pairing",
-                "session_id": "test-session-id",
-                "role": "mobile"
-            })
+            websocket.send_json(
+                {
+                    "type": "register_pairing",
+                    "session_id": "test-session-id",
+                    "role": "mobile",
+                }
+            )
 
             # Give it time to process
             import time
+
             time.sleep(0.1)
 
         # Verify registration was called
@@ -107,11 +113,13 @@ class TestWebSocketPairingRegistration:
         # Connect WebSocket and try to register
         with client.websocket_connect("/ws") as websocket:
             # Send registration message
-            websocket.send_json({
-                "type": "register_pairing",
-                "session_id": "invalid-session",
-                "role": "desktop"
-            })
+            websocket.send_json(
+                {
+                    "type": "register_pairing",
+                    "session_id": "invalid-session",
+                    "role": "desktop",
+                }
+            )
 
             # Should receive error
             response = websocket.receive_json()
@@ -143,23 +151,28 @@ class TestWebSocketImageSync:
         # Connect WebSocket as mobile
         with client.websocket_connect("/ws") as websocket:
             # Register as mobile
-            websocket.send_json({
-                "type": "register_pairing",
-                "session_id": "test-session-id",
-                "role": "mobile"
-            })
+            websocket.send_json(
+                {
+                    "type": "register_pairing",
+                    "session_id": "test-session-id",
+                    "role": "mobile",
+                }
+            )
 
             # Send image sync message
-            websocket.send_json({
-                "type": "sync_image",
-                "session_id": "test-session-id",
-                "image_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",  # 1x1 red pixel
-                "image_index": 0,
-                "metadata": {"width": 1920, "height": 1080}
-            })
+            websocket.send_json(
+                {
+                    "type": "sync_image",
+                    "session_id": "test-session-id",
+                    "image_data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",  # 1x1 red pixel
+                    "image_index": 0,
+                    "metadata": {"width": 1920, "height": 1080},
+                }
+            )
 
             # Give it a moment to process
             import time
+
             time.sleep(0.1)
 
         mock_pairing_manager.sync_image.assert_called_once()
@@ -185,19 +198,23 @@ class TestWebSocketImageSync:
         # Connect WebSocket as mobile
         with client.websocket_connect("/ws") as websocket:
             # Register as mobile
-            websocket.send_json({
-                "type": "register_pairing",
-                "session_id": "test-session-id",
-                "role": "mobile"
-            })
+            websocket.send_json(
+                {
+                    "type": "register_pairing",
+                    "session_id": "test-session-id",
+                    "role": "mobile",
+                }
+            )
 
             # Send image sync message with invalid base64
-            websocket.send_json({
-                "type": "sync_image",
-                "session_id": "test-session-id",
-                "image_data": "not-valid-base64!!!",
-                "image_index": 0
-            })
+            websocket.send_json(
+                {
+                    "type": "sync_image",
+                    "session_id": "test-session-id",
+                    "image_data": "not-valid-base64!!!",
+                    "image_index": 0,
+                }
+            )
 
             # Should receive error
             response = websocket.receive_json()
@@ -228,14 +245,17 @@ class TestWebSocketPeerStatus:
 
         # Connect desktop WebSocket
         with client.websocket_connect("/ws") as websocket:
-            websocket.send_json({
-                "type": "register_pairing",
-                "session_id": "test-session-id",
-                "role": "desktop"
-            })
+            websocket.send_json(
+                {
+                    "type": "register_pairing",
+                    "session_id": "test-session-id",
+                    "role": "desktop",
+                }
+            )
 
             # Give it time to process
             import time
+
             time.sleep(0.1)
 
         # Verify notification was attempted (via register_websocket which calls it)
@@ -249,11 +269,13 @@ class TestWebSocketMessageValidation:
         """Should reject registration without session_id."""
         with client.websocket_connect("/ws") as websocket:
             # Send invalid registration message
-            websocket.send_json({
-                "type": "register_pairing",
-                "role": "desktop"
-                # Missing session_id
-            })
+            websocket.send_json(
+                {
+                    "type": "register_pairing",
+                    "role": "desktop",
+                    # Missing session_id
+                }
+            )
 
             # Should receive error
             response = websocket.receive_json()
@@ -277,11 +299,13 @@ class TestWebSocketMessageValidation:
 
         with client.websocket_connect("/ws") as websocket:
             # Send registration with invalid role
-            websocket.send_json({
-                "type": "register_pairing",
-                "session_id": "test-session-id",
-                "role": "invalid-role"
-            })
+            websocket.send_json(
+                {
+                    "type": "register_pairing",
+                    "session_id": "test-session-id",
+                    "role": "invalid-role",
+                }
+            )
 
             # Should receive error
             response = websocket.receive_json()
@@ -307,19 +331,23 @@ class TestWebSocketMessageValidation:
 
         with client.websocket_connect("/ws") as websocket:
             # Register as mobile
-            websocket.send_json({
-                "type": "register_pairing",
-                "session_id": "test-session-id",
-                "role": "mobile"
-            })
+            websocket.send_json(
+                {
+                    "type": "register_pairing",
+                    "session_id": "test-session-id",
+                    "role": "mobile",
+                }
+            )
 
             # Send sync without image_data
-            websocket.send_json({
-                "type": "sync_image",
-                "session_id": "test-session-id",
-                "image_index": 0
-                # Missing image_data
-            })
+            websocket.send_json(
+                {
+                    "type": "sync_image",
+                    "session_id": "test-session-id",
+                    "image_index": 0,
+                    # Missing image_data
+                }
+            )
 
             # Should receive error
             response = websocket.receive_json()

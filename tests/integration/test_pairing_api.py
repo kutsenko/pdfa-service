@@ -52,7 +52,9 @@ class TestCreatePairingSessionEndpoint:
         assert "/mobile/camera?code=ABC123" in data["qr_data"]
         assert data["ttl_seconds"] == 1800  # 30 minutes
 
-    def test_create_pairing_session_includes_base_url(self, client, mock_pairing_manager):
+    def test_create_pairing_session_includes_base_url(
+        self, client, mock_pairing_manager
+    ):
         """Should include correct base URL in QR data."""
         mock_session = PairingSessionDocument(
             session_id="test-session-id",
@@ -93,8 +95,7 @@ class TestJoinPairingSessionEndpoint:
 
         # Make request
         response = client.post(
-            "/api/v1/camera/pairing/join",
-            data={"pairing_code": "ABC123"}
+            "/api/v1/camera/pairing/join", data={"pairing_code": "ABC123"}
         )
 
         # Assertions
@@ -111,8 +112,7 @@ class TestJoinPairingSessionEndpoint:
         )
 
         response = client.post(
-            "/api/v1/camera/pairing/join",
-            data={"pairing_code": "INVALID"}
+            "/api/v1/camera/pairing/join", data={"pairing_code": "INVALID"}
         )
 
         assert response.status_code == 400
@@ -125,8 +125,7 @@ class TestJoinPairingSessionEndpoint:
         )
 
         response = client.post(
-            "/api/v1/camera/pairing/join",
-            data={"pairing_code": "ABC123"}
+            "/api/v1/camera/pairing/join", data={"pairing_code": "ABC123"}
         )
 
         assert response.status_code == 400
@@ -139,8 +138,7 @@ class TestJoinPairingSessionEndpoint:
         )
 
         response = client.post(
-            "/api/v1/camera/pairing/join",
-            data={"pairing_code": "ABC123"}
+            "/api/v1/camera/pairing/join", data={"pairing_code": "ABC123"}
         )
 
         assert response.status_code == 400
