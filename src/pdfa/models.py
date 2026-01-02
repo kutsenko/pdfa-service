@@ -10,7 +10,7 @@ to/from MongoDB BSON format.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -278,6 +278,23 @@ class PairingSessionDocument(BaseModel):
     images_synced: int = 0
 
     model_config = {"arbitrary_types_allowed": True}
+
+    @field_validator(
+        "created_at", "expires_at", "joined_at", "last_activity_at", mode="before"
+    )
+    @classmethod
+    def ensure_timezone_aware(cls, v: datetime | None) -> datetime | None:
+        """Ensure datetime fields are timezone-aware (UTC).
+
+        MongoDB returns timezone-naive datetimes, but we need timezone-aware
+        datetimes for comparisons with datetime.now(UTC).
+        """
+        if v is None:
+            return None
+        if v.tzinfo is None:
+            # Assume UTC for naive datetimes from MongoDB
+            return v.replace(tzinfo=UTC)
+        return v
 
 
 # Type aliases for convenience
