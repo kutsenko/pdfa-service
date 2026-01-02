@@ -115,8 +115,11 @@ export class MobilePairingManager {
             statusBadge.classList.remove('connected');
         }
         if (statusText) {
-            statusText.textContent = 'Waiting for mobile...';
             statusText.setAttribute('data-i18n', 'camera.pairing.waiting');
+            // Apply translation using global function
+            if (window.applyTranslations && window.currentLang) {
+                window.applyTranslations(window.currentLang);
+            }
         }
     }
 
