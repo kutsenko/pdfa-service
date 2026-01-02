@@ -246,13 +246,9 @@ export class AuthManager {
             console.log('[Auth] Showing tabs');
         }
 
-        // Enable tab panels (remove hidden attribute, let tab switching logic handle visibility)
-        // Don't set inline styles as they override the tab switching logic
-        tabPanels.forEach((panel) => {
-            // Remove hidden attribute from all panels
-            // Tab switching logic will manage visibility through the 'active' class
-            panel.hidden = false;
-        });
+        // Don't touch the hidden attribute - let tab navigation (main.js) handle it
+        // Tab navigation initializes after showMainUI() and manages panel visibility
+        // based on the 'active' class and URL hash
 
         // Show container
         if (container) {

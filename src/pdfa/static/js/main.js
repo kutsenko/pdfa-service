@@ -104,7 +104,7 @@ function initTabNavigation() {
 
     let currentTab = 'tab-konverter';
 
-    function switchTab(tabId) {
+    function switchTab(tabId, pushHistory = true) {
         if (tabId === currentTab) return;
 
         console.log(`[Tabs] Switching from ${currentTab} to ${tabId}`);
@@ -137,8 +137,12 @@ function initTabNavigation() {
         }
 
         // Update URL hash
-        if (history.replaceState) {
-            const hash = tabId.replace('tab-', '');
+        const hash = tabId.replace('tab-', '');
+        if (pushHistory && history.pushState) {
+            // Create new history entry for user-initiated tab switches
+            history.pushState(null, null, `#${hash}`);
+        } else if (history.replaceState) {
+            // Replace current entry for programmatic switches (e.g., on page load)
             history.replaceState(null, null, `#${hash}`);
         }
 
@@ -187,7 +191,7 @@ function initTabNavigation() {
         const tabId = `tab-${hash}`;
         const targetPanel = document.getElementById(tabId);
         if (targetPanel) {
-            switchTab(tabId);
+            switchTab(tabId, false); // Don't push history on initial load
         }
     }
 
@@ -198,8 +202,11 @@ function initTabNavigation() {
             const tabId = `tab-${hash}`;
             const targetPanel = document.getElementById(tabId);
             if (targetPanel) {
-                switchTab(tabId);
+                switchTab(tabId, false); // Don't push history for browser navigation
             }
+        } else {
+            // No hash means we're at the root - switch to first tab
+            switchTab('tab-konverter', false);
         }
     });
 }

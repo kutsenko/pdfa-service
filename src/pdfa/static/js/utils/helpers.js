@@ -27,8 +27,9 @@ export function detectAndRedirectToPreferredLanguage() {
         const langCode = browserLang.split('-')[0].toLowerCase();
 
         if (supportedLangs.includes(langCode)) {
-            // Redirect to language-specific URL
-            window.location.href = `/${langCode}`;
+            // Redirect to language-specific URL, preserving hash if present
+            const hash = window.location.hash || '';
+            window.location.href = `/${langCode}${hash}`;
             return langCode; // Return while redirecting
         }
     }
