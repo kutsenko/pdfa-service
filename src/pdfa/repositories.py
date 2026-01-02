@@ -14,7 +14,7 @@ The repository pattern offers several benefits:
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 
 from pdfa.db import get_db
@@ -57,8 +57,8 @@ class UserRepository:
                 email="user@example.com",
                 name="John Doe",
                 picture="https://...",
-                created_at=datetime.utcnow(),
-                last_login_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
+                last_login_at=datetime.now(UTC),
                 login_count=1
             )
             await user_repo.create_or_update_user(user)
@@ -175,7 +175,7 @@ class UserPreferencesRepository:
 
         """
         db = get_db()
-        prefs.updated_at = datetime.utcnow()
+        prefs.updated_at = datetime.now(UTC)
 
         await db.user_preferences.update_one(
             {"user_id": prefs.user_id}, {"$set": prefs.model_dump()}, upsert=True
@@ -233,7 +233,7 @@ class JobRepository:
                 status="queued",
                 filename="document.pdf",
                 config={"pdfa_level": "2"},
-                created_at=datetime.utcnow()
+                created_at=datetime.now(UTC)
             )
             await job_repo.create_job(job)
 
@@ -261,7 +261,7 @@ class JobRepository:
             await job_repo.update_job_status(
                 "uuid-123",
                 "completed",
-                completed_at=datetime.utcnow(),
+                completed_at=datetime.now(UTC),
                 duration_seconds=45.2,
                 file_size_output=524288
             )
@@ -454,7 +454,7 @@ class OAuthStateRepository:
         Example:
             state = OAuthStateDocument(
                 state="random-token",
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(UTC),
                 ip_address="192.168.1.100",
                 user_agent="Mozilla/5.0..."
             )
@@ -512,7 +512,7 @@ class AuditLogRepository:
             event = AuditLogDocument(
                 event_type="user_login",
                 user_id="google_123",
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(UTC),
                 ip_address="192.168.1.100",
                 user_agent="Mozilla/5.0...",
                 details={"method": "google_oauth"}
@@ -584,7 +584,7 @@ class AuditLogRepository:
         db = get_db()
 
         # Calculate timestamp threshold
-        threshold = datetime.utcnow().timestamp() - (hours * 3600)
+        threshold = datetime.now(UTC).timestamp() - (hours * 3600)
         threshold_dt = datetime.fromtimestamp(threshold)
 
         query_filter = {

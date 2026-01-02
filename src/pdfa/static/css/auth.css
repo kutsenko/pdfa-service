@@ -1,0 +1,33 @@
+
+        /* Authentication UI */
+        .auth-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+
+        .auth-bar.visible {
+            display: flex;
+        }
+
+
+        .auth-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+
+        .container.auth-enabled {
+            margin-top: 60px;
+        }

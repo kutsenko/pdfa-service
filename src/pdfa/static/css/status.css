@@ -1,0 +1,161 @@
+
+        .status-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 10px;
+        }
+
+
+        .status-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+
+        .status-btn-primary {
+            background-color: #28a745;
+            color: white;
+        }
+
+
+        .status-btn-primary:hover {
+            background-color: #218838;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+        }
+
+
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+
+        .status-badge.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+
+        .status-badge.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+
+        .status-badge.processing {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+
+        .status-badge.queued {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+
+        .status-badge.cancelled {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+
+        .error-state .error-message {
+            color: #dc3545;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            .status-badge.completed {
+                background: #1e4620;
+                color: #a3cfbb;
+            }
+
+            .status-badge.failed {
+                background: #4a1c1c;
+                color: #f5c6cb;
+            }
+
+            .status-badge.processing {
+                background: #1c3d47;
+                color: #bee5eb;
+            }
+
+            .status-badge.queued {
+                background: #4a3c1c;
+                color: #ffeeba;
+            }
+
+            .status-badge.cancelled {
+                background: #2c2e30;
+                color: #c6c8ca;
+            }
+
+            .event-timeline {
+                background: #2d3748;
+                border-left-color: #4299e1;
+            }
+
+            .event-details {
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .jobs-table {
+                background: #1a202c;
+            }
+
+            .jobs-table thead {
+                background: #2d3748;
+            }
+
+            .filter-btn.active {
+                background: #4299e1;
+                border-color: #4299e1;
+            }
+
+            .pagination-btn:disabled {
+                background: #2d3748;
+            }
+        }
+
+
+        .edge-status .status-icon {
+            font-size: 24px;
+        }
+
+
+        .status-message {
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-top: 16px;
+        }
+
+
+        .status-message.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+
+        .status-message.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }

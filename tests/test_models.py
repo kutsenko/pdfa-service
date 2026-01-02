@@ -5,7 +5,7 @@ Following TDD principles, these tests verify model behavior before implementatio
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -134,7 +134,7 @@ class TestJobDocumentWithEvents:
             status="queued",
             filename="test.pdf",
             config={},
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
         )
 
         assert job.events == []
@@ -153,7 +153,7 @@ class TestJobDocumentWithEvents:
             status="processing",
             filename="test.pdf",
             config={},
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             events=[event],
         )
 
@@ -184,7 +184,7 @@ class TestJobDocumentWithEvents:
             status="processing",
             filename="test.pdf",
             config={},
-            created_at=datetime.utcnow(),
+            created_at=datetime.now(UTC),
             events=[event1, event2, event3],
         )
 
@@ -201,7 +201,7 @@ class TestJobDocumentWithEvents:
             "status": "completed",
             "filename": "old.pdf",
             "config": {},
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.now(UTC),
             # NO events field - this is the key test for backward compatibility
         }
 

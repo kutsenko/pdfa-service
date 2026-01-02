@@ -1,0 +1,29 @@
+/* PDF/A Converter - Modular CSS
+ * Main entry point that imports all CSS modules
+ */
+
+/* 1. Base styles (reset, typography, CSS variables) */
+@import url('./base.css');
+
+/* 2. Layout (container, header, language switcher) */
+@import url('./layout.css');
+
+/* 3. Components (forms, buttons, status messages) */
+@import url('./forms.css');
+@import url('./buttons.css');
+@import url('./status.css');
+@import url('./progress.css');
+@import url('./modals.css');
+
+/* 4. Navigation */
+@import url('./tabs.css');
+
+/* 5. Feature-specific styles */
+@import url('./auth.css');
+@import url('./converter.css');
+@import url('./camera.css');
+@import url('./jobs.css');
+@import url('./account.css');
+
+/* 6. Responsive and theme overrides (last) */
+@import url('./responsive.css');

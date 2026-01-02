@@ -1,0 +1,26 @@
+
+        /* Mobile responsive for accessibility controls */
+        @media (max-width: 600px) {
+            .a11y-controls-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+
+        /* Mobile optimizations */
+        @media (max-width: 600px) {
+            .debug-console {
+                max-height: 35vh;
+                font-size: 10px;
+            }
+
+            .debug-console-content div {
+                font-size: 9px;
+            }
+
+            .debug-toggle-btn,
+            .debug-clear-btn {
+                font-size: 10px;
+                padding: 4px 8px;
+            }
+        }

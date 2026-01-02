@@ -1,0 +1,165 @@
+
+        .modal-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+
+        .modal-close-btn {
+            background: transparent;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            color: #6b7280;
+            line-height: 1;
+        }
+
+
+        .modal-close-btn:hover {
+            color: #111827;
+        }
+
+
+        .modal-close-btn:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+
+        .modal-description {
+            margin: 0 0 1rem 0;
+            color: #6b7280;
+            font-size: 0.95rem;
+        }
+
+
+        .modal-event-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+
+
+        .modal-download-btn,
+        .modal-ok-btn {
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+
+        .modal-download-btn {
+            background: #10b981;
+            color: white;
+        }
+
+
+        .modal-download-btn:hover {
+            background: #059669;
+        }
+
+
+        .modal-download-btn:focus {
+            outline: 2px solid #10b981;
+            outline-offset: 2px;
+        }
+
+
+        .modal-ok-btn {
+            background: #667eea;
+            color: white;
+        }
+
+
+        .modal-ok-btn:hover {
+            background: #5568d3;
+        }
+
+
+        .modal-ok-btn:focus {
+            outline: 2px solid #667eea;
+            outline-offset: 2px;
+        }
+
+
+        .modal-content {
+            padding: 0;
+        }
+
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: #111827;
+        }
+
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #6b7280;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+
+        .modal-close-btn:hover {
+            color: #111827;
+        }
+
+
+        .modal-footer {
+            padding: 24px;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }

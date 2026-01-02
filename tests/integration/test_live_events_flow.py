@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import base64
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -189,15 +190,13 @@ class TestLiveEventBroadcasting:
     @pytest.mark.asyncio
     async def test_event_message_structure(self) -> None:
         """Test that JobEventMessage has correct structure for frontend."""
-        from datetime import datetime
-
         from pdfa.websocket_protocol import JobEventMessage
 
         # Create a sample event message
         msg = JobEventMessage(
             job_id="test-job-123",
             event_type="ocr_decision",
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             message="OCR skipped: tagged PDF detected",
             details={
                 "decision": "skip",
