@@ -211,9 +211,9 @@ export class AuthManager {
             console.log('[Auth] Hiding tabs - user not authenticated');
         }
 
-        // Hide all tab panels
+        // Hide all tab panels using hidden attribute (not style.display)
         tabPanels.forEach(panel => {
-            panel.style.display = 'none';
+            panel.hidden = true;
         });
 
         // Keep container visible for header
@@ -242,15 +242,16 @@ export class AuthManager {
 
         // Show tabs when authenticated or auth is disabled
         if (tabNavigation) {
-            tabNavigation.style.display = 'flex';
+            tabNavigation.style.display = '';  // Remove inline style, let CSS handle it
             console.log('[Auth] Showing tabs');
         }
 
-        // Show the active tab panel (first one by default)
-        tabPanels.forEach((panel, index) => {
-            if (index === 0 || panel.classList.contains('active')) {
-                panel.style.display = 'block';
-            }
+        // Enable tab panels (remove hidden attribute, let tab switching logic handle visibility)
+        // Don't set inline styles as they override the tab switching logic
+        tabPanels.forEach((panel) => {
+            // Remove hidden attribute from all panels
+            // Tab switching logic will manage visibility through the 'active' class
+            panel.hidden = false;
         });
 
         // Show container
