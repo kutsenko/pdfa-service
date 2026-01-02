@@ -4,6 +4,7 @@
  */
 
 import { t, showStatus } from '../utils/helpers.js';
+import { AccessibleCameraAssistant } from './AccessibleCameraAssistant.js';
 
 export class CameraManager {
     constructor() {
