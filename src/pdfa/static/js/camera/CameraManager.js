@@ -5,6 +5,7 @@
 
 import { t, showStatus } from '../utils/helpers.js';
 import { AccessibleCameraAssistant } from './AccessibleCameraAssistant.js';
+import { MobilePairingManager } from './MobilePairingManager.js';
 
 export class CameraManager {
     constructor() {
@@ -49,6 +50,9 @@ export class CameraManager {
         // Initialize accessibility assistant
         this.a11yAssistant = new AccessibleCameraAssistant(this);
         await this.a11yAssistant.init();
+
+        // Initialize mobile pairing manager
+        this.pairingManager = new MobilePairingManager(this);
 
         console.log('[Camera] CameraManager initialized');
     }

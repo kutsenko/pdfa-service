@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Camera - PDF/A Converter</title>
+    <link rel="stylesheet" href="/static/css/mobile_camera.css">
+</head>
+<body>
+    <!-- Pairing Screen -->
+    <div id="pairingScreen" class="screen active">
+        <div class="header">
+            <h1>📷 Mobile Camera</h1>
+            <p>Link to Desktop Session</p>
+        </div>
+
+        <form id="pairingForm" class="pairing-form">
+            <label for="pairingCodeInput">Enter Pairing Code:</label>
+            <input
+                type="text"
+                id="pairingCodeInput"
+                placeholder="ABC123"
+                maxlength="8"
+                autocomplete="off"
+                autocapitalize="characters"
+                aria-label="Pairing code"
+                required>
+            <button type="submit" class="btn-primary">Connect</button>
+        </form>
+
+        <div class="help-text">
+            <p>Scan the QR code on your desktop or enter the pairing code manually.</p>
+        </div>
+    </div>
+
+    <!-- Camera Screen -->
+    <div id="cameraScreen" class="screen">
+        <div class="connection-banner connected">
+            <span class="status-dot"></span>
+            <span>Connected to Desktop</span>
+        </div>
+
+        <div class="camera-container">
+            <video id="mobileCamera"
+                   autoplay
+                   playsinline
+                   aria-label="Camera preview"></video>
+
+            <div class="camera-overlay">
+                <div class="counter">
+                    📸 <span id="imageCount">0</span> sent
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="switchCameraBtn" class="btn-secondary" aria-label="Switch camera">
+                🔄 Switch
+            </button>
+            <button id="mobileCaptureBtn" class="btn-capture" aria-label="Capture photo">
+                <span class="capture-ring"></span>
+            </button>
+            <button id="disconnectBtn" class="btn-secondary" aria-label="Disconnect">
+                ✕ Disconnect
+            </button>
+        </div>
+    </div>
+
+    <!-- Editor Screen -->
+    <div id="editorScreen" class="screen">
+        <div class="editor-header">
+            <h2>Edit Image</h2>
+        </div>
+
+        <div class="editor-container">
+            <canvas id="mobileEditCanvas" aria-label="Image editor"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="rotateLeftBtn" class="btn-icon" aria-label="Rotate left">
+                ↶ Rotate Left
+            </button>
+            <button id="rotateRightBtn" class="btn-icon" aria-label="Rotate right">
+                ↷ Rotate Right
+            </button>
+        </div>
+
+        <div class="actions">
+            <button id="retakeBtn" class="btn-secondary">
+                ↻ Retake
+            </button>
+            <button id="sendBtn" class="btn-primary">
+                ✓ Send to Desktop
+            </button>
+        </div>
+    </div>
+
+    <script type="module" src="/static/js/mobile/main.js"></script>
+</body>
+</html>

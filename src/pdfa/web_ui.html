@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title data-i18n="page.title">PDF/A Converter - Test Interface</title>
     <link rel="stylesheet" href="/static/css/main.css">
+    <!-- QR Code library for mobile-desktop pairing -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 <body>
     <!-- Authentication Bar (shown when logged in) -->
@@ -406,6 +408,51 @@
                         Select Camera:
                     </label>
                     <select id="cameraSelect" class="form-select"></select>
+                </div>
+            </div>
+
+            <!-- Mobile Pairing Section -->
+            <div id="mobilePairingSection" class="mobile-pairing">
+                <h3 data-i18n="camera.pairing.title">📱 Link Mobile Device</h3>
+
+                <button id="startPairingBtn"
+                        class="btn btn-primary"
+                        data-i18n="camera.pairing.start">
+                    Start Mobile Pairing
+                </button>
+
+                <div id="pairingActiveView" class="pairing-active" hidden>
+                    <div class="pairing-header">
+                        <div class="status-badge" id="pairingStatusBadge">
+                            <span class="status-dot"></span>
+                            <span id="pairingStatusText" data-i18n="camera.pairing.waiting">Waiting for mobile...</span>
+                        </div>
+                        <div class="countdown">
+                            <span data-i18n="camera.pairing.expiresIn">⏱️ Expires in</span>
+                            <span id="countdownTime">15:00</span>
+                        </div>
+                    </div>
+
+                    <div class="pairing-code-display">
+                        <div class="code-label" data-i18n="camera.pairing.code">Pairing Code:</div>
+                        <div class="code-value" id="pairingCodeDisplay">------</div>
+                        <div class="code-hint" data-i18n="camera.pairing.qrHint">or scan QR code below</div>
+                    </div>
+
+                    <div id="qrCodeContainer" class="qr-container"></div>
+
+                    <div class="pairing-stats">
+                        <span>
+                            <span data-i18n="camera.pairing.imagesReceived">📸 Images received:</span>
+                            <strong id="imagesSyncedCount">0</strong>
+                        </span>
+                    </div>
+
+                    <button id="cancelPairingBtn"
+                            class="btn btn-secondary"
+                            data-i18n="camera.pairing.cancel">
+                        Cancel Pairing
+                    </button>
                 </div>
             </div>
 

@@ -23,6 +23,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse, HTMLResponse, Response
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from ocrmypdf import exceptions as ocrmypdf_exceptions
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -56,6 +57,7 @@ from pdfa.image_converter import convert_image_to_pdf, convert_images_to_pdf
 from pdfa.job_manager import get_job_manager
 from pdfa.logging_config import configure_logging, get_logger
 from pdfa.models import UserDocument, UserPreferencesDocument
+from pdfa.pairing_manager import pairing_manager
 from pdfa.progress_tracker import ProgressInfo
 from pdfa.repositories import (
     JobRepository,
@@ -70,9 +72,12 @@ from pdfa.websocket_protocol import (
     CompletedMessage,
     ErrorMessage,
     JobAcceptedMessage,
+    PingMessage,
     PongMessage,
     ProgressMessage,
+    RegisterPairingMessage,
     SubmitJobMessage,
+    SyncImageMessage,
     parse_client_message,
 )
 
@@ -202,6 +207,11 @@ if static_path.exists():
     logger.info(f"Mounted static files from {static_path}")
 else:
     logger.warning(f"Static files directory not found at {static_path}")
+
+# Setup Jinja2 templates
+templates_path = Path(__file__).parent / "templates"
+templates = Jinja2Templates(directory=str(templates_path))
+logger.info(f"Configured Jinja2 templates from {templates_path}")
 
 # Global auth config (loaded in startup_event)
 auth_config = None
@@ -763,6 +773,220 @@ async def delete_user_account(
     return {"message": "Account deleted successfully"}
 
 
+# ============================================================================
+# Mobile Camera Page
+# ============================================================================
+
+
+@app.get("/mobile/camera", response_class=HTMLResponse)
+async def mobile_camera_page(request: Request):
+    """Mobile camera page for capturing and syncing images to desktop.
+
+    This page provides an optimized mobile interface for:
+    - Joining a desktop pairing session
+    - Capturing photos with the mobile camera
+    - Basic image editing (rotation)
+    - Real-time sync to desktop session
+
+    Query Parameters:
+        code: Optional pairing code to pre-fill the form
+
+    """
+    return templates.TemplateResponse("mobile_camera.html", {"request": request})
+
+
+# ============================================================================
+# Camera Pairing API
+# ============================================================================
+
+
+@app.post("/api/v1/camera/pairing/create")
+@limiter.limit("10/minute")
+async def create_pairing_session(
+    request: Request, current_user: User | None = Depends(get_current_user_optional)
+) -> dict[str, Any]:
+    """Create new mobile-desktop pairing session.
+
+    Returns QR code data URL and pairing code for mobile linking.
+
+    Args:
+        request: FastAPI request object
+        current_user: Authenticated user (optional, depends on auth config)
+
+    Returns:
+        Dictionary containing:
+            - session_id: UUID of the pairing session
+            - pairing_code: 6-character alphanumeric code
+            - qr_data: Full URL for QR code (includes pairing code)
+            - expires_at: ISO 8601 expiration timestamp
+            - ttl_seconds: Time-to-live in seconds
+
+    Raises:
+        HTTPException: 401 if authentication required but not provided
+
+    """
+    if auth_config_instance.enabled and not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    user_id = current_user.user_id if current_user else "anonymous"
+    session = await pairing_manager.create_session(user_id)
+
+    # Build QR data URL
+    base_url = str(request.base_url).rstrip("/")
+    qr_data = f"{base_url}/mobile/camera?code={session.pairing_code}"
+
+    return {
+        "session_id": session.session_id,
+        "pairing_code": session.pairing_code,
+        "qr_data": qr_data,
+        "expires_at": session.expires_at.isoformat(),
+        "ttl_seconds": int((session.expires_at - session.created_at).total_seconds()),
+    }
+
+
+@app.post("/api/v1/camera/pairing/join")
+@limiter.limit("20/minute")
+async def join_pairing_session(
+    request: Request,
+    pairing_code: str = Form(...),
+    current_user: User | None = Depends(get_current_user_optional),
+) -> dict[str, Any]:
+    """Join existing pairing session with code.
+
+    Mobile device uses this endpoint to join a desktop pairing session.
+
+    Args:
+        request: FastAPI request object
+        pairing_code: 6-character pairing code from desktop
+        current_user: Authenticated user (optional, depends on auth config)
+
+    Returns:
+        Dictionary containing:
+            - session_id: UUID of the pairing session
+            - status: Session status (should be "active" after join)
+            - expires_at: ISO 8601 expiration timestamp
+
+    Raises:
+        HTTPException:
+            - 400 if code invalid, expired, or different user
+            - 401 if authentication required but not provided
+
+    """
+    if auth_config_instance.enabled and not current_user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+
+    user_id = current_user.user_id if current_user else "anonymous"
+
+    try:
+        session = await pairing_manager.join_session(pairing_code, user_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return {
+        "session_id": session.session_id,
+        "status": session.status,
+        "expires_at": session.expires_at.isoformat(),
+    }
+
+
+@app.get("/api/v1/camera/pairing/status/{session_id}")
+@limiter.limit("60/minute")
+async def get_pairing_status(
+    request: Request,
+    session_id: str,
+    current_user: User | None = Depends(get_current_user_optional),
+) -> dict[str, Any]:
+    """Get current pairing session status.
+
+    Args:
+        request: FastAPI request object
+        session_id: UUID of the pairing session
+        current_user: Authenticated user (optional, depends on auth config)
+
+    Returns:
+        Dictionary containing:
+            - session_id: UUID of the pairing session
+            - status: Current session status
+            - images_synced: Number of images transferred
+            - expires_at: ISO 8601 expiration timestamp
+
+    Raises:
+        HTTPException:
+            - 403 if user doesn't own this session
+            - 404 if session not found
+
+    """
+    session = await pairing_manager.repo.get_session(session_id)
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Verify ownership
+    if current_user:
+        if session.desktop_user_id != current_user.user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    return {
+        "session_id": session.session_id,
+        "status": session.status,
+        "images_synced": session.images_synced,
+        "expires_at": session.expires_at.isoformat(),
+    }
+
+
+@app.post("/api/v1/camera/pairing/cancel/{session_id}")
+@limiter.limit("30/minute")
+async def cancel_pairing_session(
+    request: Request,
+    session_id: str,
+    current_user: User | None = Depends(get_current_user_optional),
+) -> dict[str, str]:
+    """Cancel active pairing session.
+
+    Args:
+        request: FastAPI request object
+        session_id: UUID of the pairing session
+        current_user: Authenticated user (optional, depends on auth config)
+
+    Returns:
+        Dictionary with status="cancelled"
+
+    Raises:
+        HTTPException:
+            - 403 if user doesn't own this session
+            - 404 if session not found
+
+    """
+    session = await pairing_manager.repo.get_session(session_id)
+
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Verify ownership
+    if current_user:
+        if session.desktop_user_id != current_user.user_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    session.status = "cancelled"
+    await pairing_manager.repo.update_session(session)
+
+    # Notify connected devices
+    connections = pairing_manager.active_connections.get(session_id, {})
+    for ws in connections.values():
+        try:
+            await ws.send_json(
+                {
+                    "type": "pairing_expired",
+                    "session_id": session_id,
+                    "reason": "cancelled",
+                }
+            )
+        except Exception:
+            pass  # Ignore if WebSocket already closed
+
+    return {"status": "cancelled"}
+
+
 # Conversion endpoints
 
 
@@ -1261,16 +1485,18 @@ async def process_conversion_job(job_id: str) -> None:
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
-    """WebSocket endpoint for real-time conversion progress.
+    """WebSocket endpoint for real-time conversion progress and mobile-desktop pairing.
 
     Security: Supports two authentication methods:
         1. NEW (Secure): Auth message as first WebSocket message (token not in URL)
         2. OLD (Deprecated): Token in query parameter (for backward compatibility)
 
     Protocol:
-        Client sends: AuthMessage (first), SubmitJobMessage, CancelJobMessage, PingMessage
+        Client sends: AuthMessage (first), SubmitJobMessage, CancelJobMessage, PingMessage,
+                     RegisterPairingMessage, SyncImageMessage
         Server sends: JobAcceptedMessage, ProgressMessage, CompletedMessage,
-                     ErrorMessage, CancelledMessage, PongMessage
+                     ErrorMessage, CancelledMessage, PongMessage,
+                     ImageSyncedMessage, PairingPeerStatusMessage, PairingExpiredMessage
 
     """
     await websocket.accept()
@@ -1303,6 +1529,10 @@ async def websocket_endpoint(websocket: WebSocket):
             authenticated = False  # Will be set to True after AuthMessage
 
     current_job_id: str | None = None
+
+    # Track pairing session
+    current_pairing_session: str | None = None
+    pairing_role: str | None = None
 
     try:
         async for message_data in websocket.iter_json():
@@ -1399,7 +1629,85 @@ async def websocket_endpoint(websocket: WebSocket):
                         )
                         await websocket.send_json(error_msg.to_dict())
 
-                else:  # PingMessage
+                elif isinstance(message, RegisterPairingMessage):
+                    # Register WebSocket for pairing session
+                    session = await pairing_manager.repo.get_session(message.session_id)
+
+                    if not session:
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "error_code": "INVALID_SESSION",
+                                "message": "Invalid session ID",
+                            }
+                        )
+                        continue
+
+                    # Verify ownership based on role
+                    user_id = current_user.user_id if current_user else "anonymous"
+
+                    if message.role == "desktop":
+                        if session.desktop_user_id != user_id:
+                            logger.warning(
+                                f"Unauthorized desktop registration attempt: "
+                                f"session user {session.desktop_user_id} != {user_id}"
+                            )
+                            await websocket.close(code=1008, reason="Unauthorized")
+                            return
+                    elif message.role == "mobile":
+                        if not session.mobile_user_id:
+                            await websocket.send_json(
+                                {
+                                    "type": "error",
+                                    "error_code": "SESSION_NOT_JOINED",
+                                    "message": "Session not yet joined",
+                                }
+                            )
+                            continue
+                        if session.mobile_user_id != user_id:
+                            logger.warning(
+                                f"Unauthorized mobile registration attempt: "
+                                f"session user {session.mobile_user_id} != {user_id}"
+                            )
+                            await websocket.close(code=1008, reason="Unauthorized")
+                            return
+
+                    # Register WebSocket for pairing
+                    await pairing_manager.register_websocket(
+                        message.session_id, message.role, websocket
+                    )
+                    current_pairing_session = message.session_id
+                    pairing_role = message.role
+
+                    logger.info(
+                        f"Registered {message.role} WebSocket for pairing session "
+                        f"{message.session_id}"
+                    )
+
+                elif isinstance(message, SyncImageMessage):
+                    # Sync image from mobile to desktop
+                    try:
+                        await pairing_manager.sync_image(
+                            message.session_id,
+                            message.image_data,
+                            message.image_index,
+                            message.metadata,
+                        )
+                        logger.info(
+                            f"Synced image {message.image_index} for session "
+                            f"{message.session_id}"
+                        )
+                    except ValueError as e:
+                        await websocket.send_json(
+                            {
+                                "type": "error",
+                                "error_code": "SYNC_FAILED",
+                                "message": str(e),
+                            }
+                        )
+                        logger.warning(f"Image sync failed: {e}")
+
+                elif isinstance(message, PingMessage):
                     response = PongMessage()
                     await websocket.send_json(response.to_dict())
 
@@ -1415,9 +1723,20 @@ async def websocket_endpoint(websocket: WebSocket):
     except Exception as e:
         logger.error(f"WebSocket error: {e}", exc_info=True)
     finally:
-        # Unregister WebSocket
+        # Unregister WebSocket for job
         if current_job_id:
             job_manager.unregister_websocket(current_job_id, websocket)
+
+        # Unregister WebSocket for pairing
+        if current_pairing_session and pairing_role:
+            await pairing_manager.unregister_websocket(
+                current_pairing_session, pairing_role
+            )
+            logger.info(
+                f"Unregistered {pairing_role} from pairing session "
+                f"{current_pairing_session}"
+            )
+
         logger.info("WebSocket connection closed")
 
 

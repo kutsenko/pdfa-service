@@ -23,6 +23,7 @@ from pdfa.models import (
     JobDocument,
     JobEvent,
     OAuthStateDocument,
+    PairingSessionDocument,
     UserDocument,
     UserPreferencesDocument,
 )
@@ -596,3 +597,97 @@ class AuditLogRepository:
 
         events_data = await cursor.to_list(length=limit)
         return [AuditLogDocument(**event_data) for event_data in events_data]
+
+
+class PairingSessionRepository:
+    """Repository for mobile-desktop camera pairing sessions.
+
+    Manages temporary pairing sessions that link desktop and mobile devices
+    for real-time image transfer during camera workflows.
+
+    """
+
+    async def create_session(self, session: PairingSessionDocument) -> None:
+        """Create new pairing session.
+
+        Args:
+            session: Pairing session document to create
+
+        Example:
+            >>> session = PairingSessionDocument(
+            ...     session_id=str(uuid.uuid4()),
+            ...     pairing_code="ABC123",
+            ...     desktop_user_id="user-123",
+            ...     status="pending",
+            ...     created_at=datetime.now(UTC),
+            ...     expires_at=datetime.now(UTC) + timedelta(minutes=30),
+            ...     last_activity_at=datetime.now(UTC)
+            ... )
+            >>> await repo.create_session(session)
+
+        """
+        db = get_db()
+        await db.pairing_sessions.insert_one(session.model_dump())
+        logger.debug(f"Created pairing session: {session.session_id}")
+
+    async def get_session(self, session_id: str) -> PairingSessionDocument | None:
+        """Get pairing session by ID.
+
+        Args:
+            session_id: Session identifier (UUID)
+
+        Returns:
+            Pairing session document if found, None otherwise
+
+        """
+        db = get_db()
+        doc = await db.pairing_sessions.find_one({"session_id": session_id})
+        return PairingSessionDocument(**doc) if doc else None
+
+    async def find_by_code(self, code: str) -> PairingSessionDocument | None:
+        """Find active pairing session by pairing code.
+
+        Only returns sessions with status 'pending' or 'active'.
+
+        Args:
+            code: Pairing code (6-8 alphanumeric characters)
+
+        Returns:
+            Active pairing session if found, None otherwise
+
+        """
+        db = get_db()
+        doc = await db.pairing_sessions.find_one(
+            {"pairing_code": code, "status": {"$in": ["pending", "active"]}}
+        )
+        return PairingSessionDocument(**doc) if doc else None
+
+    async def update_session(self, session: PairingSessionDocument) -> None:
+        """Update existing pairing session.
+
+        Args:
+            session: Updated pairing session document
+
+        """
+        db = get_db()
+        await db.pairing_sessions.update_one(
+            {"session_id": session.session_id}, {"$set": session.model_dump()}
+        )
+        logger.debug(f"Updated pairing session: {session.session_id}")
+
+    async def increment_images_synced(self, session_id: str) -> None:
+        """Increment the images synced counter for a session.
+
+        Args:
+            session_id: Session identifier (UUID)
+
+        """
+        db = get_db()
+        await db.pairing_sessions.update_one(
+            {"session_id": session_id},
+            {
+                "$inc": {"images_synced": 1},
+                "$set": {"last_activity_at": datetime.now(UTC)},
+            },
+        )
+        logger.debug(f"Incremented images_synced for session: {session_id}")
