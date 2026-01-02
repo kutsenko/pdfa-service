@@ -27,7 +27,8 @@ class TestQRCodeLibraryLoading:
 
         # Check that CorrectLevel is available
         has_correct_level = page.evaluate(
-            "typeof QRCode !== 'undefined' && typeof QRCode.CorrectLevel !== 'undefined'"
+            "typeof QRCode !== 'undefined' && "
+            "typeof QRCode.CorrectLevel !== 'undefined'"
         )
         assert has_correct_level, "QRCode.CorrectLevel is not available"
 
