@@ -150,6 +150,29 @@ export class MobilePairingManager {
                 correctLevel: QRCode.CorrectLevel.H
             });
 
+            // Make QR code accessible for keyboard navigation and screen readers
+            setTimeout(() => {
+                const qrElement = container.querySelector('canvas, img');
+                if (qrElement) {
+                    // Make focusable with keyboard (Tab key)
+                    qrElement.setAttribute('tabindex', '0');
+
+                    // Add ARIA role and label for screen readers
+                    qrElement.setAttribute('role', 'img');
+                    qrElement.setAttribute('aria-label',
+                        `QR code for mobile pairing. Pairing code: ${this.currentSession?.pairing_code || 'unknown'}. ` +
+                        'Scan this QR code with your mobile device or manually enter the pairing code.'
+                    );
+
+                    // Add title for tooltip on hover
+                    qrElement.setAttribute('title',
+                        `QR Code - Pairing Code: ${this.currentSession?.pairing_code || 'unknown'}`
+                    );
+
+                    console.log('[Pairing] QR code made accessible for keyboard navigation');
+                }
+            }, 100); // Small delay to ensure QRCode library has rendered
+
             console.log('[Pairing] QR code generated');
         } catch (error) {
             console.error('[Pairing] Failed to generate QR code:', error);
