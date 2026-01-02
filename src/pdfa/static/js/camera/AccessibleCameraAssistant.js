@@ -111,16 +111,22 @@ export class AccessibleCameraAssistant {
         // Detect screen reader
         this.screenReaderDetected = this.detectScreenReader();
 
-        // Auto-enable if screen reader detected
+        // Setup UI controls first (this sets up event listeners)
+        this.setupControls();
+
+        // Auto-check checkbox if screen reader detected, but DON'T call enable()
+        // Enable will be called by the checkbox change event handler when user interacts
+        // This prevents AudioContext creation without user gesture
         const checkbox = document.getElementById('enableA11yAssistance');
         if (this.screenReaderDetected && checkbox) {
-            console.log('[A11y] Screen reader detected, auto-enabling assistance');
-            checkbox.checked = true;
-            await this.enable();
+            console.log(
+                '[A11y] Screen reader detected - checkbox will be pre-checked for user'
+            );
+            console.log(
+                '[A11y] User must click to enable (required for AudioContext user gesture)'
+            );
+            checkbox.checked = true; // Pre-check, but don't enable yet
         }
-
-        // Setup UI controls
-        this.setupControls();
 
         console.log('[A11y] Initialization complete');
     }

@@ -185,14 +185,20 @@ function initTabNavigation() {
         });
     });
 
-    // Initialize from URL hash
+    // Initialize from URL hash or default to first tab
     const hash = window.location.hash.slice(1);
     if (hash) {
         const tabId = `tab-${hash}`;
         const targetPanel = document.getElementById(tabId);
         if (targetPanel) {
             switchTab(tabId, false); // Don't push history on initial load
+        } else {
+            // Hash exists but panel not found - fall back to first tab
+            switchTab('tab-konverter', false);
         }
+    } else {
+        // No hash on initial load - show first tab
+        switchTab('tab-konverter', false);
     }
 
     // Handle hash changes (back/forward navigation)
