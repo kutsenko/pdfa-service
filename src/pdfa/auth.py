@@ -194,8 +194,13 @@ async def get_current_user_optional(
             picture=None,
         )
 
-    # Auth enabled - require authentication
-    return await get_current_user(request)
+    # Auth enabled - try to authenticate, but don't require it
+    # This allows endpoints to decide whether to require auth
+    try:
+        return await get_current_user(request)
+    except HTTPException:
+        # No valid token provided - return None to let endpoint decide
+        return None
 
 
 class GoogleOAuthClient:
