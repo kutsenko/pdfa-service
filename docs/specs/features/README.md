@@ -1,63 +1,63 @@
 # Gherkin Features
 
-Dieses Verzeichnis enthält **Gherkin Feature-Dateien** im BDD-Format (Behavior Driven Development) für wichtige Features des PDF/A-Service.
-
 This directory contains **Gherkin Feature files** in BDD format (Behavior Driven Development) for major features of the PDF/A service.
 
 ---
 
-## Übersicht / Overview
+## Overview
 
-| Feature | Szenarien | Sprache | Datei | User Story |
-|---------|-----------|---------|-------|------------|
-| MongoDB-Integration | 36 | Deutsch | [gherkin-mongodb-integration.feature](gherkin-mongodb-integration.feature) | [US-001](../user-stories/US-001-mongodb-integration.md) |
-| Job Event Logging | 21 | Deutsch | [gherkin-job-event-logging.feature](gherkin-job-event-logging.feature) | [US-002](../user-stories/US-002-job-event-logging.md) |
-| Lokaler Standardbenutzer | 18 | Deutsch | [gherkin-local-default-user.feature](gherkin-local-default-user.feature) | [US-003](../user-stories/US-003-local-default-user.md) |
-| Camera Tab for Multi-Page Document Capture | 57 | English | [gherkin-camera-tab.feature](gherkin-camera-tab.feature) | [US-004](../user-stories/US-004-camera-tab.md) |
-| Accessibility Camera Assistance | 65 | English | [gherkin-accessibility-camera-assistance.feature](gherkin-accessibility-camera-assistance.feature) | [US-005](../user-stories/US-005-accessibility-camera-assistance.md) |
+| Feature | Scenarios | File | User Story |
+|---------|-----------|------|------------|
+| MongoDB Integration | 36 | [gherkin-mongodb-integration.feature](gherkin-mongodb-integration.feature) | [US-001](../user-stories/US-001-mongodb-integration.md) |
+| Job Event Logging | 21 | [gherkin-job-event-logging.feature](gherkin-job-event-logging.feature) | [US-002](../user-stories/US-002-job-event-logging.md) |
+| Local Default User | 18 | [gherkin-local-default-user.feature](gherkin-local-default-user.feature) | [US-003](../user-stories/US-003-local-default-user.md) |
+| Live Job Events | ~20 | [gherkin-live-job-events.feature](gherkin-live-job-events.feature) | [US-004](../user-stories/US-004-live-job-events.md) |
+| Tab Interface | ~25 | [gherkin-tab-interface.feature](gherkin-tab-interface.feature) | [US-005](../user-stories/US-005-tab-interface.md) |
+| Account Tab | ~20 | [gherkin-account-tab.feature](gherkin-account-tab.feature) | [US-006](../user-stories/US-006-account-tab.md) |
+| Jobs Tab | ~30 | [gherkin-jobs-tab.feature](gherkin-jobs-tab.feature) | [US-007](../user-stories/US-007-jobs-tab.md) |
+| Camera Tab | 57 | [gherkin-camera-tab.feature](gherkin-camera-tab.feature) | [US-008](../user-stories/US-008-camera-tab.md) |
+| Accessibility Camera | 65 | [gherkin-accessibility-camera-assistance.feature](gherkin-accessibility-camera-assistance.feature) | [US-009](../user-stories/US-009-accessibility-camera-assistance.md) |
+| Mobile-Desktop Pairing | ~15 | [gherkin-mobile-desktop-pairing.feature](gherkin-mobile-desktop-pairing.feature) | [US-010](../user-stories/US-010-mobile-desktop-pairing.md) |
+| Auth Page Visibility | 18 | [gherkin-auth-page-visibility.feature](gherkin-auth-page-visibility.feature) | [US-011](../user-stories/US-011-auth-page-visibility.md) |
 
-**Gesamt**: 197 Szenarien in 5 Features
+**Total**: ~325 scenarios in 11 features
 
 ---
 
 ## Gherkin Format
 
-Alle Features folgen dem **Gherkin**-Standard:
+All features follow the **Gherkin** standard with English keywords.
 
-### Sprache
-```gherkin
-# language: de
-```
-Alle Features sind in **deutscher Sprache** verfasst.
-
-### Struktur
+### Structure
 
 ```gherkin
-Funktionalität: [Feature-Name]
-  Als [Rolle]
-  möchte ich [Ziel]
-  damit [Nutzen]
+Feature: [Feature Name]
+  As [role]
+  I want [goal]
+  So that [benefit]
 
-  Hintergrund:
-    Angenommen [Gemeinsamer Kontext für alle Szenarien]
+  Background:
+    Given [common context for all scenarios]
 
-  Szenario: [Beschreibung]
-    Angenommen [Vorbedingung]
-    Wenn [Aktion]
-    Dann [Erwartetes Ergebnis]
-    Und [Weitere Erwartung]
+  Scenario: [Description]
+    Given [precondition]
+    When [action]
+    Then [expected result]
+    And [further expectation]
 ```
 
 ### Keywords
 
-- **Funktionalität** - Beschreibt das Feature
-- **Als/möchte ich/damit** - User Story Format
-- **Hintergrund** - Gemeinsame Vorbedingungen
-- **Szenario** - Einzelner Testfall
-- **Angenommen** - Vorbedingung (Given)
-- **Wenn** - Aktion (When)
-- **Dann** - Erwartung (Then)
-- **Und** - Weitere Schritte (And)
+| Keyword | Usage |
+|---------|-------|
+| Feature | Feature description |
+| Background | Common preconditions |
+| Scenario | Single test case |
+| Given | Precondition/Context |
+| When | Action/Event |
+| Then | Expected result |
+| And | Additional steps |
+| But | Negative expectation |
 
 ---
 
@@ -65,169 +65,50 @@ Funktionalität: [Feature-Name]
 
 ### [gherkin-mongodb-integration.feature](gherkin-mongodb-integration.feature)
 
-**Feature**: Persistente Datenspeicherung mit MongoDB
+**Feature**: Persistent data storage with MongoDB
 
-**Beschreibung**: MongoDB-Integration für Conversion-History, OAuth-Tokens und Audit-Logs
-
-**Szenarien**: 36 in 10 Gruppen
-
-**Szenario-Gruppen**:
-1. **Service-Start und MongoDB-Verbindung** (3 Szenarien)
-   - Service startet mit MongoDB
-   - Service-Start schlägt fehl ohne MongoDB
-   - Falsche Credentials
-
-2. **Job-Persistierung** (6 Szenarien)
-   - Job-Erstellung
-   - Status-Updates
-   - Job-Completion mit Metadaten
-   - Fehlgeschlagene Jobs
-   - Jobs ohne Authentifizierung
-   - TTL-Cleanup
-
-3. **OAuth State Token Management** (4 Szenarien)
-   - Token-Speicherung
-   - Token-Validierung
-   - Token-Ablauf
-   - Multi-Instance-OAuth
-
-4. **User-Profile** (3 Szenarien)
-   - Neuer User bei erstem Login
-   - Bestehender User bei Login
-   - Minimale User-Profile
-
-5. **Audit Logs** (5 Szenarien)
-   - Login-Event
-   - Fehlgeschlagener Login
-   - Job-Erstellung
-   - TTL-Cleanup
-   - Security-Events-Abfrage
-
-6. **Indexes und Performance** (3 Szenarien)
-   - Index-Erstellung beim Start
-   - Effiziente Job-Queries
-   - Automatischer TTL-Cleanup
-
-7. **Repository-Pattern** (4 Szenarien)
-   - JobRepository.create_job()
-   - JobRepository.update_job_status()
-   - UserRepository.find_or_create_user()
-   - OAuthStateRepository.validate_and_consume_state()
-
-8. **Error Handling** (3 Szenarien)
-   - Verbindungsfehler
-   - Duplicate-Key-Error
-   - Connection Pooling
-
-9. **Backward Compatibility** (2 Szenarien)
-   - Alte Jobs ohne neue Felder
-   - Migration von In-Memory zu MongoDB
-
-10. **Multi-Instance Deployment** (3 Szenarien)
-    - Geteilte MongoDB zwischen Instanzen
-    - Job-Updates von verschiedenen Instanzen
-    - OAuth über Instanzen hinweg
-
-**Zugehörige User Story**: [US-001: MongoDB-Integration](../user-stories/US-001-mongodb-integration.md)
+**Scenario Groups** (36 scenarios):
+1. Service start and MongoDB connection (3)
+2. Job persistence (6)
+3. OAuth State Token Management (4)
+4. User profiles (3)
+5. Audit logs (5)
+6. Indexes and performance (3)
+7. Repository pattern (4)
+8. Error handling (3)
+9. Backward compatibility (2)
+10. Multi-instance deployment (3)
 
 ---
 
 ### [gherkin-job-event-logging.feature](gherkin-job-event-logging.feature)
 
-**Feature**: Detaillierte Event-Protokollierung für Konvertierungsaufträge
+**Feature**: Detailed event logging for conversion jobs
 
-**Beschreibung**: Event-basiertes Logging-System für alle Konvertierungsentscheidungen
-
-**Szenarien**: 21 in 9 Gruppen
-
-**Szenario-Gruppen**:
-1. **OCR-Entscheidung** (3 Szenarien)
-   - OCR skip wegen Tagged-PDF
-   - OCR skip wegen vorhandenem Text
-   - OCR perform wegen fehlendem Text
-
-2. **Format-Konvertierung** (3 Szenarien)
-   - Office→PDF Konvertierung
-   - Bild→PDF Konvertierung
-   - PDF ohne Format-Konvertierung
-
-3. **Fallback-Mechanismen** (3 Szenarien)
-   - Tier 2 Fallback bei Ghostscript-Fehler
-   - Tier 3 Fallback (kein OCR)
-   - Keine Fallbacks bei Erfolg
-
-4. **Pass-through-Modus** (2 Szenarien)
-   - Pass-through für PDF-Ausgabe ohne OCR
-   - Pass-through mit Tag-Erhaltung
-
-5. **Kompressionsprofilwahl** (2 Szenarien)
-   - Benutzer wählt Quality-Profil
-   - Auto-Switch zu Preserve-Profil
-
-6. **Job-Lifecycle-Events** (2 Szenarien)
-   - Job-Timeout
-   - Job-Cleanup wegen Alter
-
-7. **Rückwärtskompatibilität** (2 Szenarien)
-   - Alte Jobs ohne events-Feld
-   - Neue Events zu alten Jobs hinzufügen
-
-8. **Vollständige Job-Lifecycle-Beispiele** (2 Szenarien)
-   - Office-Dokument mit OCR-Skip
-   - Gescannte PDF mit Fallback
-
-9. **Error Handling** (2 Szenarien)
-   - Event-Logging-Fehler blockieren Konvertierung nicht
-   - Event-Callback ist optional
-
-**Zugehörige User Story**: [US-002: Job Event Logging](../user-stories/US-002-job-event-logging.md)
+**Scenario Groups** (21 scenarios):
+1. OCR decision (3)
+2. Format conversion (3)
+3. Fallback mechanisms (3)
+4. Pass-through mode (2)
+5. Compression profile selection (2)
+6. Job lifecycle events (2)
+7. Backward compatibility (2)
+8. Complete job lifecycle examples (2)
+9. Error handling (2)
 
 ---
 
 ### [gherkin-local-default-user.feature](gherkin-local-default-user.feature)
 
-**Feature**: Lokaler Standardbenutzer für Non-Auth-Modus
+**Feature**: Local default user for non-auth mode
 
-**Beschreibung**: Automatische Erstellung eines Standardbenutzers wenn Authentifizierung deaktiviert ist
-
-**Szenarien**: 18 in 7 Gruppen
-
-**Szenario-Gruppen**:
-1. **Service-Start und Default User-Erstellung** (3 Szenarien)
-   - Service mit deaktivierter Auth
-   - Service mit aktivierter Auth (kein Default User)
-   - Idempotente Erstellung
-
-2. **Konfigurierbare Standardbenutzer-Felder** (2 Szenarien)
-   - Custom Werte aus Umgebungsvariablen
-   - Teilweise Custom-Werte
-
-3. **Job-Attribution mit Default User** (3 Szenarien)
-   - Job via WebSocket mit Default User
-   - Custom Default User ID
-   - OAuth User bei aktivierter Auth
-
-4. **Job-Verlauf-Abfrage** (3 Szenarien)
-   - Jobs des Default Users
-   - Leerer Verlauf für neuen User
-   - Custom Default User Verlauf
-
-5. **Dependency Injection** (3 Szenarien)
-   - get_current_user_optional() mit Default User
-   - OAuth User bei aktivierter Auth
-   - Fallback bei fehlender Config
-
-6. **Edge Cases und Error Handling** (4 Szenarien)
-   - MongoDB-Verbindungsfehler
-   - Wechsel enabled→disabled
-   - Wechsel disabled→enabled
-   - Gelöschter Default User (Self-Healing)
-
-7. **Vollständige Integration-Workflows** (2 Szenarien)
-   - Kompletter Workflow ohne Auth
-   - Multi-Instance-Deployment
-
-**Zugehörige User Story**: [US-003: Lokaler Standardbenutzer](../user-stories/US-003-local-default-user.md)
+**Scenario Groups** (18 scenarios):
+1. Service start and default user creation (3)
+2. Configurable default user fields (2)
+3. Job attribution with default user (3)
+4. Job history queries (3)
+5. Dependency injection (3)
+6. Edge cases and error handling (4)
 
 ---
 
@@ -235,88 +116,17 @@ Funktionalität: [Feature-Name]
 
 **Feature**: Camera Tab for Multi-Page Document Capture
 
-**Description**: Browser-based camera interface for multi-page document scanning using getUserMedia API
-
-**Scenarios**: 57 in 10 groups
-
-**Scenario Groups**:
-1. **Camera Access and Preview** (7 scenarios)
-   - Permission request and grant
-   - Live camera preview
-   - Rear camera default on mobile
-   - Camera selection dropdown
-   - Camera switching
-   - Permission denied error
-   - No camera available fallback
-
-2. **Photo Capture** (6 scenarios)
-   - Capture button and Space bar
-   - Full camera resolution
-   - Camera shutter sound
-   - Photo editor opening
-   - Portrait and landscape support
-
-3. **Photo Editor** (10 scenarios)
-   - Image display
-   - Rotation controls (left/right, multiple rotations)
-   - Brightness and contrast adjustments
-   - Combined adjustments
-   - Accept and Retake buttons
-   - Escape key handling
-
-4. **Multi-Page Support** (8 scenarios)
-   - First and subsequent pages
-   - Page counter updates
-   - Thumbnail generation
-   - Unlimited pages
-   - Camera preview between captures
-   - Convert button states
-
-5. **Page Management** (6 scenarios)
-   - Drag and drop reordering
-   - Page deletion
-   - Delete all pages
-   - Retake page
-   - Thumbnail updates
-   - Page renumbering
-
-6. **Document Submission** (8 scenarios)
-   - Single and multi-page submission
-   - Progress indicator
-   - PDF/A settings application
-   - Compression profile
-   - Successful conversion
-   - Conversion errors
-   - Network failure handling
-
-7. **Accessibility Integration** (6 scenarios)
-   - Accessibility checkbox visibility
-   - Screen reader auto-enable
-   - Manual activation
-   - Auto-capture workflow
-   - Auto-crop application
-   - Multi-page accessibility
-
-8. **Camera Settings** (3 scenarios)
-   - Camera preference persistence
-   - Seamless camera switching
-   - Preference survival across sessions
-
-9. **Error Handling** (4 scenarios)
-   - Permission error instructions
-   - getUserMedia error
-   - Canvas error
-   - API error with retry
-
-10. **Responsive Design** (6 scenarios)
-    - Desktop browser support
-    - Mobile device support
-    - Tablet support
-    - Portrait orientation
-    - Landscape orientation
-    - Orientation change handling
-
-**Related User Story**: [US-004: Camera Tab for Multi-Page Document Capture](../user-stories/US-004-camera-tab.md)
+**Scenario Groups** (57 scenarios):
+1. Camera access and preview (7)
+2. Photo capture (6)
+3. Photo editor (10)
+4. Multi-page support (8)
+5. Page management (6)
+6. Document submission (8)
+7. Accessibility integration (6)
+8. Camera settings (3)
+9. Error handling (4)
+10. Responsive design (6)
 
 ---
 
@@ -324,280 +134,177 @@ Funktionalität: [Feature-Name]
 
 **Feature**: Accessibility Camera Assistance for Blind Users
 
-**Description**: Audio-guided document capture with automatic edge detection, auto-crop and perspective correction
-
-**Scenarios**: 65 in 18 groups
-
-**Scenario Groups**:
-1. **Screen Reader Auto-Detection & Initialization** (3 scenarios)
-   - Screen reader automatically detected
-   - No screen reader - feature disabled
-   - Manual activation
-
-2. **iOS Safari Audio/TTS Unlock** (4 scenarios)
-   - AudioContext unlock in user gesture
-   - SpeechSynthesis unlock
-   - Unlock tone is played
-   - Immediate TTS announcement before library loading
-
-3. **Page Reload AudioContext Handling** (2 scenarios)
-   - AudioContext closed after reload
-   - AudioContext suspended is resumed
-
-4. **Edge Detection with jscanify** (4 scenarios)
-   - jscanify loads successfully
-   - CDN failed - degraded mode
-   - OpenCV.js loads successfully
-   - Real-time edge detection
-
-5. **Confidence Calculation with Partial Capture** (5 scenarios)
-   - 40% area - optimal confidence
-   - 33% area - acceptable (1/3 document)
-   - 10% area - minimal
-   - 5% area - too small
-   - 95% area - too close
-
-6. **Hysteresis to Prevent Flickering** (3 scenarios)
-   - Transition to "detected" (upper threshold)
-   - Stays "detected" despite fluctuation
-   - Transition to "lost" (lower threshold)
-
-7. **Audio Feedback (Tones + TTS)** (5 scenarios)
-   - Success tone on edge detection
-   - Warning tone on edges lost
-   - Continuous tone indicates confidence
-   - TTS announcement throttling
-   - Force-priority bypasses throttling
-
-8. **Edge-Based Guidance** (4 scenarios)
-   - Top edge too close
-   - Multiple edges not visible
-   - All edges visible - centered
-   - Periodic guidance update
-
-9. **Auto-Capture on Stable Recognition** (5 scenarios)
-   - Stability counter increments
-   - Countdown starts after 10 frames
-   - Countdown announcements "2", "1"
-   - Photo taken after countdown
-   - Auto-capture canceled on loss
-
-10. **Auto-Crop and Perspective Correction** (7 scenarios)
-    - lastDetectedCorners stored
-    - Auto-crop applied
-    - Corner scaling to full resolution
-    - OpenCV.js perspective correction
-    - Mat to Canvas conversion
-    - High-quality JPEG (90%)
-    - Fallback on error
-
-11. **Multilingualism (i18n)** (4 scenarios)
-    - German announcements
-    - English announcements
-    - Spanish announcements
-    - French announcements
-
-12. **Visual Indicators** (2 scenarios)
-    - Green overlay on success
-    - Yellow overlay on warning
-
-13. **ARIA Live Regions** (1 scenario)
-    - Screen reader receives updates
-
-14. **Volume Control** (1 scenario)
-    - Volume slider changes volume
-
-15. **Test Audio Button** (1 scenario)
-    - Test audio plays tone and TTS
-
-16. **Disable Feature** (2 scenarios)
-    - Audio guidance disabled
-    - AudioContext closed
-
-17. **Error Handling** (3 scenarios)
-    - Browser without Web Audio API
-    - getUserMedia failed
-    - Canvas 2D Context error
-
-18. **Performance & Memory** (4 scenarios)
-    - 10 FPS frame analysis
-    - Analysis canvas 640x480
-    - Capture canvas full resolution
-    - OpenCV Mat memory cleanup
-
-**Related User Story**: [US-005: Accessibility Camera Assistance](../user-stories/US-005-accessibility-camera-assistance.md)
+**Scenario Groups** (65 scenarios):
+1. Screen reader auto-detection (3)
+2. iOS Safari audio/TTS unlock (4)
+3. Page reload AudioContext handling (2)
+4. Edge detection with jscanify (4)
+5. Confidence calculation (5)
+6. Hysteresis (3)
+7. Audio feedback (5)
+8. Edge-based guidance (4)
+9. Auto-capture (5)
+10. Auto-crop and perspective correction (7)
+11. Multilingualism (4)
+12. Visual indicators (2)
+13. ARIA live regions (1)
+14. Volume control (1)
+15. Test audio button (1)
+16. Disable feature (2)
+17. Error handling (3)
+18. Performance & memory (4)
 
 ---
 
-## Verwendung / Usage
+### [gherkin-auth-page-visibility.feature](gherkin-auth-page-visibility.feature)
 
-### Für Tester / For Testers
+**Feature**: Authentication-Based Page Visibility
 
-1. **Nutzen Sie Szenarien als Testfälle**
-   - Jedes Szenario = 1 Testfall
-   - Given-When-Then als Test-Struktur
+**Scenario Groups** (18 scenarios):
+1. Authentication disabled (2)
+2. Authentication enabled - not logged in (3)
+3. Authentication enabled - logged in (3)
+4. Logout flow (3)
+5. API behavior (3)
+6. Session persistence (2)
+7. Mobile camera pairing anonymous access (2)
 
-2. **Führen Sie manuelle Tests durch**
-   - Folgen Sie den Steps
-   - Verifizieren Sie erwartete Ergebnisse
+---
 
-3. **Automatisieren Sie mit BDD-Tools**
+## Usage
+
+### For Testers
+
+1. **Use scenarios as test cases**
+   - Each scenario = 1 test case
+   - Given-When-Then as test structure
+
+2. **Run manual tests**
+   - Follow the steps
+   - Verify expected results
+
+3. **Automate with BDD tools**
    ```bash
-   # Beispiel mit behave (Python)
+   # Example with behave (Python)
    behave features/gherkin-mongodb-integration.feature
    ```
 
-### Für Entwickler / For Developers
+### For Developers
 
-1. **Verstehen Sie Anforderungen**
-   - Szenarien zeigen konkrete Beispiele
-   - Tables definieren Datenstrukturen
+1. **Understand requirements**
+   - Scenarios show concrete examples
+   - Tables define data structures
 
-2. **Implementieren Sie mit TDD**
-   - Schreiben Sie Tests basierend auf Szenarien
+2. **Implement with TDD**
+   - Write tests based on scenarios
    - RED-GREEN-REFACTOR
 
-3. **Erweitern Sie bei Bedarf**
-   - Fügen Sie neue Szenarien für Edge Cases hinzu
-   - Dokumentieren Sie in Gherkin
+3. **Extend as needed**
+   - Add new scenarios for edge cases
+   - Document in Gherkin
 
-### Für Product Owner / For Product Owners
+### For Product Owners
 
-1. **Validieren Sie Szenarien**
-   - Sind alle wichtigen Fälle abgedeckt?
-   - Stimmen Erwartungen?
+1. **Validate scenarios**
+   - Are all important cases covered?
+   - Do expectations match?
 
-2. **Akzeptieren Sie basierend auf Szenarien**
-   - Alle Szenarien müssen erfüllt sein
+2. **Accept based on scenarios**
+   - All scenarios must be fulfilled
    - Definition of Done
 
 ---
 
 ## Best Practices
 
-### Szenario-Namen
+### Scenario Names
 
-✅ **Gut**: "OCR wird übersprungen wegen Tagged-PDF"
-❌ **Schlecht**: "Test 1"
+✅ **Good**: "OCR is skipped for tagged PDF"
+❌ **Bad**: "Test 1"
 
 ### Given-When-Then
 
-✅ **Gut**:
+✅ **Good**:
 ```gherkin
-Angenommen eine PDF-Datei "document.pdf" wird hochgeladen
-Wenn der Konvertierungsjob ausgeführt wird
-Dann sollte ein Event mit Typ "format_conversion" existieren
+Given a PDF file "document.pdf" is uploaded
+When the conversion job is executed
+Then an event with type "format_conversion" should exist
 ```
 
-❌ **Schlecht**:
+❌ **Bad**:
 ```gherkin
-Angenommen PDF
-Wenn job
-Dann event
+Given PDF
+When job
+Then event
 ```
 
-### Tables für Daten
+### Tables for Data
 
-✅ **Gut**:
+✅ **Good**:
 ```gherkin
-Und die Konfiguration ist:
-  | Parameter  | Wert |
-  | pdfa_level | 2    |
-  | ocr_enabled| true |
+And the configuration is:
+  | Parameter   | Value |
+  | pdfa_level  | 2     |
+  | ocr_enabled | true  |
 ```
 
-❌ **Schlecht**:
+❌ **Bad**:
 ```gherkin
-Und pdfa_level ist 2 und ocr_enabled ist true
-```
-
-### Dokumentation
-
-✅ **Gut**: JSON-Beispiele in Multiline-Strings
-```gherkin
-Und die Event-Details sollten enthalten:
-  """
-  {
-    "decision": "skip",
-    "reason": "tagged_pdf"
-  }
-  """
+And pdfa_level is 2 and ocr_enabled is true
 ```
 
 ---
 
-## Gherkin-Syntax-Referenz
+## Automation
 
-### Schlüsselwörter
-
-| Deutsch | English | Verwendung |
-|---------|---------|------------|
-| Funktionalität | Feature | Feature-Beschreibung |
-| Hintergrund | Background | Gemeinsame Vorbedingungen |
-| Szenario | Scenario | Einzelner Testfall |
-| Angenommen | Given | Vorbedingung/Kontext |
-| Wenn | When | Aktion/Event |
-| Dann | Then | Erwartetes Ergebnis |
-| Und | And | Weitere Schritte |
-| Aber | But | Negative Erwartung |
-
-### Datenstrukturen
-
-**Table**:
-```gherkin
-| Spalte1 | Spalte2 |
-| Wert1   | Wert2   |
-```
-
-**Multiline String (Doc String)**:
-```gherkin
-"""
-Mehrzeiliger
-Text
-"""
-```
-
----
-
-## Automatisierung
-
-### Mit Behave (Python)
+### With Behave (Python)
 
 ```bash
 # Installation
 pip install behave
 
-# Feature ausführen
+# Run feature
 behave features/gherkin-mongodb-integration.feature
 
-# Spezifisches Szenario
+# Run specific scenario
 behave features/gherkin-mongodb-integration.feature:10
 ```
 
-### Mit Cucumber (JavaScript)
+### With Cucumber (JavaScript)
 
 ```bash
 # Installation
 npm install @cucumber/cucumber
 
-# Feature ausführen
+# Run features
 npx cucumber-js features/
+```
+
+### With pytest-bdd (Python)
+
+```bash
+# Installation
+pip install pytest-bdd
+
+# Run features
+pytest --bdd
 ```
 
 ---
 
-## Verwandte Dokumentation / Related Documentation
+## Related Documentation
 
-- [Zurück zur Übersicht](../README.md)
+- [Back to Overview](../README.md)
 - [User Stories](../user-stories/)
 - [AGENTS.md](../../../AGENTS.md)
-- [Behave Dokumentation](https://behave.readthedocs.io/)
-- [Cucumber Dokumentation](https://cucumber.io/docs/gherkin/)
+- [Behave Documentation](https://behave.readthedocs.io/)
+- [Cucumber Documentation](https://cucumber.io/docs/gherkin/)
 
 ---
 
-## Änderungshistorie / Change History
+## Change History
 
-| Datum | Version | Änderung |
-|-------|---------|----------|
-| 2024-12-25 | 1.0 | Initiale Erstellung |
+| Date | Version | Change |
+|------|---------|--------|
+| 2024-12-25 | 1.0 | Initial creation |
+| 2026-01-03 | 2.0 | Unified structure, renamed German files, added auth-page-visibility |

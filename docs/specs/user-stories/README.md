@@ -1,287 +1,284 @@
 # User Stories
 
-Dieses Verzeichnis enthält formale User Stories im **INVEST**-Format für wichtige Features des PDF/A-Service.
-
 This directory contains formal User Stories in **INVEST** format for major features of the PDF/A service.
 
 ---
 
-## Übersicht / Overview
+## Overview
 
-| ID | Titel | Status | Datum | Datei | Gherkin Feature |
-|----|-------|--------|-------|-------|-----------------|
-| US-001 | MongoDB-Integration | ✅ Implementiert | 2024-12-21 | [US-001-mongodb-integration.md](US-001-mongodb-integration.md) | [Feature](../features/gherkin-mongodb-integration.feature) |
-| US-002 | Job Event Logging | ✅ Implementiert | 2024-12-25 | [US-002-job-event-logging.md](US-002-job-event-logging.md) | [Feature](../features/gherkin-job-event-logging.feature) |
-| US-003 | Lokaler Standardbenutzer | ✅ Implementiert | 2024-12-25 | [US-003-local-default-user.md](US-003-local-default-user.md) | [Feature](../features/gherkin-local-default-user.feature) |
-| US-004 | Camera Tab for Multi-Page Document Capture | ✅ Implemented | 2025-12-30 | [US-004-camera-tab.md](US-004-camera-tab.md) | [Feature](../features/gherkin-camera-tab.feature) |
-| US-005 | Accessibility Camera Assistance | ✅ Implemented | 2026-01-01 | [US-005-accessibility-camera-assistance.md](US-005-accessibility-camera-assistance.md) | [Feature](../features/gherkin-accessibility-camera-assistance.feature) |
-
----
-
-## INVEST-Prinzipien
-
-Alle User Stories folgen dem **INVEST**-Prinzip:
-
-- **I**ndependent - Unabhängig voneinander implementierbar
-- **N**egotiable - Flexibel mit klaren Prioritäten
-- **V**aluable - Klarer Business-Value
-- **E**stimable - Zeitschätzungen möglich
-- **S**mall - In 3-5 Tagen umsetzbar
-- **T**estable - Mit Akzeptanzkriterien testbar
+| ID | Title | Status | Date | File | Gherkin Feature |
+|----|-------|--------|------|------|-----------------|
+| US-001 | MongoDB Integration | ✅ Implemented | 2024-12-21 | [US-001-mongodb-integration.md](US-001-mongodb-integration.md) | [Feature](../features/gherkin-mongodb-integration.feature) |
+| US-002 | Job Event Logging | ✅ Implemented | 2024-12-25 | [US-002-job-event-logging.md](US-002-job-event-logging.md) | [Feature](../features/gherkin-job-event-logging.feature) |
+| US-003 | Local Default User | ✅ Implemented | 2024-12-25 | [US-003-local-default-user.md](US-003-local-default-user.md) | [Feature](../features/gherkin-local-default-user.feature) |
+| US-004 | Live Job Events Display | ✅ Implemented | 2024-12-25 | [US-004-live-job-events.md](US-004-live-job-events.md) | [Feature](../features/gherkin-live-job-events.feature) |
+| US-005 | Tab-Based Interface | 🚧 In Progress | 2024-12-26 | [US-005-tab-interface.md](US-005-tab-interface.md) | [Feature](../features/gherkin-tab-interface.feature) |
+| US-006 | Account Tab | 🚧 In Progress | 2024-12-27 | [US-006-account-tab.md](US-006-account-tab.md) | [Feature](../features/gherkin-account-tab.feature) |
+| US-007 | Jobs History Tab | 🚧 In Progress | 2024-12-27 | [US-007-jobs-tab.md](US-007-jobs-tab.md) | [Feature](../features/gherkin-jobs-tab.feature) |
+| US-008 | Camera Tab | ✅ Implemented | 2025-12-30 | [US-008-camera-tab.md](US-008-camera-tab.md) | [Feature](../features/gherkin-camera-tab.feature) |
+| US-009 | Accessibility Camera | ✅ Implemented | 2026-01-01 | [US-009-accessibility-camera-assistance.md](US-009-accessibility-camera-assistance.md) | [Feature](../features/gherkin-accessibility-camera-assistance.feature) |
+| US-010 | Mobile-Desktop Pairing | ✅ Implemented | 2026-01-02 | [US-010-mobile-desktop-pairing.md](US-010-mobile-desktop-pairing.md) | [Feature](../features/gherkin-mobile-desktop-pairing.feature) |
+| US-011 | Auth Page Visibility | ✅ Implemented | 2026-01-03 | [US-011-auth-page-visibility.md](US-011-auth-page-visibility.md) | [Feature](../features/gherkin-auth-page-visibility.feature) |
 
 ---
 
-## User Story Struktur
+## INVEST Principles
 
-Jede User Story enthält:
+All User Stories follow the **INVEST** principle:
 
-### 1. Metadaten
-- **ID**: Eindeutige Kennung (US-XXX)
-- **Titel**: Kurzbeschreibung
-- **Status**: In Arbeit / Implementiert / Abgelehnt
-- **Datum**: Erstellungsdatum
+- **I**ndependent - Can be implemented independently
+- **N**egotiable - Flexible with clear priorities
+- **V**aluable - Clear business value
+- **E**stimable - Time estimates possible
+- **S**mall - Achievable in 3-5 days
+- **T**estable - Testable with acceptance criteria
+
+---
+
+## User Story Structure
+
+Each User Story contains:
+
+### 1. Metadata
+- **ID**: Unique identifier (US-XXX)
+- **Title**: Short description
+- **Status**: In Progress / Implemented / Rejected
+- **Date**: Creation date
 
 ### 2. Story
 ```
-Als [Rolle]
-möchte ich [Funktion]
-damit [Nutzen]
+As [role]
+I want [feature]
+So that [benefit]
 ```
 
-### 3. Kontext
-- Aktueller Zustand (Ist)
-- Problemstellung
-- Lösung (Soll)
+### 3. Context
+- Current state
+- Problem statement
+- Solution
 
-### 4. Akzeptanzkriterien
-Given-When-Then Format:
+### 4. Acceptance Criteria
+Given-When-Then format:
 ```
-Given [Vorbedingung]
-When [Aktion]
-Then [Erwartetes Ergebnis]
-And [Weitere Erwartungen]
+Given [precondition]
+When [action]
+Then [expected result]
+And [further expectations]
 ```
 
 ### 5. Definition of Done
-Checkliste mit klaren Abnahmekriterien:
-- [ ] Tests bestehen
-- [ ] Code formatiert
-- [ ] Dokumentation aktualisiert
+Checklist with clear acceptance criteria:
+- [ ] Tests pass
+- [ ] Code formatted
+- [ ] Documentation updated
 - etc.
 
-### 6. Technische Details
-- Datenmodelle
-- Architektur
-- Implementierte Komponenten
-- Deployment-Informationen
+### 6. Technical Details
+- Data models
+- Architecture
+- Implemented components
+- Deployment information
 
-### 7. Risiken & Mitigationen
-Tabelle mit:
-- Risiko
-- Wahrscheinlichkeit
+### 7. Risks & Mitigations
+Table with:
+- Risk
+- Probability
 - Impact
 - Mitigation
 
-### 8. Verwandte Spezifikationen
-Links zu:
-- Verwandten User Stories
+### 8. Related Specifications
+Links to:
+- Related User Stories
 - Gherkin Features
-- Dokumentation
+- Documentation
 
-### 9. Änderungshistorie
-Versions-Tracking mit:
-- Datum
+### 9. Change History
+Version tracking with:
+- Date
 - Version
-- Änderung
+- Change
 
 ---
 
-## User Stories
+## User Stories Summary
 
-### [US-001: MongoDB-Integration](US-001-mongodb-integration.md)
+### [US-001: MongoDB Integration](US-001-mongodb-integration.md)
 
-**Story**: Als Systemadministrator möchte ich persistente Datenspeicherung mit MongoDB, damit Jobs Server-Neustarts überleben.
+**Story**: As a system administrator, I want persistent data storage with MongoDB so that jobs survive server restarts.
 
-**Kernpunkte**:
+**Key Points**:
 - 4 MongoDB Collections (users, jobs, oauth_states, audit_logs)
-- TTL-Indexes für automatische Cleanup
-- Repository-Pattern für Datenzugriff
-- Multi-Instance-fähig
-
-**Status**: ✅ Implementiert (2024-12-21)
-
-**Gherkin Feature**: [36 Szenarien](../features/gherkin-mongodb-integration.feature)
-
----
+- TTL indexes for automatic cleanup
+- Repository pattern for data access
+- Multi-instance capable
 
 ### [US-002: Job Event Logging](US-002-job-event-logging.md)
 
-**Story**: Als Benutzer möchte ich detaillierte Event-Listen für jeden Job, damit ich Konvertierungsentscheidungen nachvollziehen kann.
+**Story**: As a user, I want detailed event lists for each job so that I can understand conversion decisions.
 
-**Kernpunkte**:
-- 7 Event-Typen (format_conversion, ocr_decision, etc.)
-- Event-Callback-Pattern in converter.py
-- Async Event-Logger-Helper
-- Backward-kompatibel (default_factory)
+**Key Points**:
+- 7 event types (format_conversion, ocr_decision, etc.)
+- Event callback pattern in converter.py
+- Async event logger helper
+- Backward compatible
 
-**Status**: ✅ Implementiert (2024-12-25)
+### [US-003: Local Default User](US-003-local-default-user.md)
 
-**Gherkin Feature**: [21 Szenarien](../features/gherkin-job-event-logging.feature)
+**Story**: As a user without OAuth, I want an automatic local default user so that I can use features like job history.
 
----
+**Key Points**:
+- Automatic creation when AUTH_ENABLED=false
+- Configurable via environment variables
+- Idempotent implementation (multi-instance safe)
 
-### [US-003: Lokaler Standardbenutzer](US-003-local-default-user.md)
+### [US-004: Live Job Events Display](US-004-live-job-events.md)
 
-**Story**: Als Benutzer ohne OAuth möchte ich einen automatischen lokalen Standardbenutzer, damit ich Features wie Job-Verlauf nutzen kann.
+**Story**: As a user, I want to see conversion events as they occur in real-time.
 
-**Kernpunkte**:
-- Automatische Erstellung bei AUTH_ENABLED=false
-- Konfigurierbar via Umgebungsvariablen
-- Idempotente Implementierung (Multi-Instance-safe)
-- Dependency Injection gibt User statt None zurück
+### [US-005: Tab-Based Interface](US-005-tab-interface.md)
 
-**Status**: ✅ Implementiert (2024-12-25)
+**Story**: As a user, I want the interface organized as tabs for easy navigation.
 
-**Gherkin Feature**: [18 Szenarien](../features/gherkin-local-default-user.feature)
+### [US-006: Account Tab](US-006-account-tab.md)
 
----
+**Story**: As a user, I want to view my account information and settings.
 
-### [US-004: Camera Tab for Multi-Page Document Capture](US-004-camera-tab.md)
+### [US-007: Jobs History Tab](US-007-jobs-tab.md)
 
-**Story**: As a user of the PDF/A service, I want to capture multi-page documents using my device's camera directly in the browser so that I can create searchable PDF/A documents without needing a physical scanner or separate app.
+**Story**: As a user, I want to view my conversion job history with detailed events.
+
+### [US-008: Camera Tab](US-008-camera-tab.md)
+
+**Story**: As a user, I want to capture multi-page documents using my device's camera.
 
 **Key Points**:
 - Browser-based camera interface using getUserMedia API
 - Multi-page document capture with page management
 - Built-in photo editor (rotation, brightness, contrast)
 - Direct submission to PDF/A conversion pipeline
-- Integration with accessibility features (US-005)
-- Progressive Web App capabilities (works offline)
 
-**Status**: ✅ Implemented (2025-12-30)
+### [US-009: Accessibility Camera Assistance](US-009-accessibility-camera-assistance.md)
 
-**Gherkin Feature**: [57 scenarios](../features/gherkin-camera-tab.feature)
-
----
-
-### [US-005: Accessibility Camera Assistance](US-005-accessibility-camera-assistance.md)
-
-**Story**: As a blind or visually impaired user I want to photograph documents using audio guidance so that I can create high-quality document scans without visual control with automatic cropping and perspective correction.
+**Story**: As a blind or visually impaired user, I want audio-guided document capture.
 
 **Key Points**:
-- Real-time edge detection with jscanify v1.4.0 and OpenCV.js 4.7.0
-- Audio feedback via Web Audio API (tones) and Speech Synthesis API (TTS)
-- iOS Safari compatibility (AudioContext + SpeechSynthesis unlock)
-- Automatic capture on stable document recognition (10 frames)
-- Auto-crop and perspective correction with full resolution
-- Edge-based guidance ("Top edge not visible" instead of "Move camera down")
-- Partial capture (10-90% of area, optimized for 1/3 documents)
-- Hysteresis to prevent flickering (45%/35% thresholds)
-- Multilingual (de, en, es, fr)
+- Real-time edge detection with jscanify and OpenCV.js
+- Audio feedback via Web Audio API and Speech Synthesis
+- Automatic capture on stable document recognition
+- Auto-crop and perspective correction
 
-**Status**: ✅ Implemented (2026-01-01)
+### [US-010: Mobile-Desktop Pairing](US-010-mobile-desktop-pairing.md)
 
-**Gherkin Feature**: [65 scenarios](../features/gherkin-accessibility-camera-assistance.feature)
+**Story**: As a user, I want to pair my mobile device with the desktop application for remote capture.
+
+**Key Points**:
+- QR code-based pairing
+- WebSocket real-time synchronization
+- Session-based security via pairing codes
+
+### [US-011: Auth Page Visibility](US-011-auth-page-visibility.md)
+
+**Story**: As a user, I want to see only pages appropriate to my authentication status.
+
+**Key Points**:
+- Protected features only accessible to authenticated users
+- Seamless experience when auth is disabled
+- Clear login/logout flows
 
 ---
 
-## Verwendung / Usage
+## Usage
 
-### Für Entwickler / For Developers
+### For Developers
 
-1. **Lesen Sie die komplette User Story** vor Implementierung
-2. **Verstehen Sie den Business-Value** (Warum?)
-3. **Prüfen Sie Akzeptanzkriterien** (Was muss erfüllt sein?)
-4. **Folgen Sie der Definition of Done** (Wann ist es fertig?)
-5. **Konsultieren Sie Gherkin Features** für konkrete Beispiele
-6. **Implementieren Sie mit TDD** (RED-GREEN-REFACTOR)
+1. **Read the complete User Story** before implementation
+2. **Understand the business value** (Why?)
+3. **Check acceptance criteria** (What must be fulfilled?)
+4. **Follow Definition of Done** (When is it done?)
+5. **Consult Gherkin Features** for concrete examples
+6. **Implement with TDD** (RED-GREEN-REFACTOR)
 
-### Für Product Owner / For Product Owners
+### For Product Owners
 
-1. **Validieren Sie den Business-Value**
-2. **Prüfen Sie Akzeptanzkriterien** auf Vollständigkeit
-3. **Bewerten Sie Risiken** und akzeptieren Sie Mitigationen
-4. **Akzeptieren Sie basierend auf DoD**
+1. **Validate business value**
+2. **Check acceptance criteria** for completeness
+3. **Evaluate risks** and accept mitigations
+4. **Accept based on DoD**
 
-### Für Tester / For Testers
+### For Testers
 
-1. **Nutzen Sie Akzeptanzkriterien** als Testfälle
-2. **Referenzieren Sie Gherkin Features** für detaillierte Szenarien
-3. **Dokumentieren Sie Abweichungen**
+1. **Use acceptance criteria** as test cases
+2. **Reference Gherkin Features** for detailed scenarios
+3. **Document deviations**
 
 ---
 
 ## Template
 
-Neue User Stories sollten diesem Template folgen:
+New User Stories should follow this template:
 
 ```markdown
-# User Story: [Titel]
+# US-XXX: [Title]
 
 **ID**: US-XXX
-**Titel**: [Kurzbeschreibung]
-**Status**: In Arbeit
-**Datum**: YYYY-MM-DD
+**Status**: 🚧 In Progress
+**Date**: YYYY-MM-DD
+**Priority**: [High/Medium/Low]
+**Dependencies**: [Related User Stories]
 
 ---
 
-## Story
+## User Story
 
-Als [Rolle]
-möchte ich [Funktion]
-damit [Nutzen]
-
----
-
-## Kontext
-
-**Aktueller Zustand**:
-- [Was ist jetzt der Fall?]
-
-**Problem**:
-- [Welches Problem besteht?]
-
-**Lösung**:
-- [Wie lösen wir es?]
+\`\`\`
+As [role]
+I want [feature]
+So that [benefit]
+\`\`\`
 
 ---
 
-## Akzeptanzkriterien
+## Business Value
 
-### 1. [Kriterium]
-- **Given** [Vorbedingung]
-- **When** [Aktion]
-- **Then** [Erwartung]
-- **And** [Weitere Erwartung]
+- [Value 1]
+- [Value 2]
+
+---
+
+## Acceptance Criteria
+
+### 1. [Criterion]
+- **Given** [precondition]
+- **When** [action]
+- **Then** [expectation]
 
 ---
 
 ## Definition of Done
 
-- [ ] Tests geschrieben und bestanden
-- [ ] Code formatiert (black) und gelintet (ruff)
-- [ ] Dokumentation aktualisiert
-- [ ] Gherkin Feature erstellt
-- [ ] Code Review durchgeführt
-- [ ] Deployment-Dokumentation aktualisiert
+- [ ] Tests written and passing
+- [ ] Code formatted (black) and linted (ruff)
+- [ ] Documentation updated
+- [ ] Gherkin Feature created
+- [ ] Code review completed
 
 ---
 
-## Technische Details
+## Technical Details
 
-[Implementierungsdetails]
-
----
-
-## Risiken & Mitigationen
-
-| Risiko | Wahrscheinlichkeit | Impact | Mitigation |
-|--------|-------------------|--------|------------|
-| [Risiko] | [Niedrig/Mittel/Hoch] | [Niedrig/Mittel/Hoch] | [Mitigation] |
+[Implementation details]
 
 ---
 
-## Verwandte Spezifikationen
+## Risks & Mitigations
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| [Risk] | [Low/Medium/High] | [Low/Medium/High] | [Mitigation] |
+
+---
+
+## Related Specifications
 
 **User Stories**:
 - [Related Story](US-XXX.md)
@@ -291,26 +288,26 @@ damit [Nutzen]
 
 ---
 
-## Änderungshistorie
+## Change History
 
-| Datum | Version | Änderung |
-|-------|---------|----------|
-| YYYY-MM-DD | 1.0 | Initiale Erstellung |
+| Date | Version | Change |
+|------|---------|--------|
+| YYYY-MM-DD | 1.0 | Initial creation |
 ```
 
 ---
 
-## Verwandte Dokumentation / Related Documentation
+## Related Documentation
 
-- [Zurück zur Übersicht](../README.md)
+- [Back to Overview](../README.md)
 - [Gherkin Features](../features/)
 - [AGENTS.md](../../../AGENTS.md)
-- [Implementierungspläne](../../../../.claude/plans/)
 
 ---
 
-## Änderungshistorie / Change History
+## Change History
 
-| Datum | Version | Änderung |
-|-------|---------|----------|
-| 2024-12-25 | 1.0 | Initiale Erstellung |
+| Date | Version | Change |
+|------|---------|--------|
+| 2024-12-25 | 1.0 | Initial creation |
+| 2026-01-03 | 2.0 | Unified structure, renamed German files, renumbered IDs |

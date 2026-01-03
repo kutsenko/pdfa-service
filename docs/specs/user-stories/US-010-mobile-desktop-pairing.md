@@ -1,6 +1,6 @@
 # User Story: Mobile-Desktop Camera Pairing
 
-**ID**: US-008
+**ID**: US-010
 **Title**: Jump to mobile device to utilize camera
 **Status**: ✅ Implemented
 **Date**: 2026-01-02

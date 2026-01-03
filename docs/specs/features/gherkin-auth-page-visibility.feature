@@ -1,23 +1,3 @@
-# Authentication-Based Page Visibility
-
-## User Story
-
-**As a** user of the PDF/A Converter application
-**I want** to see only the pages and features appropriate to my authentication status
-**So that** I can access the application securely while maintaining a seamless experience when authentication is not required
-
-### Acceptance Criteria
-
-1. When authentication is **disabled**, I am automatically logged in as the default local user and can access all features
-2. When authentication is **enabled** and I am **not logged in**, I only see the welcome page with login option
-3. When authentication is **enabled** and I am **logged in**, I can access all application features
-4. When I **log out**, I am returned to the welcome page and cannot access protected features
-
----
-
-## Gherkin Specification
-
-```gherkin
 Feature: Authentication-Based Page Visibility
   As a user of the PDF/A Converter
   I want to see appropriate pages based on my authentication status
@@ -230,38 +210,3 @@ Feature: Authentication-Based Page Visibility
     When I send a "register_pairing" message via WebSocket without authentication
     Then the message should be accepted
     And I should receive a success response
-```
-
----
-
-## Technical Notes
-
-### Frontend Detection Logic
-
-The frontend (`AuthManager.js`) detects authentication status by calling `/auth/user`:
-
-| Response Status | Meaning | Frontend Action |
-|-----------------|---------|-----------------|
-| 404 | Auth disabled | Show all UI, no login/logout buttons |
-| 401 | Auth enabled, not logged in | Show welcome page with login button |
-| 200 | Auth enabled, logged in | Show all UI with logout button |
-
-### Backend Endpoints
-
-| Endpoint | Auth Disabled | Auth Enabled (No Token) | Auth Enabled (Valid Token) |
-|----------|---------------|-------------------------|----------------------------|
-| `GET /auth/user` | 404 | 401 | 200 + user info |
-| `GET /auth/status` | `{enabled: false}` | `{enabled: true}` | `{enabled: true}` |
-| `POST /auth/logout` | 404 | 200 | 200 |
-
-### Environment Variables
-
-```bash
-# Enable/disable authentication
-PDFA_ENABLE_AUTH=true|false
-
-# Default user when auth is disabled
-DEFAULT_USER_ID=local-default
-DEFAULT_USER_EMAIL=local@localhost
-DEFAULT_USER_NAME=Local User
-```
