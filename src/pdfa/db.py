@@ -271,7 +271,24 @@ async def ensure_indexes() -> None:
         [("timestamp", 1)], expireAfterSeconds=31536000, name="idx_ttl_1year"
     )
 
+    # Pairing sessions collection indexes
+    await db.pairing_sessions.create_index(
+        [("pairing_code", 1)], unique=True, sparse=True, name="idx_pairing_code"
+    )
+    await db.pairing_sessions.create_index(
+        [("desktop_user_id", 1), ("created_at", -1)], name="idx_user_sessions"
+    )
+    await db.pairing_sessions.create_index(
+        [("status", 1), ("desktop_user_id", 1)], name="idx_status_user"
+    )
+    # TTL index: Auto-delete pairing sessions after expiration
+    # expireAfterSeconds=0 means delete immediately when expires_at is reached
+    await db.pairing_sessions.create_index(
+        [("expires_at", 1)], expireAfterSeconds=0, name="idx_ttl_expiry"
+    )
+
     logger.info(
         "MongoDB indexes created: "
-        "users (3), user_preferences (1), jobs (5), oauth_states (2), audit_logs (4)"
+        "users (3), user_preferences (1), jobs (5), oauth_states (2), audit_logs (4), "
+        "pairing_sessions (4)"
     )

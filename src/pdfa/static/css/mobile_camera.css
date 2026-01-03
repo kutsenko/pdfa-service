@@ -1,0 +1,350 @@
+/**
+ * Mobile Camera Styles
+ * Optimized for mobile devices for document capture
+ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    background: #000;
+    color: #fff;
+    overflow: hidden;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Screen Management */
+.screen {
+    display: none;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.screen.active {
+    display: flex;
+}
+
+/* ==================== Pairing Screen ==================== */
+
+.header {
+    text-align: center;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.header h1 {
+    font-size: 32px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.header p {
+    color: #e0e0e0;
+    font-size: 16px;
+}
+
+.pairing-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 30px;
+    max-width: 400px;
+    margin: 0 auto;
+    flex: 1;
+    justify-content: center;
+}
+
+.pairing-form label {
+    font-size: 14px;
+    color: #aaa;
+    margin-bottom: -10px;
+}
+
+.pairing-form input {
+    padding: 16px;
+    font-size: 22px;
+    text-align: center;
+    letter-spacing: 6px;
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+    border: 2px solid #333;
+    background: #1a1a1a;
+    color: #fff;
+    border-radius: 8px;
+    outline: none;
+}
+
+.pairing-form input:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+}
+
+.pairing-form input::placeholder {
+    color: #555;
+    opacity: 1;
+}
+
+.help-text {
+    padding: 0 30px 40px;
+    text-align: center;
+}
+
+.help-text p {
+    color: #888;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* ==================== Camera Screen ==================== */
+
+.connection-banner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px;
+    background: #28a745;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.camera-container {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #000;
+}
+
+#mobileCamera {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.camera-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    padding: 20px;
+    pointer-events: none;
+}
+
+.counter {
+    display: inline-block;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: 500;
+    backdrop-filter: blur(10px);
+}
+
+.controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #000;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.btn-capture {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    border: 4px solid #fff;
+    background: transparent;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.1s;
+}
+
+.btn-capture:active {
+    transform: scale(0.95);
+}
+
+.capture-ring {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #fff;
+}
+
+/* ==================== Editor Screen ==================== */
+
+.editor-header {
+    padding: 20px;
+    text-align: center;
+    background: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.editor-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.editor-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    background: #000;
+    padding: 10px;
+}
+
+#mobileEditCanvas {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+}
+
+.actions {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    background: #1a1a1a;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* ==================== Buttons ==================== */
+
+.btn-primary,
+.btn-secondary,
+.btn-icon {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.1s;
+    font-family: inherit;
+}
+
+.btn-primary {
+    flex: 1;
+    background: #667eea;
+    color: #fff;
+}
+
+.btn-primary:active {
+    background: #5568d3;
+    transform: scale(0.98);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: #fff;
+    padding: 10px 18px;
+    font-size: 14px;
+}
+
+.btn-secondary:active {
+    background: #5a6268;
+    transform: scale(0.98);
+}
+
+.btn-icon {
+    flex: 1;
+    background: #343a40;
+    color: #fff;
+}
+
+.btn-icon:active {
+    background: #23272b;
+    transform: scale(0.98);
+}
+
+/* ==================== Responsive Adjustments ==================== */
+
+/* Small phones */
+@media (max-width: 375px) {
+    .header h1 {
+        font-size: 28px;
+    }
+
+    .pairing-form input {
+        font-size: 20px;
+        letter-spacing: 4px;
+        padding: 14px;
+    }
+
+    .btn-capture {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+/* Large phones and tablets */
+@media (min-width: 768px) {
+    .header {
+        padding: 60px 20px;
+    }
+
+    .header h1 {
+        font-size: 38px;
+    }
+
+    .pairing-form {
+        max-width: 500px;
+    }
+
+    .btn-capture {
+        width: 80px;
+        height: 80px;
+    }
+}
+
+/* Landscape orientation adjustments */
+@media (orientation: landscape) {
+    .header {
+        padding: 30px 20px;
+    }
+
+    .pairing-form {
+        padding: 20px 30px;
+    }
+
+    .camera-overlay {
+        padding: 15px;
+    }
+
+    .controls {
+        padding: 15px 20px;
+    }
+}
+
+/* Accessibility - Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01s !important;
+        transition-duration: 0.01s !important;
+    }
+}

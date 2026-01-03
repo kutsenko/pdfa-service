@@ -127,6 +127,24 @@ export class ConversionClient {
                         case 'job_event':
                             this.handleJobEvent(message);
                             break;
+                        case 'image_synced':
+                            // Handle mobile-to-desktop image sync
+                            if (window.cameraManager?.pairingManager) {
+                                window.cameraManager.pairingManager.handleImageSynced(message);
+                            }
+                            break;
+                        case 'pairing_peer_status':
+                            // Handle peer connection status updates
+                            if (window.cameraManager?.pairingManager) {
+                                window.cameraManager.pairingManager.handlePeerStatus(message);
+                            }
+                            break;
+                        case 'pairing_expired':
+                            // Handle pairing session expiration
+                            if (window.cameraManager?.pairingManager) {
+                                window.cameraManager.pairingManager.handlePairingExpired(message);
+                            }
+                            break;
                         default:
                             console.warn('Unknown message type:', message.type);
                     }

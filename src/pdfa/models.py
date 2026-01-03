@@ -10,7 +10,7 @@ to/from MongoDB BSON format.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, field_validator
@@ -242,6 +242,59 @@ class AuditLogDocument(BaseModel):
     details: dict[str, Any] | None = None
 
     model_config = {"arbitrary_types_allowed": True}
+
+
+class PairingSessionDocument(BaseModel):
+    """Pairing session for mobile-desktop camera sync.
+
+    Stores temporary pairing sessions that link a desktop browser session to a mobile
+    device for real-time image transfer during camera capture workflows.
+
+    TTL: Sessions are automatically deleted after expiration via MongoDB TTL index.
+
+    Attributes:
+        session_id: Unique session identifier (UUID)
+        pairing_code: Short pairing code for manual entry (6-8 alphanumeric chars)
+        desktop_user_id: User who created the session on desktop
+        mobile_user_id: User who joined from mobile (None until joined)
+        status: Session status (pending, active, expired, cancelled)
+        created_at: Session creation timestamp
+        expires_at: Expiration timestamp (created_at + TTL)
+        joined_at: When mobile device joined (None until joined)
+        last_activity_at: Last sync activity timestamp
+        images_synced: Count of images synced in this session
+
+    """
+
+    session_id: str
+    pairing_code: str
+    desktop_user_id: str
+    mobile_user_id: str | None = None
+    status: Literal["pending", "active", "expired", "cancelled"]
+    created_at: datetime
+    expires_at: datetime
+    joined_at: datetime | None = None
+    last_activity_at: datetime
+    images_synced: int = 0
+
+    model_config = {"arbitrary_types_allowed": True}
+
+    @field_validator(
+        "created_at", "expires_at", "joined_at", "last_activity_at", mode="before"
+    )
+    @classmethod
+    def ensure_timezone_aware(cls, v: datetime | None) -> datetime | None:
+        """Ensure datetime fields are timezone-aware (UTC).
+
+        MongoDB returns timezone-naive datetimes, but we need timezone-aware
+        datetimes for comparisons with datetime.now(UTC).
+        """
+        if v is None:
+            return None
+        if v.tzinfo is None:
+            # Assume UTC for naive datetimes from MongoDB
+            return v.replace(tzinfo=UTC)
+        return v
 
 
 # Type aliases for convenience

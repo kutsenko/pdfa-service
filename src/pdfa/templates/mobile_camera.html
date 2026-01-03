@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mobile Camera - PDF/A Converter</title>
+    <link rel="stylesheet" href="/static/css/mobile_camera.css">
+</head>
+<body>
+    <!-- Pairing Screen -->
+    <div id="pairingScreen" class="screen active">
+        <div class="header">
+            <h1 data-i18n="mobile.title">📷 Mobile Camera</h1>
+            <p data-i18n="mobile.subtitle">Link to Desktop Session</p>
+        </div>
+
+        <form id="pairingForm" class="pairing-form">
+            <label for="pairingCodeInput" data-i18n="mobile.pairingCode.label">Enter Pairing Code:</label>
+            <input
+                type="text"
+                id="pairingCodeInput"
+                data-i18n-placeholder="mobile.pairingCode.placeholder"
+                placeholder="ABC123"
+                maxlength="8"
+                autocomplete="off"
+                autocapitalize="characters"
+                aria-label="Pairing code"
+                required>
+            <button type="submit" class="btn-primary" data-i18n="mobile.connect">Connect</button>
+        </form>
+
+        <div class="help-text">
+            <p data-i18n="mobile.help">Scan the QR code on your desktop or enter the pairing code manually.</p>
+        </div>
+    </div>
+
+    <!-- Camera Screen -->
+    <div id="cameraScreen" class="screen">
+        <div class="connection-banner connected">
+            <span class="status-dot"></span>
+            <span data-i18n="mobile.connected">Connected to Desktop</span>
+        </div>
+
+        <div class="camera-container">
+            <video id="mobileCamera"
+                   autoplay
+                   playsinline
+                   aria-label="Camera preview"></video>
+
+            <div class="camera-overlay">
+                <div class="counter">
+                    📸 <span id="imageCount">0</span> <span data-i18n="mobile.imagesSent">sent</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="switchCameraBtn" class="btn-secondary" aria-label="Switch camera">
+                🔄 <span data-i18n="mobile.switch">Switch</span>
+            </button>
+            <button id="mobileCaptureBtn" class="btn-capture" aria-label="Capture photo">
+                <span class="capture-ring"></span>
+            </button>
+            <button id="disconnectBtn" class="btn-secondary" aria-label="Disconnect">
+                ✕ <span data-i18n="mobile.disconnect">Disconnect</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Editor Screen -->
+    <div id="editorScreen" class="screen">
+        <div class="editor-header">
+            <h2 data-i18n="mobile.editImage">Edit Image</h2>
+        </div>
+
+        <div class="editor-container">
+            <canvas id="mobileEditCanvas" aria-label="Image editor"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="rotateLeftBtn" class="btn-icon" aria-label="Rotate left">
+                ↶ <span data-i18n="mobile.rotateLeft">Rotate Left</span>
+            </button>
+            <button id="rotateRightBtn" class="btn-icon" aria-label="Rotate right">
+                ↷ <span data-i18n="mobile.rotateRight">Rotate Right</span>
+            </button>
+        </div>
+
+        <div class="actions">
+            <button id="retakeBtn" class="btn-secondary">
+                ↻ <span data-i18n="mobile.retake">Retake</span>
+            </button>
+            <button id="sendBtn" class="btn-primary">
+                ✓ <span data-i18n="mobile.sendToDesktop">Send to Desktop</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Load mobile camera app with i18n support -->
+    <script type="module" src="/static/js/mobile/main.js"></script>
+</body>
+</html>
