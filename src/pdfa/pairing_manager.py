@@ -150,8 +150,9 @@ class PairingManager:
         if session.expires_at < datetime.now(UTC):
             raise ValueError("Pairing session expired")
 
-        if session.desktop_user_id != user_id:
-            raise ValueError("Must use same account on both devices")
+        # Note: We intentionally don't require same account on both devices
+        # The pairing code itself provides security - anyone with the code can join
+        # This allows mobile users to join without being logged in
 
         if session.status != "pending":
             raise ValueError(f"Session already {session.status}")
