@@ -824,13 +824,13 @@ async def create_pairing_session(
             - expires_at: ISO 8601 expiration timestamp
             - ttl_seconds: Time-to-live in seconds
 
-    Raises:
-        HTTPException: 401 if authentication required but not provided
+    Note:
+        This endpoint allows anonymous access even when auth is enabled,
+        because the camera pairing feature should be accessible to all users.
+        The session is protected by a unique pairing code.
 
     """
-    if auth_config_instance.enabled and not current_user:
-        raise HTTPException(status_code=401, detail="Authentication required")
-
+    # Allow anonymous access for camera pairing feature
     user_id = current_user.user_id if current_user else "anonymous"
     session = await pairing_manager.create_session(user_id)
 
@@ -876,12 +876,14 @@ async def join_pairing_session(
     Raises:
         HTTPException:
             - 400 if code invalid, expired, or different user
-            - 401 if authentication required but not provided
+
+    Note:
+        This endpoint allows anonymous access even when auth is enabled,
+        because mobile users joining a pairing session may not be logged in.
+        The session itself is protected by the pairing code.
 
     """
-    if auth_config_instance.enabled and not current_user:
-        raise HTTPException(status_code=401, detail="Authentication required")
-
+    # Allow anonymous access for mobile pairing - session is protected by code
     user_id = current_user.user_id if current_user else "anonymous"
 
     try:
