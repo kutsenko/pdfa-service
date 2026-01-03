@@ -1,7 +1,6 @@
 """Unit tests for QR code accessibility features."""
 
 
-
 class TestQRCodeAccessibility:
     """Tests for QR code keyboard navigation and screen reader support."""
 

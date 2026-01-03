@@ -131,6 +131,10 @@ def mock_mongodb(monkeypatch, auth_config_disabled, auth_config_enabled, request
     The mock is applied globally and automatically to all tests unless
     explicitly disabled with the marker: @pytest.mark.no_mongo_mock
     """
+    # Skip mocking if test is marked with no_mongo_mock
+    if request.node.get_closest_marker("no_mongo_mock"):
+        return None
+
     from unittest.mock import AsyncMock, MagicMock
 
     # Create mock database
