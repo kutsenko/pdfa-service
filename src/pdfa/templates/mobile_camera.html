@@ -96,26 +96,7 @@
         </div>
     </div>
 
-    <!-- Load i18n system -->
-    <script src="/static/js/i18n/translations.js"></script>
-    <script src="/static/js/utils/helpers.js"></script>
-    <script>
-        // Initialize i18n
-        (function() {
-            // Get language from URL parameter or default to 'en'
-            const urlParams = new URLSearchParams(window.location.search);
-            const lang = urlParams.get('lang') || 'en';
-
-            // Store current language globally
-            window.currentLang = lang;
-
-            // Apply translations
-            if (window.applyTranslations) {
-                window.applyTranslations(lang);
-            }
-        })();
-    </script>
-
+    <!-- Load mobile camera app with i18n support -->
     <script type="module" src="/static/js/mobile/main.js"></script>
 </body>
 </html>
