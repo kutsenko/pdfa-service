@@ -835,7 +835,11 @@ async def create_pairing_session(
     session = await pairing_manager.create_session(user_id)
 
     # Build QR data URL with language parameter
-    base_url = str(request.base_url).rstrip("/")
+    # Use X-Forwarded-Proto header to determine correct scheme (http/https)
+    # This ensures HTTPS URLs when behind a reverse proxy like nginx
+    forwarded_proto = request.headers.get("X-Forwarded-Proto", "http")
+    host = request.headers.get("Host", str(request.base_url.netloc))
+    base_url = f"{forwarded_proto}://{host}"
     qr_data = f"{base_url}/mobile/camera?code={session.pairing_code}&lang={lang}"
 
     return {
