@@ -1578,7 +1578,12 @@ async def websocket_endpoint(websocket: WebSocket):
                         return
 
                 # Security: Enforce authentication for protected operations
-                if auth_config_instance.enabled and not authenticated:
+                # Exception: Pairing messages (RegisterPairingMessage, SyncImageMessage)
+                # use session-based security via pairing codes, not user auth
+                is_pairing_message = isinstance(
+                    message, (RegisterPairingMessage, SyncImageMessage)
+                )
+                if auth_config_instance.enabled and not authenticated and not is_pairing_message:
                     error_msg = ErrorMessage(
                         job_id="",
                         error_code="UNAUTHORIZED",
