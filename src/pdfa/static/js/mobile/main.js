@@ -22,7 +22,17 @@ window.translations = translations;
 
 // Apply translations on page load
 console.log('[Mobile] Applying translations for language:', lang);
-applyTranslations(lang);
+console.log('[Mobile] translations object:', translations ? 'loaded' : 'NOT LOADED');
+console.log('[Mobile] translations.de:', translations?.de ? 'exists' : 'MISSING');
+console.log('[Mobile] translations.de["mobile.title"]:', translations?.de?.['mobile.title']);
+console.log('[Mobile] applyTranslations function:', typeof applyTranslations);
+
+try {
+    applyTranslations(lang);
+    console.log('[Mobile] Translations applied successfully');
+} catch (error) {
+    console.error('[Mobile] Error applying translations:', error);
+}
 
 // ============================================================================
 // Initialize Mobile Camera Client
