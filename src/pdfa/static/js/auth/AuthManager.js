@@ -160,6 +160,14 @@ export class AuthManager {
         localStorage.removeItem('auth_token');
         this.token = null;
         this.user = null;
+
+        // Clear URL hash to prevent tab navigation from restoring the last tab
+        // after reload (which would make tab content visible on login screen)
+        if (window.location.hash) {
+            // Use replaceState to avoid adding to history
+            history.replaceState(null, null, window.location.pathname + window.location.search);
+        }
+
         window.location.reload();
     }
 

@@ -491,8 +491,12 @@ async function initializeApp() {
             console.log('[Auth] WebSocket connection skipped - user not authenticated');
         }
 
-        // Initialize tab navigation
-        initTabNavigation();
+        // Initialize tab navigation only if user is authenticated or auth is disabled
+        if (!authManager.authEnabled || (authManager.authEnabled && authManager.user)) {
+            initTabNavigation();
+        } else {
+            console.log('[Auth] Tab navigation skipped - user not authenticated');
+        }
 
         // Initialize managers
         accountManager.init();
