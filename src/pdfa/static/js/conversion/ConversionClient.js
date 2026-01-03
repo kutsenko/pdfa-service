@@ -294,8 +294,13 @@ export class ConversionClient {
              * Translate progress step message
              */
             translateProgressStep(step) {
+                // Check if translations are available
+                if (typeof translations === 'undefined' || typeof currentLang === 'undefined') {
+                    return step; // Return original if translations not loaded
+                }
+
                 const translations_current = translations[currentLang] || translations.en;
-                if (translations_current.progressSteps && translations_current.progressSteps[step]) {
+                if (translations_current && translations_current.progressSteps && translations_current.progressSteps[step]) {
                     return translations_current.progressSteps[step];
                 }
                 return step; // Fallback to original if no translation found
@@ -380,8 +385,14 @@ export class ConversionClient {
                 }
 
                 // Reset form
-                form.reset();
-                fileName.textContent = '';
+                const form = document.getElementById('converterForm');
+                if (form) {
+                    form.reset();
+                }
+                const fileName = document.getElementById('fileName');
+                if (fileName) {
+                    fileName.textContent = '';
+                }
                 this.currentJobId = null;
             }
 
@@ -477,11 +488,17 @@ export class ConversionClient {
                 }
 
                 // Hide status div
-                statusDiv.style.display = 'none';
+                const statusDiv = document.getElementById('status');
+                if (statusDiv) {
+                    statusDiv.style.display = 'none';
+                }
 
                 // Disable convert button and mark as busy
-                convertBtn.disabled = true;
-                convertBtn.setAttribute('aria-busy', 'true');
+                const convertBtn = document.getElementById('convertBtn');
+                if (convertBtn) {
+                    convertBtn.disabled = true;
+                    convertBtn.setAttribute('aria-busy', 'true');
+                }
 
                 // Enable cancel button
                 const cancelBtn = document.getElementById('cancelBtn');
@@ -530,8 +547,11 @@ export class ConversionClient {
                 }
 
                 // Enable convert button and clear busy state
-                convertBtn.disabled = false;
-                convertBtn.setAttribute('aria-busy', 'false');
+                const convertBtn = document.getElementById('convertBtn');
+                if (convertBtn) {
+                    convertBtn.disabled = false;
+                    convertBtn.setAttribute('aria-busy', 'false');
+                }
             }
 
             updateProgress({ step, percentage, current, total, message }) {
@@ -797,7 +817,9 @@ export class ConversionClient {
 
                 // Timestamp formatting
                 const timestamp = new Date(event.timestamp);
-                const timeStr = timestamp.toLocaleTimeString(currentLang);
+                const timeStr = timestamp.toLocaleTimeString(
+                    typeof currentLang !== 'undefined' ? currentLang : 'en'
+                );
 
                 // Translate message (with fallback to English)
                 const localizedMessage = this.translateEventMessage(event);
@@ -1055,7 +1077,9 @@ export class ConversionClient {
 
                 const icon = this.getEventIcon(event.event_type);
                 const timestamp = new Date(event.timestamp);
-                const timeStr = timestamp.toLocaleTimeString(currentLang);
+                const timeStr = timestamp.toLocaleTimeString(
+                    typeof currentLang !== 'undefined' ? currentLang : 'en'
+                );
                 const message = this.translateEventMessage(event);
 
                 eventItem.innerHTML = `
