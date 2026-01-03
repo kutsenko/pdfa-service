@@ -12,6 +12,7 @@ export class MobileCameraClient {
         this.currentDeviceId = null;
         this.rotation = 0;
         this.editingImage = null;
+        this.isConnecting = false;  // Flag to prevent disconnect during initial setup
 
         console.log('[Mobile] Initializing MobileCameraClient');
         this.init();
@@ -92,6 +93,8 @@ export class MobileCameraClient {
     }
 
     async joinSession(pairingCode) {
+        this.isConnecting = true;
+
         try {
             console.log('[Mobile] Joining session with code:', pairingCode);
 
@@ -102,6 +105,8 @@ export class MobileCameraClient {
                 method: 'POST',
                 body: formData
             });
+
+            console.log('[Mobile] API response status:', response.status);
 
             if (!response.ok) {
                 const error = await response.json();
@@ -114,17 +119,27 @@ export class MobileCameraClient {
             console.log('[Mobile] Joined session:', this.sessionId);
 
             // Connect WebSocket
+            console.log('[Mobile] About to connect WebSocket...');
             await this.connectWebSocket();
+            console.log('[Mobile] WebSocket connected successfully');
 
             // Start camera
+            console.log('[Mobile] About to start camera...');
             await this.startCamera();
+            console.log('[Mobile] Camera started successfully');
 
             // Show camera screen
+            console.log('[Mobile] About to show camera screen...');
             this.showScreen('cameraScreen');
+            console.log('[Mobile] Camera screen shown');
+
+            this.isConnecting = false;
 
         } catch (error) {
+            this.isConnecting = false;
             console.error('[Mobile] Failed to join session:', error);
             alert(error.message || 'Failed to connect. Please check the code and try again.');
+            this.disconnect();
         }
     }
 
@@ -196,31 +211,33 @@ export class MobileCameraClient {
     }
 
     async startCamera() {
-        try {
-            console.log('[Mobile] Starting camera');
+        console.log('[Mobile] Starting camera');
 
-            const constraints = {
-                video: {
-                    facingMode: { ideal: 'environment' }, // Back camera
-                    width: { ideal: 1920 },
-                    height: { ideal: 1080 }
-                }
-            };
-
-            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-            const video = document.getElementById('mobileCamera');
-            if (video) {
-                video.srcObject = this.stream;
+        const constraints = {
+            video: {
+                facingMode: { ideal: 'environment' }, // Back camera
+                width: { ideal: 1920 },
+                height: { ideal: 1080 }
             }
+        };
 
-            console.log('[Mobile] Camera started');
-
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
         } catch (error) {
-            console.error('[Mobile] Camera error:', error);
-            alert('Failed to access camera. Please check permissions and try again.');
-            this.disconnect();
+            console.error('[Mobile] Camera permission/access error:', error);
+            throw new Error('Failed to access camera. Please check permissions and try again.');
         }
+
+        const video = document.getElementById('mobileCamera');
+        if (video) {
+            video.srcObject = this.stream;
+            console.log('[Mobile] Camera stream attached to video element');
+        } else {
+            console.error('[Mobile] Video element not found');
+            throw new Error('Camera video element not found');
+        }
+
+        console.log('[Mobile] Camera started successfully');
     }
 
     async switchCamera() {
@@ -429,7 +446,14 @@ export class MobileCameraClient {
     }
 
     handleDisconnection() {
-        console.log('[Mobile] Handling disconnection');
+        console.log('[Mobile] Handling disconnection, isConnecting:', this.isConnecting);
+
+        // Don't show alert or disconnect if we're still in the connection process
+        // The joinSession catch block will handle errors
+        if (this.isConnecting) {
+            console.log('[Mobile] Ignoring disconnection during connection phase');
+            return;
+        }
 
         // Show alert if we were connected
         if (this.sessionId) {
@@ -459,6 +483,7 @@ export class MobileCameraClient {
         this.imageCounter = 0;
         this.rotation = 0;
         this.editingImage = null;
+        this.isConnecting = false;
 
         // Reset counter
         const counter = document.getElementById('imageCount');
