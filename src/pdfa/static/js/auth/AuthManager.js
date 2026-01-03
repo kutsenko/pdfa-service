@@ -211,9 +211,18 @@ export class AuthManager {
             console.log('[Auth] Hiding tabs - user not authenticated');
         }
 
-        // Hide all tab panels using hidden attribute (not style.display)
+        // Hide all tab panels - remove 'active' class because CSS .tab-panel.active
+        // sets display:block which overrides the hidden attribute
         tabPanels.forEach(panel => {
             panel.hidden = true;
+            panel.classList.remove('active');
+        });
+
+        // Also deactivate tab buttons
+        const tabButtons = document.querySelectorAll('.tab-button');
+        tabButtons.forEach(btn => {
+            btn.classList.remove('active');
+            btn.setAttribute('aria-selected', 'false');
         });
 
         // Keep container visible for header
@@ -246,9 +255,24 @@ export class AuthManager {
             console.log('[Auth] Showing tabs');
         }
 
-        // Don't touch the hidden attribute - let tab navigation (main.js) handle it
-        // Tab navigation initializes after showMainUI() and manages panel visibility
-        // based on the 'active' class and URL hash
+        // Restore tab panel visibility - remove hidden attribute and let CSS handle it
+        // The tab navigation (main.js) will set the correct active panel based on URL hash
+        tabPanels.forEach(panel => {
+            panel.hidden = false;
+        });
+
+        // Ensure at least the first tab panel is active if none are active
+        // (can happen if showLoginScreen removed all active classes)
+        const hasActivePanel = Array.from(tabPanels).some(p => p.classList.contains('active'));
+        if (!hasActivePanel && tabPanels.length > 0) {
+            tabPanels[0].classList.add('active');
+            // Also activate the corresponding tab button
+            const firstTabBtn = document.querySelector('.tab-button');
+            if (firstTabBtn) {
+                firstTabBtn.classList.add('active');
+                firstTabBtn.setAttribute('aria-selected', 'true');
+            }
+        }
 
         // Show container
         if (container) {
