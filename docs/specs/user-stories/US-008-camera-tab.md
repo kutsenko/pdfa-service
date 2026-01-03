@@ -1,6 +1,6 @@
 # User Story: Camera Tab for Multi-Page Document Capture
 
-**ID**: US-004
+**ID**: US-008
 **Title**: Browser-based camera interface for multi-page document scanning
 **Status**: ✅ Implemented
 **Date**: 2025-12-30

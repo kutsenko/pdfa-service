@@ -1,199 +1,108 @@
-# Spezifikationen / Specifications
-
-Dieses Verzeichnis enthält formale User Stories und Gherkin Feature-Dateien für wichtige Features des PDF/A-Service.
+# Specifications
 
 This directory contains formal User Stories and Gherkin Feature files for major features of the PDF/A service.
 
 ---
 
-## Struktur / Structure
+## Structure
 
 ```
 docs/specs/
-├── README.md                                    # Diese Datei / This file
+├── README.md                                    # This file
 ├── user-stories/                                # User Stories (INVEST)
-│   ├── README.md                                # Übersicht User Stories
-│   ├── US-001-mongodb-integration.md            # MongoDB-Integration
+│   ├── README.md                                # User Stories overview
+│   ├── US-001-mongodb-integration.md            # MongoDB Integration
 │   ├── US-002-job-event-logging.md              # Job Event Logging
-│   └── US-003-local-default-user.md             # Lokaler Standardbenutzer
-└── features/                                     # Gherkin Features (BDD)
-    ├── README.md                                 # Übersicht Gherkin Features
-    ├── gherkin-mongodb-integration.feature       # MongoDB (36 Szenarien)
-    ├── gherkin-job-event-logging.feature         # Event Logging (21 Szenarien)
-    └── gherkin-local-default-user.feature        # Lokaler Standardbenutzer (18 Szenarien)
+│   ├── US-003-local-default-user.md             # Local Default User
+│   ├── US-004-live-job-events.md                # Live Job Events Display
+│   ├── US-005-tab-interface.md                  # Tab-Based Interface
+│   ├── US-006-account-tab.md                    # Account Tab
+│   ├── US-007-jobs-tab.md                       # Jobs History Tab
+│   ├── US-008-camera-tab.md                     # Camera Tab
+│   ├── US-009-accessibility-camera-assistance.md # Accessibility Camera
+│   ├── US-010-mobile-desktop-pairing.md         # Mobile-Desktop Pairing
+│   └── US-011-auth-page-visibility.md           # Auth-Based Page Visibility
+└── features/                                    # Gherkin Features (BDD)
+    ├── README.md                                # Gherkin Features overview
+    ├── gherkin-mongodb-integration.feature      # MongoDB (36 scenarios)
+    ├── gherkin-job-event-logging.feature        # Event Logging (21 scenarios)
+    ├── gherkin-local-default-user.feature       # Local Default User (18 scenarios)
+    ├── gherkin-live-job-events.feature          # Live Job Events
+    ├── gherkin-tab-interface.feature            # Tab Interface
+    ├── gherkin-account-tab.feature              # Account Tab
+    ├── gherkin-jobs-tab.feature                 # Jobs Tab
+    ├── gherkin-camera-tab.feature               # Camera Tab (57 scenarios)
+    ├── gherkin-accessibility-camera-assistance.feature # Accessibility (65 scenarios)
+    ├── gherkin-mobile-desktop-pairing.feature   # Mobile-Desktop Pairing
+    └── gherkin-auth-page-visibility.feature     # Auth Page Visibility (18 scenarios)
 ```
 
 ---
 
-## Übersicht / Overview
+## Overview
 
-| ID | Titel | Status | Datum | User Story | Gherkin Feature |
-|----|-------|--------|-------|------------|-----------------|
-| US-001 | MongoDB-Integration | ✅ Implementiert | 2024-12-21 | [User Story](user-stories/US-001-mongodb-integration.md) | [Feature](features/gherkin-mongodb-integration.feature) (36 Szenarien) |
-| US-002 | Job Event Logging | ✅ Implementiert | 2024-12-25 | [User Story](user-stories/US-002-job-event-logging.md) | [Feature](features/gherkin-job-event-logging.feature) (21 Szenarien) |
-| US-003 | Lokaler Standardbenutzer | ✅ Implementiert | 2024-12-25 | [User Story](user-stories/US-003-local-default-user.md) | [Feature](features/gherkin-local-default-user.feature) (18 Szenarien) |
+| ID | Title | Status | Date | User Story | Gherkin Feature |
+|----|-------|--------|------|------------|-----------------|
+| US-001 | MongoDB Integration | ✅ Implemented | 2024-12-21 | [User Story](user-stories/US-001-mongodb-integration.md) | [Feature](features/gherkin-mongodb-integration.feature) |
+| US-002 | Job Event Logging | ✅ Implemented | 2024-12-25 | [User Story](user-stories/US-002-job-event-logging.md) | [Feature](features/gherkin-job-event-logging.feature) |
+| US-003 | Local Default User | ✅ Implemented | 2024-12-25 | [User Story](user-stories/US-003-local-default-user.md) | [Feature](features/gherkin-local-default-user.feature) |
+| US-004 | Live Job Events Display | ✅ Implemented | 2024-12-25 | [User Story](user-stories/US-004-live-job-events.md) | [Feature](features/gherkin-live-job-events.feature) |
+| US-005 | Tab-Based Interface | 🚧 In Progress | 2024-12-26 | [User Story](user-stories/US-005-tab-interface.md) | [Feature](features/gherkin-tab-interface.feature) |
+| US-006 | Account Tab | 🚧 In Progress | 2024-12-27 | [User Story](user-stories/US-006-account-tab.md) | [Feature](features/gherkin-account-tab.feature) |
+| US-007 | Jobs History Tab | 🚧 In Progress | 2024-12-27 | [User Story](user-stories/US-007-jobs-tab.md) | [Feature](features/gherkin-jobs-tab.feature) |
+| US-008 | Camera Tab | ✅ Implemented | 2025-12-30 | [User Story](user-stories/US-008-camera-tab.md) | [Feature](features/gherkin-camera-tab.feature) |
+| US-009 | Accessibility Camera | ✅ Implemented | 2026-01-01 | [User Story](user-stories/US-009-accessibility-camera-assistance.md) | [Feature](features/gherkin-accessibility-camera-assistance.feature) |
+| US-010 | Mobile-Desktop Pairing | ✅ Implemented | 2026-01-02 | [User Story](user-stories/US-010-mobile-desktop-pairing.md) | [Feature](features/gherkin-mobile-desktop-pairing.feature) |
+| US-011 | Auth Page Visibility | ✅ Implemented | 2026-01-03 | [User Story](user-stories/US-011-auth-page-visibility.md) | [Feature](features/gherkin-auth-page-visibility.feature) |
 
 ---
 
 ## User Stories
 
-📁 **Verzeichnis**: [`user-stories/`](user-stories/)
+📁 **Directory**: [`user-stories/`](user-stories/)
 
-User Stories folgen dem **INVEST**-Prinzip und enthalten:
-- Story im "Als... möchte ich... damit..." Format
-- Kontext und Problemstellung
-- Akzeptanzkriterien
+User Stories follow the **INVEST** principle and contain:
+- Story in "As... I want... So that..." format
+- Context and problem statement
+- Acceptance criteria
 - Definition of Done
-- Technische Details
-- Risiken & Mitigationen
-
-### [US-001: MongoDB-Integration](user-stories/US-001-mongodb-integration.md)
-
-**Zusammenfassung**: Einführung einer persistenten MongoDB-Datenbankschicht für Conversion-History, OAuth State Tokens und Audit Logs.
-
-**Hauptziele**:
-- Jobs überleben Server-Neustarts
-- OAuth funktioniert in Multi-Instance-Deployments
-- Audit Logs für Compliance und Analytics
-
-**Collections**:
-- `users` - Minimale User-Profile
-- `jobs` - Conversion-History (TTL: 90 Tage)
-- `oauth_states` - CSRF Token Validation (TTL: 10 Minuten)
-- `audit_logs` - Event-Protokollierung (TTL: 1 Jahr)
-
-**Gherkin Feature**: [gherkin-mongodb-integration.feature](features/gherkin-mongodb-integration.feature) - 36 Szenarien
-
----
-
-### [US-002: Job Event Logging](user-stories/US-002-job-event-logging.md)
-
-**Zusammenfassung**: Detaillierte Event-Liste für jeden Konvertierungsauftrag, um Entscheidungen nachvollziehbar zu machen.
-
-**Event-Typen**:
-- `format_conversion` - Office/Image→PDF Konvertierung
-- `ocr_decision` - OCR Skip/Perform mit Statistiken
-- `compression_selected` - Kompressionsprofilwahl
-- `passthrough_mode` - PDF-Durchreichung ohne OCRmyPDF
-- `fallback_applied` - Fallback-Tier-Aktivierung
-- `job_timeout` - Job-Timeout-Ereignis
-- `job_cleanup` - Job-Cleanup-Ereignis
-
-**Architektur**:
-- Event-Callback-Pattern in converter.py
-- Async Event-Logger-Helper
-- MongoDB $push für atomare Updates
-- Backward-kompatibel (default_factory)
-
-**Gherkin Feature**: [gherkin-job-event-logging.feature](features/gherkin-job-event-logging.feature) - 21 Szenarien
-
----
-
-### [US-003: Lokaler Standardbenutzer](user-stories/US-003-local-default-user.md)
-
-**Zusammenfassung**: Automatische Erstellung eines lokalen Standardbenutzers wenn Authentifizierung deaktiviert ist.
-
-**Hauptziele**:
-- Job-Verlauf und persistente Features auch ohne OAuth
-- Konfigurierbare Standardbenutzer-Felder
-- Idempotente Multi-Instance-fähige Implementierung
-
-**Kernfeatures**:
-- `ensure_default_user()` - Erstellt User beim Startup
-- `DEFAULT_USER_ID`, `DEFAULT_USER_EMAIL`, `DEFAULT_USER_NAME` - Umgebungsvariablen
-- `get_current_user_optional()` - Gibt Default User statt None zurück
-- Backward-kompatibel mit Auth-Modus
-
-**Gherkin Feature**: [gherkin-local-default-user.feature](features/gherkin-local-default-user.feature) - 18 Szenarien
+- Technical details
+- Risks & Mitigations
 
 ---
 
 ## Gherkin Features
 
-📁 **Verzeichnis**: [`features/`](features/)
+📁 **Directory**: [`features/`](features/)
 
-Gherkin-Features sind in **deutscher Sprache** verfasst (language: de) und folgen dem **Given-When-Then**-Pattern.
-
-### [gherkin-mongodb-integration.feature](features/gherkin-mongodb-integration.feature)
-
-**Szenario-Gruppen**:
-1. Service-Start und MongoDB-Verbindung (3 Szenarien)
-2. Job-Persistierung (6 Szenarien)
-3. OAuth State Token Management (4 Szenarien)
-4. User-Profile (3 Szenarien)
-5. Audit Logs (5 Szenarien)
-6. Indexes und Performance (3 Szenarien)
-7. Repository-Pattern (4 Szenarien)
-8. Error Handling (3 Szenarien)
-9. Backward Compatibility (2 Szenarien)
-10. Multi-Instance Deployment (3 Szenarien)
-
-**Gesamt**: 36 Szenarien
-
-**Zugehörige User Story**: [US-001: MongoDB-Integration](user-stories/US-001-mongodb-integration.md)
+Gherkin features follow the **Given-When-Then** pattern and are written in English.
 
 ---
 
-### [gherkin-job-event-logging.feature](features/gherkin-job-event-logging.feature)
+## Usage
 
-**Szenario-Gruppen**:
-1. OCR-Entscheidung (3 Szenarien)
-2. Format-Konvertierung (3 Szenarien)
-3. Fallback-Mechanismen (3 Szenarien)
-4. Pass-through-Modus (2 Szenarien)
-5. Kompressionsprofilwahl (2 Szenarien)
-6. Job-Lifecycle-Events (2 Szenarien)
-7. Rückwärtskompatibilität (2 Szenarien)
-8. Vollständige Job-Lifecycle-Beispiele (2 Szenarien)
-9. Error Handling (2 Szenarien)
+### For Developers
 
-**Gesamt**: 21 Szenarien
+1. **Read the User Story** to understand the "why"
+   - 📄 Start in [`user-stories/`](user-stories/)
+2. **Check acceptance criteria** for requirements
+3. **Follow Gherkin scenarios** for concrete examples
+   - 🧪 See [`features/`](features/)
+4. **Implement with TDD** (RED-GREEN-REFACTOR)
 
-**Zugehörige User Story**: [US-002: Job Event Logging](user-stories/US-002-job-event-logging.md)
+### For Testers
 
----
+1. **Use Gherkin scenarios** as test cases
+   - 🧪 All features in [`features/`](features/)
+2. **Verify all scenarios** against implementation
+3. **Extend with new edge cases** as needed
 
-### [gherkin-local-default-user.feature](features/gherkin-local-default-user.feature)
+### For Product Owners
 
-**Szenario-Gruppen**:
-1. Service-Start und Default User-Erstellung (3 Szenarien)
-2. Konfigurierbare Standardbenutzer-Felder (2 Szenarien)
-3. Job-Attribution mit Default User (3 Szenarien)
-4. Job-Verlauf-Abfrage (3 Szenarien)
-5. Dependency Injection (3 Szenarien)
-6. Edge Cases und Error Handling (4 Szenarien)
-7. Vollständige Integration-Workflows (2 Szenarien)
-
-**Gesamt**: 18 Szenarien (inkl. Multi-Instance)
-
-**Zugehörige User Story**: [US-003: Lokaler Standardbenutzer](user-stories/US-003-local-default-user.md)
-
----
-
-## Verwendung / Usage
-
-### Für Entwickler / For Developers
-
-1. **Lesen Sie die User Story** um das "Warum" zu verstehen
-   - 📄 Beginnen Sie in [`user-stories/`](user-stories/)
-2. **Prüfen Sie die Akzeptanzkriterien** für Anforderungen
-3. **Folgen Sie den Gherkin-Szenarien** für konkrete Beispiele
-   - 🧪 Siehe [`features/`](features/)
-4. **Implementieren Sie mit TDD** (RED-GREEN-REFACTOR)
-
-### Für Tester / For Testers
-
-1. **Nutzen Sie Gherkin-Szenarien** als Testfälle
-   - 🧪 Alle Features in [`features/`](features/)
-2. **Prüfen Sie alle Szenarien** gegen die Implementierung
-3. **Erweitern Sie bei Bedarf** neue Edge Cases
-
-### Für Product Owner / For Product Owners
-
-1. **Validieren Sie Akzeptanzkriterien** in User Stories
-   - 📄 Siehe [`user-stories/`](user-stories/)
-2. **Prüfen Sie Definition of Done**
-3. **Akzeptieren oder Ablehnen** basierend auf Erfüllung
+1. **Validate acceptance criteria** in User Stories
+   - 📄 See [`user-stories/`](user-stories/)
+2. **Check Definition of Done**
+3. **Accept or reject** based on fulfillment
 
 ---
 
@@ -201,96 +110,87 @@ Gherkin-Features sind in **deutscher Sprache** verfasst (language: de) und folge
 
 ### User Story Format
 
-**Template**:
 ```markdown
-# User Story: [Titel]
+# User Story: [Title]
 
 **ID**: US-XXX
-**Titel**: [Kurzbeschreibung]
-**Status**: [In Arbeit / Implementiert / Abgelehnt]
-**Datum**: YYYY-MM-DD
+**Title**: [Short description]
+**Status**: [In Progress / Implemented / Rejected]
+**Date**: YYYY-MM-DD
 
 ## Story
-Als [Rolle]
-möchte ich [Funktion]
-damit [Nutzen]
+As [role]
+I want [feature]
+So that [benefit]
 
-## Kontext
-[Hintergrund und Problemstellung]
+## Context
+[Background and problem statement]
 
-## Akzeptanzkriterien
-[Given-When-Then Kriterien]
+## Acceptance Criteria
+[Given-When-Then criteria]
 
 ## Definition of Done
-- [ ] Checkliste
+- [ ] Checklist
 
-## Technische Details
-[Implementierungsdetails]
+## Technical Details
+[Implementation details]
 
-## Verwandte Spezifikationen
-**User Stories**: Links zu verwandten Stories
-**Gherkin Features**: Links zu Gherkin Features
+## Related Specifications
+**User Stories**: Links to related stories
+**Gherkin Features**: Links to Gherkin features
 ```
 
 ### Gherkin Format
 
-**Template**:
 ```gherkin
-# language: de
-Funktionalität: [Titel]
-  Als [Rolle]
-  möchte ich [Ziel]
-  damit [Nutzen]
+Feature: [Title]
+  As [role]
+  I want [goal]
+  So that [benefit]
 
-  Hintergrund:
-    Angenommen [Kontext]
+  Background:
+    Given [context]
 
-  Szenario: [Beschreibung]
-    Angenommen [Vorbedingung]
-    Wenn [Aktion]
-    Dann [Erwartetes Ergebnis]
+  Scenario: [Description]
+    Given [precondition]
+    When [action]
+    Then [expected result]
 ```
 
 ---
 
-## Statistiken
+## Statistics
 
-**User Stories**: 3
-- US-001: MongoDB-Integration (6.1 KB)
-- US-002: Job Event Logging (10 KB)
-- US-003: Lokaler Standardbenutzer (14 KB)
+**User Stories**: 11
+**Gherkin Features**: 11
+**Total Scenarios**: ~290
 
-**Gherkin Features**: 3
-- MongoDB Integration (18 KB, 36 Szenarien)
-- Job Event Logging (16 KB, 21 Szenarien)
-- Lokaler Standardbenutzer (8 KB, 18 Szenarien)
-
-**Gesamt**:
-- 75 Gherkin-Szenarien
-- ~72 KB Spezifikations-Content
-
-**Abdeckung**:
-- ✅ Alle implementierten Features dokumentiert
-- ✅ Backward Compatibility berücksichtigt
-- ✅ Error Handling spezifiziert
-- ✅ Multi-Instance Scenarios (MongoDB)
-- ✅ Performance-Aspekte dokumentiert
+**Coverage**:
+- ✅ All major features documented
+- ✅ Backward compatibility considered
+- ✅ Error handling specified
+- ✅ Multi-instance scenarios (MongoDB)
+- ✅ Accessibility features documented
+- ✅ Mobile-desktop pairing documented
+- ✅ Authentication flows documented
 
 ---
 
-## Verwandte Dokumentation / Related Documentation
+## Related Documentation
 
-- [AGENTS.md](../../AGENTS.md) - Entwicklungsrichtlinien
-- [README.md](../../README.md) - Benutzer-Dokumentation (Englisch)
-- [README.de.md](../../README.de.md) - Benutzer-Dokumentation (Deutsch)
-- [Plan-Dateien](../../../.claude/plans/) - Detaillierte Implementierungspläne
+- [AGENTS.md](../../AGENTS.md) - Development guidelines
+- [README.md](../../README.md) - User documentation (English)
+- [README.de.md](../../README.de.md) - User documentation (German)
 
 ---
 
-## Änderungshistorie / Change History
+## Change History
 
-| Datum | Version | Änderung |
-|-------|---------|----------|
-| 2024-12-25 | 1.0 | Initiale Erstellung mit US-001 und US-002 |
-| 2024-12-25 | 2.0 | Umstrukturierung: User Stories und Gherkin Features in separate Verzeichnisse |
-| 2024-12-25 | 3.0 | US-003: Lokaler Standardbenutzer hinzugefügt (18 Szenarien) |
+| Date | Version | Change |
+|------|---------|--------|
+| 2024-12-25 | 1.0 | Initial creation with US-001 and US-002 |
+| 2024-12-25 | 2.0 | Restructured: User Stories and Gherkin Features in separate directories |
+| 2024-12-25 | 3.0 | US-003: Local Default User added |
+| 2025-12-30 | 4.0 | US-004-US-007: UI features added |
+| 2026-01-01 | 5.0 | US-008-US-009: Camera and Accessibility added |
+| 2026-01-03 | 6.0 | Unified structure, renamed German files to English, added US-010-US-011 |
