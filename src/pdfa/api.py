@@ -539,7 +539,7 @@ async def oauth_callback(request: Request):
 
 
 @app.get("/auth/user")
-async def get_user_info(current_user: User = Depends(get_current_user_optional)):
+async def get_user_info(current_user: User | None = Depends(get_current_user_optional)):
     """Get current user information.
 
     Returns:
@@ -556,7 +556,10 @@ async def get_user_info(current_user: User = Depends(get_current_user_optional))
     if not auth_config_instance.enabled:
         raise HTTPException(status_code=404, detail="Authentication is disabled")
 
-    # get_current_user_optional handles auth validation for enabled auth
+    # Return 401 if auth is enabled but user is not authenticated
+    if current_user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
     return {
         "email": current_user.email,
         "name": current_user.name,
@@ -570,7 +573,7 @@ async def get_user_info(current_user: User = Depends(get_current_user_optional))
 @app.get("/api/v1/user/profile")
 @limiter.limit("30/minute")
 async def get_user_profile(
-    request: Request, current_user: User = Depends(get_current_user_optional)
+    request: Request, current_user: User | None = Depends(get_current_user_optional)
 ):
     """Get comprehensive user profile including stats and activity.
 
@@ -636,7 +639,7 @@ async def get_user_profile(
 @limiter.limit("30/minute")
 async def get_user_preferences(
     request: Request,
-    current_user: User = Depends(get_current_user_optional),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
     """Get user preferences or system defaults.
 
@@ -666,7 +669,7 @@ async def get_user_preferences(
 async def update_user_preferences(
     request: Request,
     preferences: dict[str, Any],
-    current_user: User = Depends(get_current_user_optional),
+    current_user: User | None = Depends(get_current_user_optional),
 ):
     """Update user preferences.
 
@@ -683,9 +686,12 @@ async def update_user_preferences(
     """
     user_prefs_repo = UserPreferencesRepository()
 
+    # Use user_id if user is logged in, otherwise use "anonymous"
+    user_id = current_user.user_id if current_user else "anonymous"
+
     # Validate and create preferences document
     prefs_doc = UserPreferencesDocument(
-        user_id=current_user.user_id,
+        user_id=user_id,
         default_pdfa_level=preferences.get("default_pdfa_level", "2"),
         default_ocr_language=preferences.get("default_ocr_language", "deu+eng"),
         default_compression_profile=preferences.get(
