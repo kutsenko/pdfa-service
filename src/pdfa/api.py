@@ -1589,7 +1589,11 @@ async def websocket_endpoint(websocket: WebSocket):
                 is_pairing_message = isinstance(
                     message, (RegisterPairingMessage, SyncImageMessage)
                 )
-                if auth_config_instance.enabled and not authenticated and not is_pairing_message:
+                if (
+                    auth_config_instance.enabled
+                    and not authenticated
+                    and not is_pairing_message
+                ):
                     error_msg = ErrorMessage(
                         job_id="",
                         error_code="UNAUTHORIZED",

@@ -4,6 +4,11 @@
             .a11y-controls-grid {
                 grid-template-columns: 1fr;
             }
+
+            /* Account grid should use single column on mobile */
+            .account-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
 

@@ -22,9 +22,7 @@ Note: Tests for auth-enabled scenarios require manual testing with auth enabled 
 
 from __future__ import annotations
 
-import pytest
 from playwright.sync_api import Page, expect
-
 
 # ============================================================================
 # Tests: Auth Disabled (default server configuration)
@@ -162,7 +160,8 @@ class TestLogoutSimulation:
         page.evaluate(
             """() => {
             if (window.location.hash) {
-                history.replaceState(null, null, window.location.pathname + window.location.search);
+                const path = window.location.pathname + window.location.search;
+                history.replaceState(null, null, path);
             }
         }"""
         )
@@ -242,7 +241,9 @@ class TestAuthRegressions:
             has_active = "active" in (panel.get_attribute("class") or "")
 
             if not is_visible:
-                assert not has_active, f"Hidden panel {panel} should not have 'active' class"
+                assert (
+                    not has_active
+                ), f"Hidden panel {panel} should not have 'active' class"
 
     def test_regression_url_hash_with_multiple_switches(self, page: Page):
         """Regression: URL hash should stay in sync after multiple tab switches."""
@@ -262,4 +263,6 @@ class TestAuthRegressions:
 
             # URL should reflect current tab
             current_url = page.url
-            assert current_url.endswith(f"#{hash_name}"), f"URL should end with #{hash_name}, got {current_url}"
+            assert current_url.endswith(
+                f"#{hash_name}"
+            ), f"URL should end with #{hash_name}, got {current_url}"
