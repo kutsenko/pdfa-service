@@ -46,7 +46,10 @@ export class MobilePairingManager {
             // Get auth token if available
             const authToken = window.authManager?.token || '';
 
-            const response = await fetch('/api/v1/camera/pairing/create', {
+            // Get current language to pass to mobile device
+            const lang = window.currentLang || 'en';
+
+            const response = await fetch(`/api/v1/camera/pairing/create?lang=${lang}`, {
                 method: 'POST',
                 headers: {
                     'Authorization': authToken ? `Bearer ${authToken}` : ''
