@@ -803,7 +803,9 @@ async def mobile_camera_page(request: Request):
 @app.post("/api/v1/camera/pairing/create")
 @limiter.limit("10/minute")
 async def create_pairing_session(
-    request: Request, current_user: User | None = Depends(get_current_user_optional)
+    request: Request,
+    current_user: User | None = Depends(get_current_user_optional),
+    lang: str = "en",
 ) -> dict[str, Any]:
     """Create new mobile-desktop pairing session.
 
@@ -812,12 +814,13 @@ async def create_pairing_session(
     Args:
         request: FastAPI request object
         current_user: Authenticated user (optional, depends on auth config)
+        lang: Language code to pass to mobile page (en, de, es, fr)
 
     Returns:
         Dictionary containing:
             - session_id: UUID of the pairing session
             - pairing_code: 6-character alphanumeric code
-            - qr_data: Full URL for QR code (includes pairing code)
+            - qr_data: Full URL for QR code (includes pairing code and language)
             - expires_at: ISO 8601 expiration timestamp
             - ttl_seconds: Time-to-live in seconds
 
@@ -831,9 +834,9 @@ async def create_pairing_session(
     user_id = current_user.user_id if current_user else "anonymous"
     session = await pairing_manager.create_session(user_id)
 
-    # Build QR data URL
+    # Build QR data URL with language parameter
     base_url = str(request.base_url).rstrip("/")
-    qr_data = f"{base_url}/mobile/camera?code={session.pairing_code}"
+    qr_data = f"{base_url}/mobile/camera?code={session.pairing_code}&lang={lang}"
 
     return {
         "session_id": session.session_id,
