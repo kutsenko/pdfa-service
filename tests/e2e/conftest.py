@@ -205,21 +205,6 @@ def page(context, api_process):
     # Create new page
     pg = context.new_page()
 
-    # Intercept all requests and add cache-busting query parameter
-    # This forces browser to fetch fresh versions of all resources
-    def handle_route(route):
-        url = route.request.url
-        # Add cache-busting parameter to JS/CSS files
-        if '.js' in url or '.css' in url:
-            # Add timestamp to force fresh load
-            import time
-            separator = '&' if '?' in url else '?'
-            url = f"{url}{separator}_cb={int(time.time() * 1000)}"
-        route.continue_(url=url)
-
-    # Register route handler for all requests
-    pg.route("**/*", handle_route)
-
     yield pg
 
     # Clean up
