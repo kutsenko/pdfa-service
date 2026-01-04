@@ -241,7 +241,7 @@ function initFileUpload() {
         return;
     }
 
-    const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500 MB
+    const MAX_FILE_SIZE = 300 * 1024 * 1024; // 300 MB
 
     function updateFileName() {
         if (fileInput.files.length > 0) {
