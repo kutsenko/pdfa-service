@@ -224,7 +224,7 @@ export class ConversionClient {
                 }
 
                 // Security: Validate file size before encoding
-                const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+                const MAX_FILE_SIZE = 300 * 1024 * 1024; // 300MB
                 if (file.size > MAX_FILE_SIZE) {
                     throw new Error(t('status.fileTooLarge', {
                         size: formatFileSize(file.size),
@@ -860,6 +860,11 @@ export class ConversionClient {
              * Translate event message using i18n key or fallback to English
              */
             translateEventMessage(event) {
+                // Check if translations are available
+                if (typeof translations === 'undefined' || typeof currentLang === 'undefined') {
+                    return event.message; // Return original message if translations not loaded
+                }
+
                 // Try to get translation from i18n key
                 if (event.details && event.details._i18n_key) {
                     const key = event.details._i18n_key;
