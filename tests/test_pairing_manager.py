@@ -201,8 +201,8 @@ class TestPairingSessionJoining:
         mock_repo.update_session.assert_called_once()
 
     @patch("src.pdfa.pairing_manager.PairingSessionRepository")
-    async def test_join_session_different_user_fails(self, mock_repo_class):
-        """Should reject different user."""
+    async def test_join_session_different_user_allowed(self, mock_repo_class):
+        """Should allow different user (pairing code provides security)."""
         mock_repo = AsyncMock()
         mock_repo_class.return_value = mock_repo
 
@@ -221,8 +221,12 @@ class TestPairingSessionJoining:
         manager = PairingManager()
         manager.repo = mock_repo
 
-        with pytest.raises(ValueError, match="Must use same account"):
-            await manager.join_session("ABC123", "user-456")
+        # Different user should be allowed to join (e.g. mobile without login)
+        joined = await manager.join_session("ABC123", "user-456")
+
+        assert joined.mobile_user_id == "user-456"
+        assert joined.status == "active"
+        mock_repo.update_session.assert_called_once()
 
     @patch("src.pdfa.pairing_manager.PairingSessionRepository")
     async def test_join_session_invalid_code_fails(self, mock_repo_class):

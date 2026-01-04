@@ -8,6 +8,8 @@ This module contains E2E tests that prevent regressions of previously fixed bugs
 import pytest
 from playwright.sync_api import Page, expect
 
+pytestmark = [pytest.mark.e2e, pytest.mark.playwright]
+
 
 @pytest.mark.playwright
 class TestAudioSystemRegression:

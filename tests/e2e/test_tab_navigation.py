@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 from playwright.sync_api import Page, expect
 
+pytestmark = [pytest.mark.e2e, pytest.mark.playwright]
+
 
 @pytest.fixture
 def page_with_tabs(page: Page, base_url: str) -> Page:
