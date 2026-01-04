@@ -5,6 +5,8 @@ from __future__ import annotations
 import pytest
 from playwright.sync_api import Page, expect
 
+pytestmark = [pytest.mark.e2e, pytest.mark.playwright]
+
 
 def activate_camera_tab(page: Page):
     """Activate camera tab and wait for it to be visible."""

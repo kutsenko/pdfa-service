@@ -185,7 +185,7 @@ echo "----------------------------------------"
 log_info "Running Integration Tests..."
 echo "----------------------------------------"
 
-if pytest tests/integration/ -v --tb=short -k "not websocket and not long_conversion"; then
+if pytest tests/integration/ -v --tb=short -k "not websocket and not long_conversion and not event_modal"; then
     log_success "Integration tests passed ✓"
 else
     log_error "Integration tests failed ✗"

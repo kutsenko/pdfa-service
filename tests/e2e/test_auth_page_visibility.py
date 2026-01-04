@@ -22,7 +22,10 @@ Note: Tests for auth-enabled scenarios require manual testing with auth enabled 
 
 from __future__ import annotations
 
+import pytest
 from playwright.sync_api import Page, expect
+
+pytestmark = [pytest.mark.e2e, pytest.mark.playwright]
 
 # ============================================================================
 # Tests: Auth Disabled (default server configuration)
