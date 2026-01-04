@@ -205,38 +205,28 @@ async def add_security_headers(request: Request, call_next):
 # Initialize job manager
 job_manager = get_job_manager()
 
-# Custom StaticFiles class to control caching behavior
-class CacheControlStaticFiles(StaticFiles):
-    """StaticFiles with configurable caching via environment variable."""
+# Middleware to add cache control headers based on environment variable
+@app.middleware("http")
+async def cache_control_middleware(request: Request, call_next):
+    """Add cache control headers to static files based on ENABLE_STATIC_CACHE env var."""
+    response = await call_next(request)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        # Check environment variable to enable/disable caching
-        self.enable_cache = os.getenv("ENABLE_STATIC_CACHE", "true").lower() == "true"
+    # Check if caching should be disabled
+    enable_cache = os.getenv("ENABLE_STATIC_CACHE", "true").lower() == "true"
 
-    def file_response(
-        self,
-        full_path: Path,
-        stat_result: os.stat_result,
-        scope: dict,
-        status_code: int = 200,
-    ):
-        """Override to add cache control headers."""
-        response = super().file_response(full_path, stat_result, scope, status_code)
+    # Apply no-cache headers to static files when caching is disabled
+    if not enable_cache and request.url.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
 
-        if not self.enable_cache:
-            # Disable caching for development/testing
-            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
-            response.headers["Pragma"] = "no-cache"
-            response.headers["Expires"] = "0"
-
-        return response
+    return response
 
 
 # Mount static files for modular web UI
 static_path = Path(__file__).parent / "static"
 if static_path.exists():
-    app.mount("/static", CacheControlStaticFiles(directory=str(static_path)), name="static")
+    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
     logger.info(f"Mounted static files from {static_path}")
 else:
     logger.warning(f"Static files directory not found at {static_path}")
