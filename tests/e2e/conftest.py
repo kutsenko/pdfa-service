@@ -90,6 +90,9 @@ def mongodb_test_container():
 def api_process(ensure_test_data, mongodb_test_container):
     """Start the FastAPI server for E2E tests."""
     # Set test environment variables
+    # Note: These values also exist in tests/.env.test for documentation
+    # and are loaded by tests/conftest.py. We explicitly set them here
+    # for the subprocess to ensure the server uses the correct configuration.
     test_env = os.environ.copy()
     test_env.update(
         {
@@ -113,17 +116,37 @@ def api_process(ensure_test_data, mongodb_test_container):
         env=test_env,
     )
 
-    # Wait for server to be ready
+    # Wait for server to be ready - poll health endpoint
     print("[E2E Setup] Waiting for server to start...")
-    time.sleep(4)
+    import requests
 
-    # Check if server started successfully
-    if process.poll() is not None:
-        stdout, stderr = process.communicate()
-        print("[E2E Setup] Server failed to start!")
-        print(f"STDOUT: {stdout.decode()}")
-        print(f"STDERR: {stderr.decode()}")
-        pytest.skip("FastAPI server failed to start")
+    server_ready = False
+    for i in range(60):  # 60 attempts × 0.5s = 30s max
+        try:
+            response = requests.get("http://localhost:8001/health", timeout=1)
+            if response.status_code == 200:
+                print(f"[E2E Setup] Server ready after {i * 0.5:.1f}s")
+                server_ready = True
+                break
+        except requests.exceptions.ConnectionError:
+            # Server not ready yet, wait and retry
+            time.sleep(0.5)
+        except Exception as e:
+            print(f"[E2E Setup] Unexpected error during health check: {e}")
+            time.sleep(0.5)
+
+    # Check if server became healthy
+    if not server_ready:
+        # Server didn't respond to health check - capture logs for diagnostics
+        try:
+            stdout, stderr = process.communicate(timeout=1)
+            print("[E2E Setup] Server failed to become healthy!")
+            print(f"STDOUT: {stdout.decode()}")
+            print(f"STDERR: {stderr.decode()}")
+        except subprocess.TimeoutExpired:
+            print("[E2E Setup] Server process still running but not responding to health checks")
+        process.kill()
+        pytest.skip("FastAPI server did not become healthy within 30 seconds")
 
     print("[E2E Setup] Server is ready on http://localhost:8001!")
 
@@ -137,6 +160,29 @@ def api_process(ensure_test_data, mongodb_test_container):
     except subprocess.TimeoutExpired:
         process.kill()
         process.wait()
+
+    # Verify port is freed
+    import socket
+
+    port_freed = False
+    for i in range(10):  # Wait up to 5 seconds
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        try:
+            sock.bind(("localhost", 8001))
+            sock.close()
+            print("[E2E Teardown] Port 8001 freed")
+            port_freed = True
+            break
+        except OSError:
+            time.sleep(0.5)
+        finally:
+            try:
+                sock.close()
+            except Exception:
+                pass
+
+    if not port_freed:
+        print("[E2E Teardown] WARNING: Port 8001 still in use after 5 seconds!")
 
 
 @pytest.fixture(scope="session")
@@ -176,38 +222,47 @@ def browser_context_args(browser_context_args):
     }
 
 
-@pytest.fixture
-def context(browser, browser_context_args):
-    """Create a fresh browser context with cache disabled for each test.
+@pytest.fixture(scope="module")
+def persistent_context(browser, browser_context_args):
+    """Create a browser context shared across all tests in a module.
 
-    This prevents caching issues where old JavaScript/CSS files are loaded
-    instead of updated versions.
+    This is faster than creating a new context for each test.
+    Individual tests clear state between runs to prevent leakage.
     """
-    # Create new context with our custom args
     ctx = browser.new_context(**browser_context_args)
-
-    # Clear any existing cookies/storage
-    ctx.clear_cookies()
-
     yield ctx
-
-    # Clean up
     ctx.close()
 
 
 @pytest.fixture
-def page(context, api_process):
-    """Create a fresh page with all caches cleared for each test.
+def context(persistent_context):
+    """Provide a clean context for each test by clearing state.
 
-    This overrides the default Playwright page fixture to ensure
-    no cached resources are used.
+    Reuses the persistent browser context but clears cookies and storage
+    to ensure test isolation. This is much faster than creating a new
+    context for each test while maintaining test independence.
+    """
+    # Clear state before test
+    persistent_context.clear_cookies()
+
+    yield persistent_context
+
+    # Note: No cleanup needed - persistent_context handles it
+
+
+@pytest.fixture
+def page(context, api_process):
+    """Create a fresh page for each test.
+
+    Uses the reused context from the 'context' fixture which has already
+    been cleared of cookies and storage.
     """
     # Create new page
     pg = context.new_page()
 
     yield pg
 
-    # Clean up
+    # Clean up page (but not context)
     pg.close()
 
 

@@ -58,6 +58,5 @@ ignore = ["D100", "D101", "D102", "D103", "D104", "D105", "N818"]
 
 [tool.pytest.ini_options]
 pythonpath = ["src"]
-addopts = "-ra"
-timeout = 300
-timeout_method = "thread"
+# Note: Timeout and most other pytest config is in pytest.ini
+# Only pythonpath is here as it's specific to the project structure

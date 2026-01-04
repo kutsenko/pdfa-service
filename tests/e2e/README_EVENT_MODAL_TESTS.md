@@ -117,7 +117,7 @@ Each test follows this pattern:
 def test_feature_name(self, page_with_server: Page, test_pdfs: dict[str, Path]) -> None:
     """Test description."""
     page = page_with_server
-    page.goto("http://localhost:8000/en")
+    page.goto("http://localhost:8001/en")
 
     # 1. Upload file
     file_input = page.locator('input[type="file"]')
@@ -145,7 +145,7 @@ Tests use dynamically generated PDFs:
 ## Fixtures
 
 ### `page_with_server`
-- Starts FastAPI server on `localhost:8000`
+- Starts FastAPI server on `localhost:8001`
 - Provides Playwright Page instance
 - Automatically cleans up after tests
 

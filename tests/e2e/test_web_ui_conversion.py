@@ -63,7 +63,7 @@ class TestBasicConversionFlow:
     def test_page_loads_successfully(self, page_with_server: Page) -> None:
         """Test that the web UI loads successfully."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Check title
         expect(page).to_have_title("PDF/A Converter - Test Interface")
@@ -76,7 +76,7 @@ class TestBasicConversionFlow:
     def test_file_upload_button_present(self, page_with_server: Page) -> None:
         """Test that file upload controls are present."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Check file input exists
         file_input = page.locator('input[type="file"]')
@@ -91,7 +91,7 @@ class TestBasicConversionFlow:
     ) -> None:
         """Test conversion of a minimal PDF file."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Upload file
         file_input = page.locator('input[type="file"]')
@@ -137,7 +137,7 @@ class TestProgressUpdates:
     ) -> None:
         """Test that progress dialog appears when conversion starts."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Upload file
         file_input = page.locator('input[type="file"]')
@@ -163,7 +163,7 @@ class TestProgressUpdates:
     ) -> None:
         """Test that progress bar updates during conversion."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Upload file
         file_input = page.locator('input[type="file"]')
@@ -209,7 +209,7 @@ class TestProgressUpdates:
     ) -> None:
         """Test that status message is not stuck on 'Starting...'."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Upload file
         file_input = page.locator('input[type="file"]')
@@ -251,7 +251,7 @@ class TestProgressUpdates:
     ) -> None:
         """Test that progress percentage is not stuck at 8%."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Upload file
         file_input = page.locator('input[type="file"]')
@@ -299,7 +299,7 @@ class TestLargeFileConversion:
     ) -> None:
         """Test that large PDF conversion completes successfully."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Upload large file
         file_input = page.locator('input[type="file"]')
@@ -344,7 +344,7 @@ class TestLargeFileConversion:
     ) -> None:
         """Test that large PDF shows multiple progress updates."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Upload large file
         file_input = page.locator('input[type="file"]')
@@ -409,7 +409,7 @@ class TestErrorHandling:
     ) -> None:
         """Test that uploading invalid file type shows an error."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Create a text file
         invalid_file = tmp_path / "test.txt"
@@ -441,7 +441,7 @@ class TestErrorHandling:
     ) -> None:
         """Test that uploading empty file shows an error."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Create empty PDF
         empty_file = tmp_path / "empty.pdf"
@@ -475,7 +475,7 @@ class TestUIStateManagement:
     ) -> None:
         """Test that convert button is disabled during conversion."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Upload file
         file_input = page.locator('input[type="file"]')
@@ -498,7 +498,7 @@ class TestUIStateManagement:
     ) -> None:
         """Test that cancel button appears during conversion."""
         page = page_with_server
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         # Upload file
         file_input = page.locator('input[type="file"]')

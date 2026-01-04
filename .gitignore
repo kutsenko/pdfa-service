@@ -22,4 +22,6 @@ dist/
 *.egg-info/
 /data
 /.env
+.env.test
+*.env.local
 

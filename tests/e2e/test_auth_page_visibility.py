@@ -9,7 +9,7 @@ These tests correspond to the Gherkin scenarios in:
 docs/specs/features/gherkin-auth-page-visibility.feature
 
 Requirements:
-    - Server running on localhost:8000 with PDFA_ENABLE_AUTH=false (default)
+    - Server running on localhost:8001 with PDFA_ENABLE_AUTH=false (default)
     - MongoDB running
     - Playwright browsers installed: playwright install
 
@@ -40,7 +40,7 @@ class TestAuthDisabled:
 
         Gherkin: Scenario: User sees all features when authentication is disabled
         """
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         # Tab navigation should be visible
@@ -56,7 +56,7 @@ class TestAuthDisabled:
 
         Gherkin: Scenario: User sees all features when authentication is disabled
         """
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         welcome_screen = page.locator("#welcomeScreen")
@@ -67,7 +67,7 @@ class TestAuthDisabled:
 
         Gherkin: Scenario: User sees all features when authentication is disabled
         """
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         login_screen = page.locator("#loginScreen")
@@ -78,7 +78,7 @@ class TestAuthDisabled:
 
         Gherkin: Scenario: User sees all features when authentication is disabled
         """
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         konverter_panel = page.locator("#tab-konverter")
@@ -89,7 +89,7 @@ class TestAuthDisabled:
 
         Gherkin: Scenario: User sees all features when authentication is disabled
         """
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         # Auth bar should be hidden
@@ -108,7 +108,7 @@ class TestUrlHashHandling:
     def test_url_hash_navigates_to_tab(self, page: Page):
         """Test that URL hash correctly navigates to the specified tab."""
         # Navigate with hash
-        page.goto("http://localhost:8000/#account")
+        page.goto("http://localhost:8001/#account")
         page.wait_for_load_state("networkidle")
         page.wait_for_timeout(300)
 
@@ -125,7 +125,7 @@ class TestUrlHashHandling:
         routes_to_test = ["konverter", "kamera", "jobs", "account", "documentation"]
 
         for route in routes_to_test:
-            page.goto(f"http://localhost:8000/#{route}")
+            page.goto(f"http://localhost:8001/#{route}")
             page.wait_for_load_state("networkidle")
             page.wait_for_timeout(200)
 
@@ -149,7 +149,7 @@ class TestLogoutSimulation:
         causing the last selected tab to be visible on the login screen.
         """
         # Navigate to a specific tab hash
-        page.goto("http://localhost:8000/#account")
+        page.goto("http://localhost:8001/#account")
         page.wait_for_load_state("networkidle")
         page.wait_for_timeout(300)
 
@@ -186,7 +186,7 @@ class TestAuthRegressions:
 
         Bug: Multiple panels could have 'active' class causing display issues.
         """
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         # Only one panel should have 'active' class
@@ -203,7 +203,7 @@ class TestAuthRegressions:
         Bug: The 'active' class was not always removed from previous tab,
         causing multiple tabs to appear visible.
         """
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         # Initial state - Konverter is active
@@ -229,7 +229,7 @@ class TestAuthRegressions:
         This tests the fix where showLoginScreen() now removes 'active' class
         to prevent CSS .tab-panel.active { display: block } from overriding hidden.
         """
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         # Get all hidden panels
@@ -247,7 +247,7 @@ class TestAuthRegressions:
 
     def test_regression_url_hash_with_multiple_switches(self, page: Page):
         """Regression: URL hash should stay in sync after multiple tab switches."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         tabs = [

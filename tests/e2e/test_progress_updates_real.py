@@ -36,7 +36,7 @@ class TestProgressUpdatesReal:
             create_medium_pdf(medium_pdf)
 
         # Navigate to the page using base_url
-        page.goto(base_url if base_url else "http://localhost:8000")
+        page.goto(base_url if base_url else "http://localhost:8001")
 
         # Upload file
         page.set_input_files('input[type="file"]', medium_pdf)
@@ -125,7 +125,7 @@ class TestProgressUpdatesReal:
 
             create_medium_pdf(medium_pdf)
 
-        page.goto(base_url if base_url else "http://localhost:8000")
+        page.goto(base_url if base_url else "http://localhost:8001")
         page.set_input_files('input[type="file"]', medium_pdf)
         page.wait_for_timeout(500)
 
@@ -176,7 +176,7 @@ class TestProgressUpdatesReal:
 
     def test_websocket_connection_established(self, page: Page, base_url: str) -> None:
         """Test that WebSocket connection is established successfully."""
-        page.goto(base_url if base_url else "http://localhost:8000")
+        page.goto(base_url if base_url else "http://localhost:8001")
 
         # Wait for WebSocket to connect
         page.wait_for_timeout(2000)
@@ -212,7 +212,7 @@ class TestProgressUpdatesReal:
 
         page.on("console", on_console)
 
-        page.goto(base_url if base_url else "http://localhost:8000")
+        page.goto(base_url if base_url else "http://localhost:8001")
         page.set_input_files('input[type="file"]', medium_pdf)
         page.wait_for_timeout(500)
 
@@ -246,7 +246,7 @@ class TestProgressUpdatesReal:
 
             create_medium_pdf(medium_pdf)
 
-        page.goto(base_url if base_url else "http://localhost:8000")
+        page.goto(base_url if base_url else "http://localhost:8001")
         page.set_input_files('input[type="file"]', medium_pdf)
         page.wait_for_timeout(500)
 

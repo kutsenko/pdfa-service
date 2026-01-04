@@ -113,12 +113,20 @@ def create_long_conversion_mock(
     return mock_convert
 
 
-@pytest.mark.skip(reason="WebSocket tests hang in CI - require real event loop")
+@pytest.mark.skip(
+    reason="TestClient does not properly handle async lifespan events. "
+    "Long-running conversion reliability is tested via E2E tests. "
+    "TODO: Migrate to httpx.AsyncClient or test via E2E with real browser."
+)
+@pytest.mark.integration
 class TestLongConversionReliability:
-    """Test suite for long-running conversion reliability."""
+    """Test suite for long-running conversion reliability.
 
-    @pytest.mark.asyncio
-    async def test_30_minute_conversion_with_progress_updates(
+    NOTE: Currently skipped due to TestClient limitations.
+    Long-running conversions ARE tested in E2E tests with real browsers.
+    """
+
+    def test_30_minute_conversion_with_progress_updates(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that progress updates continue throughout a 30-minute conversion.
@@ -196,8 +204,8 @@ class TestLongConversionReliability:
                 assert download_response.status_code == 200
                 assert len(download_response.content) > 0
 
-    @pytest.mark.asyncio
-    async def test_websocket_survives_multiple_keep_alive_cycles(
+    
+    def test_websocket_survives_multiple_keep_alive_cycles(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that WebSocket connection survives many keep-alive ping/pong cycles.
@@ -251,8 +259,8 @@ class TestLongConversionReliability:
                 # Note: In test environment, ping frequency depends on JobManager config
                 assert progress_count > 0, "Should receive progress updates"
 
-    @pytest.mark.asyncio
-    async def test_progress_broadcast_with_multiple_clients(
+    
+    def test_progress_broadcast_with_multiple_clients(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test progress broadcasting to multiple concurrent WebSocket clients.
@@ -307,8 +315,8 @@ class TestLongConversionReliability:
                     len(clients_progress[0]) > 10
                 ), "Should receive many progress updates"
 
-    @pytest.mark.asyncio
-    async def test_download_available_after_completion(
+    
+    def test_download_available_after_completion(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that download is available immediately after completion message.
@@ -355,8 +363,8 @@ class TestLongConversionReliability:
                 assert download_response.headers["content-type"] == "application/pdf"
                 assert len(download_response.content) > 0
 
-    @pytest.mark.asyncio
-    async def test_progress_updates_not_throttled_excessively(
+    
+    def test_progress_updates_not_throttled_excessively(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that progress throttling (1 update/sec) doesn't cause issues.
@@ -405,8 +413,8 @@ class TestLongConversionReliability:
                     5 <= len(progress_updates) <= 15
                 ), f"Expected ~10 throttled updates, got {len(progress_updates)}"
 
-    @pytest.mark.asyncio
-    async def test_job_status_endpoint_during_long_conversion(
+    
+    def test_job_status_endpoint_during_long_conversion(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that job status can be queried via REST API during conversion.
@@ -465,8 +473,8 @@ class TestReconnectionScenarios:
     network disconnections which is difficult in automated tests.
     """
 
-    @pytest.mark.asyncio
-    async def test_client_reconnection_during_conversion(
+    
+    def test_client_reconnection_during_conversion(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that client can reconnect and resume after disconnect.
@@ -479,8 +487,8 @@ class TestReconnectionScenarios:
         """
         pass
 
-    @pytest.mark.asyncio
-    async def test_client_reconnection_after_completion(
+    
+    def test_client_reconnection_after_completion(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that client can download after reconnecting post-completion.
