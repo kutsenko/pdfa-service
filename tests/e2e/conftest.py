@@ -99,6 +99,8 @@ def api_process(ensure_test_data, mongodb_test_container):
             "PYTHONUNBUFFERED": "1",
             # Disable OCR for tests (Tesseract language data not installed)
             "PDFA_OCR_ENABLED": "false",
+            # Disable static file caching to prevent browser caching issues in tests
+            "ENABLE_STATIC_CACHE": "false",
         }
     )
 
@@ -135,6 +137,93 @@ def api_process(ensure_test_data, mongodb_test_container):
     except subprocess.TimeoutExpired:
         process.kill()
         process.wait()
+
+
+@pytest.fixture(scope="session")
+def browser_launch_args(browser_launch_args):
+    """Configure browser launch arguments to disable caching.
+
+    These arguments are passed to Chromium/Firefox on launch to completely
+    disable all forms of caching.
+    """
+    return {
+        **browser_launch_args,
+        "args": [
+            "--disable-http-cache",
+            "--disable-cache",
+            "--disable-application-cache",
+            "--disable-offline-load-stale-cache",
+            "--disk-cache-size=0",
+            "--disable-dev-shm-usage",
+            "--disable-gpu-shader-disk-cache",
+        ],
+    }
+
+
+@pytest.fixture(scope="session")
+def browser_context_args(browser_context_args):
+    """Configure browser context to disable caching for E2E tests.
+
+    This ensures that JavaScript and CSS changes are immediately reflected
+    in tests without requiring manual cache clearing.
+    """
+    return {
+        **browser_context_args,
+        "ignore_https_errors": True,
+        "bypass_csp": True,
+        # Disable service workers that might cache resources
+        "service_workers": "block",
+    }
+
+
+@pytest.fixture
+def context(browser, browser_context_args):
+    """Create a fresh browser context with cache disabled for each test.
+
+    This prevents caching issues where old JavaScript/CSS files are loaded
+    instead of updated versions.
+    """
+    # Create new context with our custom args
+    ctx = browser.new_context(**browser_context_args)
+
+    # Clear any existing cookies/storage
+    ctx.clear_cookies()
+
+    yield ctx
+
+    # Clean up
+    ctx.close()
+
+
+@pytest.fixture
+def page(context, api_process):
+    """Create a fresh page with all caches cleared for each test.
+
+    This overrides the default Playwright page fixture to ensure
+    no cached resources are used.
+    """
+    # Create new page
+    pg = context.new_page()
+
+    # Intercept all requests and add cache-busting query parameter
+    # This forces browser to fetch fresh versions of all resources
+    def handle_route(route):
+        url = route.request.url
+        # Add cache-busting parameter to JS/CSS files
+        if '.js' in url or '.css' in url:
+            # Add timestamp to force fresh load
+            import time
+            separator = '&' if '?' in url else '?'
+            url = f"{url}{separator}_cb={int(time.time() * 1000)}"
+        route.continue_(url=url)
+
+    # Register route handler for all requests
+    pg.route("**/*", handle_route)
+
+    yield pg
+
+    # Clean up
+    pg.close()
 
 
 @pytest.fixture

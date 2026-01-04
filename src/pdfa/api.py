@@ -4,12 +4,17 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any, Literal
 from urllib.parse import quote
+
+# Static version for cache-busting (set at module load time)
+# This ensures browsers fetch fresh JS/CSS files when the server restarts
+STATIC_VERSION = str(int(time.time()))
 
 from fastapi import (
     Depends,
@@ -200,10 +205,38 @@ async def add_security_headers(request: Request, call_next):
 # Initialize job manager
 job_manager = get_job_manager()
 
+# Custom StaticFiles class to control caching behavior
+class CacheControlStaticFiles(StaticFiles):
+    """StaticFiles with configurable caching via environment variable."""
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Check environment variable to enable/disable caching
+        self.enable_cache = os.getenv("ENABLE_STATIC_CACHE", "true").lower() == "true"
+
+    def file_response(
+        self,
+        full_path: Path,
+        stat_result: os.stat_result,
+        scope: dict,
+        status_code: int = 200,
+    ):
+        """Override to add cache control headers."""
+        response = super().file_response(full_path, stat_result, scope, status_code)
+
+        if not self.enable_cache:
+            # Disable caching for development/testing
+            response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+
+        return response
+
+
 # Mount static files for modular web UI
 static_path = Path(__file__).parent / "static"
 if static_path.exists():
-    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+    app.mount("/static", CacheControlStaticFiles(directory=str(static_path)), name="static")
     logger.info(f"Mounted static files from {static_path}")
 else:
     logger.warning(f"Static files directory not found at {static_path}")
@@ -370,6 +403,16 @@ async def web_ui() -> str:
         html_content = html_content.replace(
             '<html lang="en" data-lang="en">', '<html lang="en" data-lang="auto">'
         )
+
+        # Add cache-busting version parameter to all script and link tags
+        # This forces browsers to fetch fresh JS/CSS files when server restarts
+        import re
+        html_content = re.sub(
+            r'(src|href)="(/static/[^"]+\.(js|css))"',
+            rf'\1="\2?v={STATIC_VERSION}"',
+            html_content
+        )
+
         # Config is now loaded via /api/config/a11y-camera endpoint (no injection)
         return html_content
     except FileNotFoundError:
@@ -410,6 +453,16 @@ async def web_ui_lang(lang: str) -> str:
             f"        window.a11yCameraConfig = {config_json};\n"
         )
         html_content = html_content.replace("<script>", f"<script>{config_injection}")
+
+        # Add cache-busting version parameter to all script and link tags
+        # This forces browsers to fetch fresh JS/CSS files when server restarts
+        import re
+        html_content = re.sub(
+            r'(src|href)="(/static/[^"]+\.(js|css))"',
+            rf'\1="\2?v={STATIC_VERSION}"',
+            html_content
+        )
+
         return html_content
     except FileNotFoundError:
         logger.warning("Web UI file not found at %s", ui_path)
