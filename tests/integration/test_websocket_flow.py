@@ -21,7 +21,6 @@ from pdfa import api
 from pdfa.job_manager import get_job_manager
 from pdfa.progress_tracker import ProgressInfo
 
-
 # Client fixture now provided by conftest.py (integration_client)
 
 
