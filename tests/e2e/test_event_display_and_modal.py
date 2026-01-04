@@ -10,7 +10,6 @@ Tests verify that:
 
 from __future__ import annotations
 
-import time
 from pathlib import Path
 
 import pytest
@@ -25,7 +24,7 @@ class TestEventDisplayDuringConversion:
     def test_event_list_container_appears_on_first_event(
         self, page: Page, test_data_dir: Path, base_url: str
     ) -> None:
-        """Test that event list container becomes visible when first event is received."""
+        """Test event list container becomes visible on first event."""
         medium_pdf = test_data_dir / "medium.pdf"
 
         if not medium_pdf.exists():
@@ -48,7 +47,7 @@ class TestEventDisplayDuringConversion:
         # Container becomes visible via style.display = 'block'
         page.wait_for_function(
             "document.getElementById('eventListContainer').style.display === 'block'",
-            timeout=10000
+            timeout=10000,
         )
 
         # Verify container is visible
@@ -171,9 +170,9 @@ class TestEventDisplayDuringConversion:
             or "translateEventMessage" in err
         ]
 
-        assert len(relevant_errors) == 0, (
-            f"JavaScript errors occurred during event handling: {relevant_errors}"
-        )
+        assert (
+            len(relevant_errors) == 0
+        ), f"JavaScript errors occurred during event handling: {relevant_errors}"
 
     def test_event_list_toggle_functionality(
         self, page: Page, test_data_dir: Path, base_url: str
@@ -199,9 +198,6 @@ class TestEventDisplayDuringConversion:
         # Event list should be expanded by default (or after first event)
         event_list = page.locator("#eventList")
         toggle_btn = page.locator("#eventListToggle")
-
-        # Check initial state - list should be visible
-        is_hidden = event_list.is_hidden()
 
         # Click toggle to collapse
         toggle_btn.click()
@@ -467,9 +463,9 @@ class TestEventSummaryModal:
             or "translateEventMessage" in err
         ]
 
-        assert len(relevant_errors) == 0, (
-            f"JavaScript errors occurred when showing modal: {relevant_errors}"
-        )
+        assert (
+            len(relevant_errors) == 0
+        ), f"JavaScript errors occurred when showing modal: {relevant_errors}"
 
 
 @pytest.mark.e2e
@@ -508,9 +504,10 @@ class TestEventAndModalIntegration:
         modal_event_count = page.locator("#modalEventList .modal-event-item").count()
 
         # Counts should match
-        assert (
-            list_event_count == modal_event_count
-        ), f"Event list had {list_event_count} events, but modal has {modal_event_count}"
+        assert list_event_count == modal_event_count, (
+            f"Event list had {list_event_count} events, "
+            f"but modal has {modal_event_count}"
+        )
 
     def test_console_logging_shows_event_flow(
         self, page: Page, test_data_dir: Path, base_url: str
@@ -545,21 +542,21 @@ class TestEventAndModalIntegration:
         log_text = "\n".join(console_logs)
 
         # Should have handleJobEvent logs
-        assert "[handleJobEvent] Job event received:" in log_text, (
-            "Expected handleJobEvent log not found"
-        )
+        assert (
+            "[handleJobEvent] Job event received:" in log_text
+        ), "Expected handleJobEvent log not found"
 
         # Should have addEventToList logs
-        assert "[addEventToList] Adding event:" in log_text, (
-            "Expected addEventToList log not found"
-        )
+        assert (
+            "[addEventToList] Adding event:" in log_text
+        ), "Expected addEventToList log not found"
 
         # Should have showEventSummaryModal logs
-        assert "[showEventSummaryModal] Total events in array:" in log_text, (
-            "Expected showEventSummaryModal log not found"
-        )
+        assert (
+            "[showEventSummaryModal] Total events in array:" in log_text
+        ), "Expected showEventSummaryModal log not found"
 
         # Should NOT have error about translations
-        assert "translations is not defined" not in log_text, (
-            "Unexpected 'translations is not defined' error found in logs"
-        )
+        assert (
+            "translations is not defined" not in log_text
+        ), "Unexpected 'translations is not defined' error found in logs"

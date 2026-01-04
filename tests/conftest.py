@@ -58,7 +58,7 @@ if importlib.util.find_spec("ocrmypdf") is None:
 
 
 # Authentication fixtures
-import pytest
+import pytest  # noqa: E402
 
 
 @pytest.fixture

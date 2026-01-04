@@ -210,6 +210,7 @@ async def add_security_headers(request: Request, call_next):
 # Initialize job manager
 job_manager = get_job_manager()
 
+
 # Middleware to add cache control headers based on environment variable
 @app.middleware("http")
 async def cache_control_middleware(request: Request, call_next):
@@ -221,7 +222,9 @@ async def cache_control_middleware(request: Request, call_next):
 
     # Apply no-cache headers to static files when caching is disabled
     if not enable_cache and request.url.path.startswith("/static/"):
-        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        response.headers["Cache-Control"] = (
+            "no-cache, no-store, must-revalidate, max-age=0"
+        )
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
 
@@ -402,10 +405,11 @@ async def web_ui() -> str:
         # Add cache-busting version parameter to all script and link tags
         # This forces browsers to fetch fresh JS/CSS files when server restarts
         import re
+
         html_content = re.sub(
             r'(src|href)="(/static/[^"]+\.(js|css))"',
             rf'\1="\2?v={STATIC_VERSION}"',
-            html_content
+            html_content,
         )
 
         # Config is now loaded via /api/config/a11y-camera endpoint (no injection)
@@ -452,10 +456,11 @@ async def web_ui_lang(lang: str) -> str:
         # Add cache-busting version parameter to all script and link tags
         # This forces browsers to fetch fresh JS/CSS files when server restarts
         import re
+
         html_content = re.sub(
             r'(src|href)="(/static/[^"]+\.(js|css))"',
             rf'\1="\2?v={STATIC_VERSION}"',
-            html_content
+            html_content,
         )
 
         return html_content

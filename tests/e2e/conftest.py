@@ -144,7 +144,10 @@ def api_process(ensure_test_data, mongodb_test_container):
             print(f"STDOUT: {stdout.decode()}")
             print(f"STDERR: {stderr.decode()}")
         except subprocess.TimeoutExpired:
-            print("[E2E Setup] Server process still running but not responding to health checks")
+            print(
+                "[E2E Setup] Server process still running but not responding "
+                "to health checks"
+            )
         process.kill()
         pytest.skip("FastAPI server did not become healthy within 30 seconds")
 

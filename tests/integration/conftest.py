@@ -63,7 +63,9 @@ def mongodb_integration_container():
         pytest.skip("MongoDB test container did not become healthy")
 
     # Set environment variables for integration tests
-    os.environ["MONGODB_URI"] = "mongodb://admin:test_password@localhost:27018/pdfa_test?authSource=admin"
+    os.environ["MONGODB_URI"] = (
+        "mongodb://admin:test_password@localhost:27018/pdfa_test?authSource=admin"
+    )
     os.environ["MONGODB_DATABASE"] = "pdfa_test"
     os.environ["PDFA_ENABLE_AUTH"] = "false"
     os.environ["PDFA_OCR_ENABLED"] = "false"
@@ -83,6 +85,7 @@ def mongodb_integration_container():
 def integration_client(mongodb_integration_container):
     """Return a TestClient with real MongoDB for integration tests."""
     from fastapi.testclient import TestClient
+
     from pdfa import api
 
     # Create client that will use real MongoDB

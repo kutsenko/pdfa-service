@@ -204,7 +204,6 @@ class TestLongConversionReliability:
                 assert download_response.status_code == 200
                 assert len(download_response.content) > 0
 
-    
     def test_websocket_survives_multiple_keep_alive_cycles(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
@@ -259,7 +258,6 @@ class TestLongConversionReliability:
                 # Note: In test environment, ping frequency depends on JobManager config
                 assert progress_count > 0, "Should receive progress updates"
 
-    
     def test_progress_broadcast_with_multiple_clients(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
@@ -315,7 +313,6 @@ class TestLongConversionReliability:
                     len(clients_progress[0]) > 10
                 ), "Should receive many progress updates"
 
-    
     def test_download_available_after_completion(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
@@ -363,7 +360,6 @@ class TestLongConversionReliability:
                 assert download_response.headers["content-type"] == "application/pdf"
                 assert len(download_response.content) > 0
 
-    
     def test_progress_updates_not_throttled_excessively(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
@@ -413,7 +409,6 @@ class TestLongConversionReliability:
                     5 <= len(progress_updates) <= 15
                 ), f"Expected ~10 throttled updates, got {len(progress_updates)}"
 
-    
     def test_job_status_endpoint_during_long_conversion(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
@@ -473,7 +468,6 @@ class TestReconnectionScenarios:
     network disconnections which is difficult in automated tests.
     """
 
-    
     def test_client_reconnection_during_conversion(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
@@ -487,7 +481,6 @@ class TestReconnectionScenarios:
         """
         pass
 
-    
     def test_client_reconnection_after_completion(
         self, client: TestClient, sample_pdf: bytes
     ) -> None:
