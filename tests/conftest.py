@@ -6,8 +6,31 @@ import importlib.util
 import os
 import sys
 import types
+from pathlib import Path
 
-# Disable rate limiting for all tests
+
+# Load test environment variables from .env.test if it exists
+def load_test_env():
+    """Load environment variables from tests/.env.test file."""
+    env_file = Path(__file__).parent / ".env.test"
+    if env_file.exists():
+        with open(env_file) as f:
+            for line in f:
+                line = line.strip()
+                # Skip comments and empty lines
+                if line and not line.startswith("#"):
+                    # Parse KEY=VALUE format
+                    if "=" in line:
+                        key, value = line.split("=", 1)
+                        # Only set if not already set (allow override)
+                        if key.strip() not in os.environ:
+                            os.environ[key.strip()] = value.strip()
+
+
+# Load test environment configuration
+load_test_env()
+
+# Disable rate limiting for all tests (always set)
 os.environ["PDFA_DISABLE_RATE_LIMITING"] = "true"
 
 if importlib.util.find_spec("ocrmypdf") is None:
@@ -118,7 +141,7 @@ def auth_headers(valid_jwt_token):
 
 @pytest.fixture(autouse=True)
 def mock_mongodb(monkeypatch, auth_config_disabled, auth_config_enabled, request):
-    """Auto-mock MongoDB for all unit tests.
+    """Auto-mock MongoDB for unit tests only.
 
     This fixture automatically mocks MongoDB database operations so unit tests
     can run without a real MongoDB instance. It provides AsyncMock objects for
@@ -128,10 +151,20 @@ def mock_mongodb(monkeypatch, auth_config_disabled, auth_config_enabled, request
     authentication should use the auth_headers fixture and mark themselves
     with @pytest.mark.enable_auth.
 
-    The mock is applied globally and automatically to all tests unless
-    explicitly disabled with the marker: @pytest.mark.no_mongo_mock
+    The mock is NOT applied to:
+    - E2E tests (marked with @pytest.mark.e2e)
+    - Integration tests (marked with @pytest.mark.integration)
+    - Tests marked with @pytest.mark.no_mongo_mock
+
+    These tests use a real MongoDB instance via Docker.
     """
-    # Skip mocking if test is marked with no_mongo_mock
+    # Skip mocking for E2E and integration tests (they use real MongoDB)
+    if request.node.get_closest_marker("e2e"):
+        return None
+    if request.node.get_closest_marker("integration"):
+        return None
+
+    # Skip mocking if test is explicitly marked with no_mongo_mock
     if request.node.get_closest_marker("no_mongo_mock"):
         return None
 

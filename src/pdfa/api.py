@@ -14,7 +14,12 @@ from urllib.parse import quote
 
 # Static version for cache-busting (set at module load time)
 # This ensures browsers fetch fresh JS/CSS files when the server restarts
-STATIC_VERSION = str(int(time.time()))
+# In test mode (ENABLE_STATIC_CACHE=false), use a static version to allow caching
+# across tests, which significantly speeds up E2E test execution
+if os.getenv("ENABLE_STATIC_CACHE", "true").lower() == "false":
+    STATIC_VERSION = "test"  # Static version for tests - allows browser caching
+else:
+    STATIC_VERSION = str(int(time.time()))  # Timestamp for production
 
 from fastapi import (
     Depends,

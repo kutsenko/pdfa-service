@@ -22,10 +22,7 @@ from pdfa.job_manager import get_job_manager
 from pdfa.progress_tracker import ProgressInfo
 
 
-@pytest.fixture()
-def client() -> TestClient:
-    """Return a test client bound to the FastAPI app."""
-    return TestClient(api.app)
+# Client fixture now provided by conftest.py (integration_client)
 
 
 @pytest.fixture()
@@ -44,13 +41,25 @@ def sample_pdf() -> bytes:
     # fmt: on
 
 
-@pytest.mark.skip(reason="WebSocket tests hang in CI - require real event loop")
+@pytest.mark.skip(
+    reason="TestClient does not properly handle async lifespan events. "
+    "WebSocket functionality is thoroughly tested via E2E tests with Playwright. "
+    "TODO: Migrate to httpx.AsyncClient or Starlette TestClient with lifespan support."
+)
+@pytest.mark.integration
 class TestWebSocketConversionFlow:
-    """Test complete WebSocket conversion workflow."""
+    """Test complete WebSocket conversion workflow.
 
-    @pytest.mark.asyncio
-    async def test_complete_conversion_flow(
-        self, client: TestClient, sample_pdf: bytes
+    NOTE: Currently skipped due to TestClient limitations with async startup/shutdown.
+    WebSocket functionality IS tested via:
+    - tests/e2e/test_event_display_and_modal.py (real browser WebSocket)
+    - tests/e2e/test_progress_updates_real.py (real browser WebSocket)
+
+    Future improvement: Use httpx.AsyncClient instead of TestClient.
+    """
+
+    def test_complete_conversion_flow(
+        self, integration_client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test complete conversion flow from submission to download."""
         messages_received = []
@@ -101,7 +110,7 @@ class TestWebSocketConversionFlow:
 
         with patch.object(api, "convert_to_pdfa", side_effect=mock_convert):
             # Connect to WebSocket
-            with client.websocket_connect("/ws") as websocket:
+            with integration_client.websocket_connect("/ws") as websocket:
                 # Should receive pong for connection
                 data = websocket.receive_json()
                 assert data is not None
@@ -175,14 +184,13 @@ class TestWebSocketConversionFlow:
                 assert download_url.startswith("/download/")
 
                 # Download the file
-                download_response = client.get(download_url)
+                download_response = integration_client.get(download_url)
                 assert download_response.status_code == 200
                 assert download_response.headers["content-type"] == "application/pdf"
                 assert len(download_response.content) > 0
 
-    @pytest.mark.asyncio
-    async def test_progress_percentage_updates(
-        self, client: TestClient, sample_pdf: bytes
+    def test_progress_percentage_updates(
+        self, integration_client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that progress percentages are correctly updated."""
         expected_percentages = [10.0, 20.0, 30.0, 50.0, 75.0, 90.0, 100.0]
@@ -209,7 +217,7 @@ class TestWebSocketConversionFlow:
                     )
 
         with patch.object(api, "convert_to_pdfa", side_effect=mock_convert):
-            with client.websocket_connect("/ws") as websocket:
+            with integration_client.websocket_connect("/ws") as websocket:
                 # Wait for connection
                 websocket.receive_json()
 
@@ -247,9 +255,8 @@ class TestWebSocketConversionFlow:
                 # Verify progress is monotonically increasing
                 assert received_percentages == sorted(received_percentages)
 
-    @pytest.mark.asyncio
-    async def test_ui_state_after_completion(
-        self, client: TestClient, sample_pdf: bytes
+    def test_ui_state_after_completion(
+        self, integration_client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that UI state is properly reset after job completion."""
 
@@ -257,7 +264,7 @@ class TestWebSocketConversionFlow:
             output_pdf.write_bytes(b"%PDF-1.4 converted")
 
         with patch.object(api, "convert_to_pdfa", side_effect=mock_convert):
-            with client.websocket_connect("/ws") as websocket:
+            with integration_client.websocket_connect("/ws") as websocket:
                 # Wait for connection
                 websocket.receive_json()
 
@@ -293,9 +300,8 @@ class TestWebSocketConversionFlow:
                 assert job.output_path is not None
                 assert job.output_path.exists()
 
-    @pytest.mark.asyncio
-    async def test_error_handling_ui_state(
-        self, client: TestClient, sample_pdf: bytes
+    def test_error_handling_ui_state(
+        self, integration_client: TestClient, sample_pdf: bytes
     ) -> None:
         """Test that UI state is properly reset after errors."""
 
@@ -305,7 +311,7 @@ class TestWebSocketConversionFlow:
             raise Exception("Simulated conversion error")
 
         with patch.object(api, "convert_to_pdfa", side_effect=mock_convert_with_error):
-            with client.websocket_connect("/ws") as websocket:
+            with integration_client.websocket_connect("/ws") as websocket:
                 # Wait for connection
                 websocket.receive_json()
 

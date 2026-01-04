@@ -50,7 +50,7 @@ class TestEventSummaryModalBasics:
     ) -> None:
         """Test that modal appears 500ms after successful conversion."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert file
         file_input = page.locator('input[type="file"]')
@@ -75,7 +75,7 @@ class TestEventSummaryModalBasics:
     ) -> None:
         """Test that modal contains all required UI elements."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -118,7 +118,7 @@ class TestEventSummaryModalBasics:
     ) -> None:
         """Test that modal displays conversion events."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -144,7 +144,7 @@ class TestEventSummaryModalBasics:
     ) -> None:
         """Test that OK button receives focus when modal opens."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -168,7 +168,7 @@ class TestEventSummaryModalInteractions:
     ) -> None:
         """Test that clicking OK button closes the modal."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -192,7 +192,7 @@ class TestEventSummaryModalInteractions:
     ) -> None:
         """Test that clicking X button closes the modal."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -215,7 +215,7 @@ class TestEventSummaryModalInteractions:
     ) -> None:
         """Test that pressing Escape closes the modal."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -237,7 +237,7 @@ class TestEventSummaryModalInteractions:
     ) -> None:
         """Test that clicking backdrop closes the modal."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -264,7 +264,7 @@ class TestEventSummaryModalInteractions:
     ) -> None:
         """Test that inline event list remains visible after modal closes."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -291,7 +291,7 @@ class TestEventSummaryModalInteractions:
     ) -> None:
         """Test that download button in modal triggers file download."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -324,7 +324,7 @@ class TestEventSummaryModalKeyboard:
     ) -> None:
         """Test that Tab key cycles through modal buttons."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -358,7 +358,7 @@ class TestEventSummaryModalKeyboard:
     ) -> None:
         """Test that Shift+Tab navigates backwards through buttons."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -383,7 +383,7 @@ class TestEventSummaryModalKeyboard:
     ) -> None:
         """Test that Enter key on OK button closes modal."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -413,7 +413,7 @@ class TestEventSummaryModalAccessibility:
     ) -> None:
         """Test that modal has correct ARIA attributes."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -440,7 +440,7 @@ class TestEventSummaryModalAccessibility:
     ) -> None:
         """Test that event list has correct role attribute."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -469,7 +469,7 @@ class TestEventSummaryModalInternationalization:
     ) -> None:
         """Test that modal displays German translations correctly."""
         page = page_with_server
-        page.goto("http://localhost:8000/de")
+        page.goto("http://localhost:8001/de")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -500,7 +500,7 @@ class TestEventSummaryModalInternationalization:
     ) -> None:
         """Test that modal displays Spanish translations correctly."""
         page = page_with_server
-        page.goto("http://localhost:8000/es")
+        page.goto("http://localhost:8001/es")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -528,7 +528,7 @@ class TestEventSummaryModalInternationalization:
     ) -> None:
         """Test that modal displays French translations correctly."""
         page = page_with_server
-        page.goto("http://localhost:8000/fr")
+        page.goto("http://localhost:8001/fr")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -556,7 +556,7 @@ class TestEventSummaryModalInternationalization:
     ) -> None:
         """Test that modal displays English translations correctly."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -588,7 +588,7 @@ class TestEventSummaryModalEdgeCases:
     ) -> None:
         """Test that modal handles many events with scrollbar."""
         page = page_with_server
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert (small PDF might generate several events)
         file_input = page.locator('input[type="file"]')
@@ -627,7 +627,7 @@ class TestEventSummaryModalEdgeCases:
         # Set narrow viewport (mobile)
         page.set_viewport_size({"width": 375, "height": 667})
 
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -665,7 +665,7 @@ class TestEventSummaryModalDarkMode:
         # Emulate dark mode preference
         page.emulate_media(color_scheme="dark")
 
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')
@@ -696,7 +696,7 @@ class TestEventSummaryModalDarkMode:
         # Emulate light mode preference
         page.emulate_media(color_scheme="light")
 
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
 
         # Upload and convert
         file_input = page.locator('input[type="file"]')

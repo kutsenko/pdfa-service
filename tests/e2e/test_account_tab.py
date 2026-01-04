@@ -13,7 +13,7 @@ Run with:
     pytest tests/e2e/test_konto_tab.py -k "test_account_info" -v
 
 Requirements:
-    - API server running on localhost:8000
+    - API server running on localhost:8001
     - MongoDB running
     - Playwright browsers installed: playwright install
 """
@@ -33,7 +33,7 @@ class TestAccountInformationDisplay:
 
     def test_should_display_loading_state(self, page: Page):
         """Loading state should be visible when opening Konto tab."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.wait_for_load_state("networkidle")
 
         # Click Konto tab
@@ -47,7 +47,7 @@ class TestAccountInformationDisplay:
 
     def test_should_display_default_user_profile_auth_disabled(self, page: Page):
         """Should display Local User profile when auth is disabled."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
 
         # Wait for content
@@ -64,7 +64,7 @@ class TestAccountInformationDisplay:
 
     def test_should_display_all_sections(self, page: Page):
         """All major sections should be visible."""
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
         page.wait_for_load_state("networkidle")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
@@ -80,7 +80,7 @@ class TestAccountInformationDisplay:
 
     def test_should_display_job_statistics(self, page: Page):
         """Job statistics should be visible."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
 
@@ -92,7 +92,7 @@ class TestAccountInformationDisplay:
 
     def test_should_display_activity_log_or_empty_message(self, page: Page):
         """Activity log should show events or empty message."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
 
@@ -120,7 +120,7 @@ class TestUserPreferences:
 
     def test_should_display_preferences_form(self, page: Page):
         """Preferences form should be visible with all fields."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
 
@@ -136,7 +136,7 @@ class TestUserPreferences:
 
     def test_should_have_standard_pdf_option(self, page: Page):
         """PDF Type dropdown should include Standard PDF option."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
 
@@ -154,7 +154,7 @@ class TestUserPreferences:
 
     def test_should_display_default_preferences(self, page: Page):
         """Default preferences should be shown for new user."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
 
@@ -167,7 +167,7 @@ class TestUserPreferences:
 
     def test_should_have_save_and_reset_buttons(self, page: Page):
         """Save and Reset buttons should be visible."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
 
@@ -176,7 +176,7 @@ class TestUserPreferences:
 
     def test_should_reset_preferences_to_defaults(self, page: Page):
         """Reset button should restore default values."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
 
@@ -209,7 +209,7 @@ class TestAccountDeletion:
 
     def test_should_show_danger_zone(self, page: Page):
         """Danger Zone section should be visible."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
 
@@ -220,7 +220,7 @@ class TestAccountDeletion:
 
     def test_should_disable_deletion_for_local_user(self, page: Page):
         """Account deletion should be disabled in local mode."""
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
 
@@ -242,7 +242,7 @@ class TestInternationalization:
 
     def test_should_display_english_translations(self, page: Page):
         """English translations should be visible."""
-        page.goto("http://localhost:8000/en")
+        page.goto("http://localhost:8001/en")
         page.wait_for_load_state("networkidle")
 
         page.click("#tab-account-btn")
@@ -255,7 +255,7 @@ class TestInternationalization:
 
     def test_should_display_german_translations(self, page: Page):
         """German translations should be visible."""
-        page.goto("http://localhost:8000/de")
+        page.goto("http://localhost:8001/de")
         page.wait_for_load_state("networkidle")
 
         page.click("#tab-account-btn")
@@ -268,7 +268,7 @@ class TestInternationalization:
 
     def test_should_display_spanish_translations(self, page: Page):
         """Spanish translations should be visible."""
-        page.goto("http://localhost:8000/es")
+        page.goto("http://localhost:8001/es")
         page.wait_for_load_state("networkidle")
 
         page.click('button[id="tab-account-btn"]')
@@ -284,7 +284,7 @@ class TestInternationalization:
 
     def test_should_display_french_translations(self, page: Page):
         """French translations should be visible."""
-        page.goto("http://localhost:8000/fr")
+        page.goto("http://localhost:8001/fr")
         page.wait_for_load_state("networkidle")
 
         page.click('button[id="tab-account-btn"]')
@@ -310,7 +310,7 @@ class TestResponsiveDesign:
     def test_should_use_two_column_grid_on_desktop(self, page: Page):
         """Desktop layout should use 2-column grid."""
         page.set_viewport_size({"width": 1920, "height": 1080})
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
@@ -328,7 +328,7 @@ class TestResponsiveDesign:
     def test_should_use_single_column_on_mobile(self, page: Page):
         """Mobile layout should use single column."""
         page.set_viewport_size({"width": 375, "height": 667})
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
@@ -346,7 +346,7 @@ class TestResponsiveDesign:
     def test_should_not_overflow_horizontally_on_mobile(self, page: Page):
         """Content should not overflow horizontally on mobile."""
         page.set_viewport_size({"width": 375, "height": 667})
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
@@ -373,7 +373,7 @@ class TestDarkMode:
     def test_should_apply_dark_mode_styles(self, page: Page):
         """Dark mode should apply dark background colors."""
         page.emulate_media(color_scheme="dark")
-        page.goto("http://localhost:8000")
+        page.goto("http://localhost:8001")
 
         page.click("#tab-account-btn")
         expect(page.locator("#accountContent")).to_be_visible()
