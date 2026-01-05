@@ -756,7 +756,7 @@ body {
             display: none;
             padding: 40px 30px;
             padding-top: 20px;
-            margin-top: 140px; /* Space for login bar */
+            margin-top: 180px; /* Space for login bar (~170px content height) */
             max-width: 800px;
             width: calc(100% - 40px);
             margin-left: auto;
