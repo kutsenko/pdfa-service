@@ -3,6 +3,92 @@
         /* Camera Tab Styles                                  */
         /* ================================================== */
 
+        /* ================================================== */
+        /* Camera Intro Section                               */
+        /* ================================================== */
+
+        .camera-intro {
+            margin-bottom: 32px;
+        }
+
+        .camera-options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .camera-option-card {
+            background: white;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 12px;
+            padding: 24px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .camera-option-card:hover {
+            border-color: var(--color-primary, #667eea);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .option-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .option-header h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .option-icon {
+            width: 32px;
+            height: 32px;
+            flex-shrink: 0;
+        }
+
+        .option-icon-emoji {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .option-description {
+            color: #555;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .camera-option-card .btn {
+            width: 100%;
+        }
+
+        /* Mobile: Single column */
+        @media (max-width: 600px) {
+            .camera-options-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .camera-option-card {
+                padding: 20px;
+            }
+
+            .option-header h3 {
+                font-size: 1rem;
+            }
+
+            .option-description {
+                font-size: 0.9rem;
+            }
+        }
+
+        /* ================================================== */
+        /* Camera Controls                                    */
+        /* ================================================== */
+
         /* Camera Controls */
         .camera-controls {
             margin-bottom: 30px;

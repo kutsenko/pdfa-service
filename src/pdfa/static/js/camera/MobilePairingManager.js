@@ -37,6 +37,21 @@ export class MobilePairingManager {
                 this.cancelSession();
             });
         }
+
+        // Quick Start Pairing button (from intro cards)
+        const quickStartBtn = document.getElementById('quickStartPairing');
+        if (quickStartBtn) {
+            quickStartBtn.addEventListener('click', () => {
+                console.log('[Pairing] Quick start button clicked');
+                // Scroll to mobile pairing section
+                const pairingSection = document.getElementById('mobilePairingSection');
+                if (pairingSection) {
+                    pairingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                // Start pairing after a short delay for smooth UX
+                setTimeout(() => this.createSession(), 300);
+            });
+        }
     }
 
     async createSession() {

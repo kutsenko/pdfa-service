@@ -378,6 +378,39 @@
              aria-labelledby="tab-kamera-btn"
              hidden>
 
+            <!-- Camera Intro Section -->
+            <div class="camera-intro">
+                <div class="camera-options-grid">
+                    <!-- Desktop Camera Card -->
+                    <div class="camera-option-card">
+                        <div class="option-header">
+                            <img src="/static/images/icons/icon-camera.svg" alt="" class="option-icon" width="32" height="32" aria-hidden="true">
+                            <h3 data-i18n="camera.desktop.title">Desktop-Kamera</h3>
+                        </div>
+                        <p class="option-description" data-i18n="camera.desktop.description">
+                            Nutzen Sie Ihre Webcam, um Dokumente direkt am Computer zu scannen. Ideal für schnelle Erfassung einzelner Seiten.
+                        </p>
+                        <button class="btn btn-primary" id="quickStartCamera" data-i18n="camera.desktop.action">
+                            ▶ Kamera starten
+                        </button>
+                    </div>
+
+                    <!-- Mobile Pairing Card -->
+                    <div class="camera-option-card">
+                        <div class="option-header">
+                            <span class="option-icon-emoji" aria-hidden="true">📱</span>
+                            <h3 data-i18n="camera.mobile.title">Mobile verbinden</h3>
+                        </div>
+                        <p class="option-description" data-i18n="camera.mobile.description">
+                            Verbinden Sie Ihr Smartphone als kabellosen Scanner. Scannen Sie Dokumente mit der besseren Handykamera und übertragen Sie sie automatisch.
+                        </p>
+                        <button class="btn btn-secondary" id="quickStartPairing" data-i18n="camera.mobile.action">
+                            🔗 Gerät koppeln
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Camera Controls Section -->
             <div id="cameraControls" class="camera-controls">
                 <div class="camera-preview-container">
