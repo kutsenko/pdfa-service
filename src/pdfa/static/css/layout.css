@@ -48,6 +48,12 @@
         left: auto;
         justify-content: flex-end;
         margin-bottom: 0;
+        gap: 4px;
+    }
+
+    .language-switcher a {
+        padding: 4px 8px;
+        font-size: 11px;
     }
 
     .progress-header {
