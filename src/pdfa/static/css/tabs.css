@@ -54,6 +54,7 @@
 
         .tab-panel {
             display: none;
+            width: 100%;
             animation: fadeIn 0.3s ease;
         }
 

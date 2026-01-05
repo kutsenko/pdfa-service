@@ -102,13 +102,70 @@ export function applyTranslations(lang) {
         document.title = pageTitle;
     }
 
-    // Mark active language in switcher
-    document.querySelectorAll('.language-switcher a').forEach(link => {
+    // Mark active language in switcher dropdown
+    const langNames = { en: 'EN', de: 'DE', es: 'ES', fr: 'FR' };
+    const currentLangLabel = document.getElementById('currentLangLabel');
+    if (currentLangLabel) {
+        currentLangLabel.textContent = langNames[lang] || 'EN';
+    }
+
+    document.querySelectorAll('.lang-dropdown-menu a').forEach(link => {
         const linkLang = link.getAttribute('data-lang-code');
         if (linkLang === lang) {
             link.classList.add('active');
         } else {
             link.classList.remove('active');
+        }
+    });
+}
+
+/**
+ * Initialize language dropdown behavior
+ */
+export function initLanguageDropdown() {
+    const switcher = document.querySelector('.language-switcher');
+    const btn = document.getElementById('langDropdownBtn');
+    const menu = document.getElementById('langDropdownMenu');
+
+    if (!switcher || !btn || !menu) return;
+
+    // Toggle dropdown on button click
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = switcher.classList.toggle('open');
+        btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!switcher.contains(e.target)) {
+            switcher.classList.remove('open');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    });
+
+    // Close dropdown on escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && switcher.classList.contains('open')) {
+            switcher.classList.remove('open');
+            btn.setAttribute('aria-expanded', 'false');
+            btn.focus();
+        }
+    });
+
+    // Keyboard navigation within dropdown
+    menu.addEventListener('keydown', (e) => {
+        const links = Array.from(menu.querySelectorAll('a'));
+        const currentIndex = links.indexOf(document.activeElement);
+
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            const nextIndex = (currentIndex + 1) % links.length;
+            links[nextIndex].focus();
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            const prevIndex = (currentIndex - 1 + links.length) % links.length;
+            links[prevIndex].focus();
         }
     });
 }

@@ -9,6 +9,7 @@ import {
     detectAndRedirectToPreferredLanguage,
     getCurrentLanguage,
     applyTranslations,
+    initLanguageDropdown,
     t,
     formatFileSize,
     showStatus
@@ -32,6 +33,9 @@ window.applyTranslations = applyTranslations;
 
 // Apply translations on page load
 applyTranslations(currentLang);
+
+// Initialize language dropdown
+initLanguageDropdown();
 
 // ============================================================================
 // Global Manager Instances
