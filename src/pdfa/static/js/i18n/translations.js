@@ -76,6 +76,7 @@ export const translations = {
                 'auth.viewPdfFailed': 'Failed to open PDF. Please try again.',
                 // Welcome screen
                 'welcome.title': 'PDF/A Converter',
+                'welcome.tagline': 'Preserve your documents for eternity',
                 'welcome.description': 'Professional document conversion service with OCR support. Convert your PDFs, Office documents, and images to archival PDF/A format - ensuring long-term accessibility and compliance with international standards.',
                 'welcome.feature1.title': 'Secure & Private',
                 'welcome.feature1.description': 'Your documents are processed securely and never stored permanently',
@@ -473,6 +474,7 @@ export const translations = {
                 'auth.viewPdfFailed': 'PDF konnte nicht geöffnet werden. Bitte versuchen Sie es erneut.',
                 // Willkommensbildschirm
                 'welcome.title': 'PDF/A-Konverter',
+                'welcome.tagline': 'Bewahren Sie Ihre Dokumente für die Ewigkeit',
                 'welcome.description': 'Professioneller Dokumentenkonvertierungsdienst mit OCR-Unterstützung. Konvertieren Sie Ihre PDFs, Office-Dokumente und Bilder in das archivfähige PDF/A-Format - für langfristige Zugänglichkeit und Einhaltung internationaler Standards.',
                 'welcome.feature1.title': 'Sicher & Privat',
                 'welcome.feature1.description': 'Ihre Dokumente werden sicher verarbeitet und niemals dauerhaft gespeichert',
@@ -870,6 +872,7 @@ export const translations = {
                 'auth.viewPdfFailed': 'No se pudo abrir el PDF. Por favor, inténtelo de nuevo.',
                 // Pantalla de bienvenida
                 'welcome.title': 'Convertidor PDF/A',
+                'welcome.tagline': 'Preserve sus documentos para la eternidad',
                 'welcome.description': 'Servicio profesional de conversión de documentos con soporte OCR. Convierta sus PDFs, documentos de Office e imágenes al formato archivístico PDF/A, garantizando la accesibilidad a largo plazo y el cumplimiento de estándares internacionales.',
                 'welcome.feature1.title': 'Seguro y Privado',
                 'welcome.feature1.description': 'Sus documentos se procesan de forma segura y nunca se almacenan permanentemente',
@@ -1267,6 +1270,7 @@ export const translations = {
                 'auth.viewPdfFailed': 'Impossible d\'ouvrir le PDF. Veuillez réessayer.',
                 // Écran de bienvenue
                 'welcome.title': 'Convertisseur PDF/A',
+                'welcome.tagline': 'Préservez vos documents pour l\'éternité',
                 'welcome.description': 'Service professionnel de conversion de documents avec support OCR. Convertissez vos PDFs, documents Office et images au format d\'archivage PDF/A - garantissant l\'accessibilité à long terme et la conformité aux normes internationales.',
                 'welcome.feature1.title': 'Sécurisé et Privé',
                 'welcome.feature1.description': 'Vos documents sont traités en toute sécurité et ne sont jamais stockés de manière permanente',
