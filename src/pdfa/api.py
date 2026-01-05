@@ -1432,8 +1432,10 @@ async def process_conversion_job(job_id: str) -> None:
                 conversion_time_seconds=conversion_time,
             )
 
-        elif is_image_file(job.filename):
-            logger.info(f"Converting image to PDF for job {job_id}")
+        # Check for multi-image mode first (input_paths contains multiple images)
+        # Note: job.filename may be "X_pages.pdf" for multi-image jobs, so we check input_paths
+        elif job.input_paths and len(job.input_paths) > 1 and is_image_file(job.input_paths[0].name):
+            logger.info(f"Multi-image job detected: {len(job.input_paths)} images for job {job_id}")
             pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
 
             # Track conversion time
@@ -1441,28 +1443,45 @@ async def process_conversion_job(job_id: str) -> None:
 
             start_time = time.time()
 
-            # Multi-image mode: combine multiple images into single PDF
-            if job.input_paths and len(job.input_paths) > 1:
-                logger.info(f"Multi-image job detected: {len(job.input_paths)} images")
-                await asyncio.to_thread(
-                    convert_images_to_pdf, job.input_paths, pdf_path
-                )
-            else:
-                # Single-image mode (backward compatibility)
-                await asyncio.to_thread(convert_image_to_pdf, job.input_path, pdf_path)
+            await asyncio.to_thread(
+                convert_images_to_pdf, job.input_paths, pdf_path
+            )
 
             conversion_time = time.time() - start_time
 
-            # Log format conversion event
-            num_images = len(job.input_paths) if job.input_paths else 1
+            # Log format conversion event for multi-image
             await async_event_callback(
                 "format_conversion",
-                source_format=job.filename.rsplit(".", 1)[-1].lower(),
+                source_format=job.input_paths[0].name.rsplit(".", 1)[-1].lower(),
                 target_format="pdf",
                 conversion_required=True,
-                converter="multi_image_to_pdf" if num_images > 1 else "image_to_pdf",
+                converter="multi_image_to_pdf",
                 conversion_time_seconds=conversion_time,
-                num_images=num_images,
+                num_images=len(job.input_paths),
+            )
+
+        elif is_image_file(job.filename) or (job.input_path and is_image_file(job.input_path.name)):
+            logger.info(f"Converting single image to PDF for job {job_id}")
+            pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
+
+            # Track conversion time
+            import time
+
+            start_time = time.time()
+
+            await asyncio.to_thread(convert_image_to_pdf, job.input_path, pdf_path)
+
+            conversion_time = time.time() - start_time
+
+            # Log format conversion event for single image
+            await async_event_callback(
+                "format_conversion",
+                source_format=job.input_path.name.rsplit(".", 1)[-1].lower(),
+                target_format="pdf",
+                conversion_required=True,
+                converter="image_to_pdf",
+                conversion_time_seconds=conversion_time,
+                num_images=1,
             )
         else:
             # Direct PDF - no conversion needed

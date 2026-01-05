@@ -43,7 +43,7 @@
 
     .language-switcher {
         position: fixed;
-        top: 10px;
+        top: 52px; /* Below auth-bar (~48px height) */
         right: 10px;
         left: auto;
     }
