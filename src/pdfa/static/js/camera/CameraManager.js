@@ -87,6 +87,20 @@ export class CameraManager {
             startBtn.addEventListener('click', () => this.startCamera());
         }
 
+        // Quick Start Camera button (from intro cards)
+        const quickStartBtn = document.getElementById('quickStartCamera');
+        if (quickStartBtn) {
+            quickStartBtn.addEventListener('click', () => {
+                // Scroll to camera controls section
+                const cameraControls = document.getElementById('cameraControls');
+                if (cameraControls) {
+                    cameraControls.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                // Start camera after a short delay for smooth UX
+                setTimeout(() => this.startCamera(), 300);
+            });
+        }
+
         // Stop Camera button
         const stopBtn = document.getElementById('stopCameraBtn');
         if (stopBtn) {
