@@ -114,18 +114,26 @@ export class ConversionClient {
                             break;
                         case 'completed':
                             this.handleCompleted(message);
+                            // Notify JobsManager of completion
+                            this.notifyJobsManager(message);
                             break;
                         case 'error':
                             this.handleJobError(message);
+                            // Notify JobsManager of failure
+                            this.notifyJobsManager({ ...message, type: 'failed' });
                             break;
                         case 'cancelled':
                             this.handleCancelled(message);
+                            // Notify JobsManager of cancellation
+                            this.notifyJobsManager(message);
                             break;
                         case 'pong':
                             // Keepalive response
                             break;
                         case 'job_event':
                             this.handleJobEvent(message);
+                            // Notify JobsManager of job event
+                            this.notifyJobsManager(message);
                             break;
                         case 'image_synced':
                             // Handle mobile-to-desktop image sync
@@ -1211,6 +1219,21 @@ export class ConversionClient {
                     setTimeout(() => {
                         srAnnouncements.textContent = message;
                     }, 100);
+                }
+            }
+
+            /**
+             * Notify JobsManager of WebSocket updates
+             * This enables real-time job list updates without polling
+             * @param {Object} message - WebSocket message with type and job_id
+             */
+            notifyJobsManager(message) {
+                if (window.jobsManager && typeof window.jobsManager.handleWebSocketMessage === 'function') {
+                    try {
+                        window.jobsManager.handleWebSocketMessage(message);
+                    } catch (error) {
+                        console.error('[ConversionClient] Error notifying JobsManager:', error);
+                    }
                 }
             }
         }

@@ -179,6 +179,20 @@ export class JobsManager {
     onTabDeactivated() {
         console.log('[Jobs] Tab deactivated');
         this.stopPolling();
+        // Clear events cache to prevent memory leak
+        this.clearEventsCache();
+    }
+
+    /**
+     * Clear events cache to prevent memory leaks
+     * Called when tab is deactivated or cache grows too large
+     */
+    clearEventsCache() {
+        const cacheSize = this.eventsCache.size;
+        if (cacheSize > 0) {
+            console.log(`[Jobs] Clearing events cache (${cacheSize} entries)`);
+            this.eventsCache.clear();
+        }
     }
 
     async loadJobs(forceRefresh = false, showLoadingIndicator = false) {
@@ -875,13 +889,17 @@ export class JobsManager {
         }
 
         // Only poll if WebSocket is not connected
-        if (!window.ws || window.ws.readyState !== WebSocket.OPEN) {
+        // FIXED: Check window.conversionClient.ws instead of window.ws
+        const ws = window.conversionClient?.ws;
+        if (!ws || ws.readyState !== WebSocket.OPEN) {
             console.log('[Jobs] Starting polling (WebSocket unavailable)');
             this.pollingInterval = setInterval(() => {
                 if (!document.getElementById('tab-jobs').hasAttribute('hidden')) {
                     this.loadJobs();
                 }
             }, 5000); // Poll every 5 seconds
+        } else {
+            console.log('[Jobs] WebSocket connected, polling not needed');
         }
     }
 
