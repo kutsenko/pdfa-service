@@ -233,9 +233,10 @@ export class AuthManager {
             btn.setAttribute('aria-selected', 'false');
         });
 
-        // Keep container visible for header
+        // Hide entire container when showing welcome screen
+        // Welcome screen has its own branding, no need for duplicate header
         if (container) {
-            container.style.display = 'block';
+            container.style.display = 'none';
         }
     }
 
