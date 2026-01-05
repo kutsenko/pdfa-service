@@ -542,19 +542,18 @@ export class CameraManager {
                 <span class="page-number">${index + 1}</span>
                 <div class="page-actions">
                     <button class="page-action-btn rotate-left" data-page-id="${page.id}" aria-label="Rotate left" title="Rotate left">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12.5 8c-2.65 0-5.05.99-6.9 2.6L2 7v9h9l-3.62-3.62c1.39-1.16 3.16-1.88 5.12-1.88 3.54 0 6.55 2.31 7.6 5.5l2.37-.78C21.08 11.03 17.15 8 12.5 8z"/>
                         </svg>
                     </button>
                     <button class="page-action-btn rotate-right" data-page-id="${page.id}" aria-label="Rotate right" title="Rotate right">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M11.5 8c2.65 0 5.05.99 6.9 2.6L22 7v9h-9l3.62-3.62c-1.39-1.16-3.16-1.88-5.12-1.88-3.54 0-6.55 2.31-7.6 5.5l-2.37-.78C2.92 11.03 6.85 8 11.5 8z"/>
                         </svg>
                     </button>
                     <button class="page-action-btn edit-page" data-page-id="${page.id}" aria-label="Edit image" title="Edit image">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
                         </svg>
                     </button>
                 </div>
@@ -666,7 +665,7 @@ export class CameraManager {
         modal.innerHTML = `
             <div class="image-editor-content">
                 <div class="image-editor-header">
-                    <h3>Edit Page ${pageIndex + 1}</h3>
+                    <h3>${t('editor.title', { n: pageIndex + 1 })}</h3>
                     <button class="close-editor" aria-label="Close editor">×</button>
                 </div>
                 <div class="image-editor-canvas-container">
@@ -674,24 +673,24 @@ export class CameraManager {
                 </div>
                 <div class="image-editor-controls">
                     <div class="editor-control-group">
-                        <label>Brightness</label>
+                        <label data-i18n="camera.edit.brightness">${t('camera.edit.brightness')}</label>
                         <input type="range" id="brightnessSlider" min="-100" max="100" value="0">
                         <span id="brightnessValue">0</span>
                     </div>
                     <div class="editor-control-group">
-                        <label>Contrast</label>
+                        <label data-i18n="camera.edit.contrast">${t('camera.edit.contrast')}</label>
                         <input type="range" id="contrastSlider" min="-100" max="100" value="0">
                         <span id="contrastValue">0</span>
                     </div>
                     <div class="editor-buttons">
-                        <button class="editor-btn" id="grayscaleBtn">Grayscale</button>
-                        <button class="editor-btn" id="thresholdBtn">Document</button>
-                        <button class="editor-btn" id="resetBtn">Reset</button>
+                        <button class="editor-btn" id="grayscaleBtn" data-i18n="editor.grayscale">${t('editor.grayscale')}</button>
+                        <button class="editor-btn" id="thresholdBtn" data-i18n="editor.document">${t('editor.document')}</button>
+                        <button class="editor-btn" id="resetBtn" data-i18n="editor.reset">${t('editor.reset')}</button>
                     </div>
                 </div>
                 <div class="image-editor-footer">
-                    <button class="btn-secondary" id="cancelEditBtn">Cancel</button>
-                    <button class="btn-primary" id="applyEditBtn">Apply</button>
+                    <button class="btn-secondary" id="cancelEditBtn" data-i18n="editor.cancel">${t('editor.cancel')}</button>
+                    <button class="btn-primary" id="applyEditBtn" data-i18n="editor.apply">${t('editor.apply')}</button>
                 </div>
             </div>
         `;

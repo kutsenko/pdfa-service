@@ -37,6 +37,12 @@ body {
     display: flex;
 }
 
+/* Editor screen needs higher z-index than controls to be visible */
+#editorScreen.active {
+    position: relative;
+    z-index: 1001;
+}
+
 /* ==================== Pairing Screen ==================== */
 
 .header {
