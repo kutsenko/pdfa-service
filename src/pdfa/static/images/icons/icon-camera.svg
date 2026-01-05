@@ -1,0 +1,18 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="amber-camera" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Amber background -->
+  <rect x="2" y="2" width="20" height="20" rx="4" fill="url(#amber-camera)"/>
+  <!-- Camera body -->
+  <rect x="5" y="8" width="14" height="10" rx="2" fill="#FFFFFF" fill-opacity="0.9"/>
+  <!-- Camera top -->
+  <path d="M9 8V7a1 1 0 011-1h4a1 1 0 011 1v1" fill="#FFFFFF" fill-opacity="0.9"/>
+  <!-- Lens outer -->
+  <circle cx="12" cy="13" r="3.5" fill="none" stroke="#667eea" stroke-width="1.5"/>
+  <!-- Lens inner -->
+  <circle cx="12" cy="13" r="1.5" fill="#667eea"/>
+</svg>
