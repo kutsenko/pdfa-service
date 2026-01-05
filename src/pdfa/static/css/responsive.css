@@ -21,6 +21,23 @@
    Mobile (600px)
    ============================================== */
 @media (max-width: 600px) {
+    /* Welcome screen mobile adjustments */
+    .welcome-screen {
+        padding: 24px 16px;
+        margin: 10px;
+        border-radius: 8px;
+    }
+
+    .welcome-content h1 {
+        font-size: 1.75rem;
+        margin-bottom: 12px;
+    }
+
+    .welcome-description {
+        font-size: 1rem;
+        margin-bottom: 24px;
+    }
+
     /* Single column grids */
     .a11y-controls-grid,
     .account-grid,
@@ -28,9 +45,11 @@
         grid-template-columns: 1fr;
     }
 
-    /* Reduce gaps */
+    /* Reduce gaps and single column */
     .welcome-features {
+        grid-template-columns: 1fr;
         gap: var(--space-sm, 8px);
+        margin-bottom: 24px;
     }
 
     /* Debug console - smaller when shown */
