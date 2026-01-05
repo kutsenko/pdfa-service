@@ -278,6 +278,12 @@ export class MobilePairingManager {
 
         // Play notification sound (optional)
         this.playNotificationSound();
+
+        // Scroll to the newly received image
+        const pageList = document.getElementById('pageList');
+        if (pageList && pageList.lastElementChild) {
+            pageList.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
     }
 
     handlePeerStatus(message) {

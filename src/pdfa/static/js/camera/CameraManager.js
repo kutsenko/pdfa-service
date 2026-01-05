@@ -248,6 +248,9 @@ export class CameraManager {
             this.videoElement.srcObject = null;
         }
 
+        // Reset device ID to allow fresh camera start
+        this.currentDeviceId = null;
+
         // Update UI
         document.getElementById('startCameraBtn').hidden = false;
         document.getElementById('stopCameraBtn').hidden = true;
@@ -537,6 +540,24 @@ export class CameraManager {
             thumb.innerHTML = `
                 <img src="${page.imageData}" alt="Page ${index + 1}">
                 <span class="page-number">${index + 1}</span>
+                <div class="page-actions">
+                    <button class="page-action-btn rotate-left" data-page-id="${page.id}" aria-label="Rotate left" title="Rotate left">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2.5 2v6h6M2.66 15.57a10 10 0 1 0 .57-8.38"/>
+                        </svg>
+                    </button>
+                    <button class="page-action-btn rotate-right" data-page-id="${page.id}" aria-label="Rotate right" title="Rotate right">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
+                        </svg>
+                    </button>
+                    <button class="page-action-btn edit-page" data-page-id="${page.id}" aria-label="Edit image" title="Edit image">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                </div>
                 <button class="delete-page" data-page-id="${page.id}" aria-label="Delete page ${index + 1}">×</button>
             `;
 
@@ -545,6 +566,26 @@ export class CameraManager {
             deleteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 this.deletePage(page.id);
+            });
+
+            // Rotate handlers
+            const rotateLeftBtn = thumb.querySelector('.rotate-left');
+            rotateLeftBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.rotatePage(page.id, -90);
+            });
+
+            const rotateRightBtn = thumb.querySelector('.rotate-right');
+            rotateRightBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.rotatePage(page.id, 90);
+            });
+
+            // Edit handler (opens image editor modal)
+            const editBtn = thumb.querySelector('.edit-page');
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openImageEditor(page.id);
             });
 
             // Drag-and-drop handlers
@@ -558,6 +599,253 @@ export class CameraManager {
 
         // Update page count
         document.getElementById('pageCount').textContent = this.stagedPages.length;
+    }
+
+    /**
+     * Rotate a page by the specified degrees
+     * @param {string} pageId - ID of the page to rotate
+     * @param {number} degrees - Rotation degrees (90 or -90)
+     */
+    rotatePage(pageId, degrees) {
+        const pageIndex = this.stagedPages.findIndex(p => p.id === pageId);
+        if (pageIndex === -1) return;
+
+        const page = this.stagedPages[pageIndex];
+        console.log(`[Camera] Rotating page ${pageIndex + 1} by ${degrees}°`);
+
+        // Create canvas for rotation
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Swap dimensions for 90° rotation
+            canvas.width = img.height;
+            canvas.height = img.width;
+
+            // Rotate around center
+            ctx.translate(canvas.width / 2, canvas.height / 2);
+            ctx.rotate((degrees * Math.PI) / 180);
+            ctx.drawImage(img, -img.width / 2, -img.height / 2);
+
+            // Update page data
+            page.imageData = canvas.toDataURL('image/jpeg', 0.9);
+            this.renderPageThumbnails();
+        };
+        img.src = page.imageData;
+    }
+
+    /**
+     * Open image editor modal for a page
+     * @param {string} pageId - ID of the page to edit
+     */
+    openImageEditor(pageId) {
+        const pageIndex = this.stagedPages.findIndex(p => p.id === pageId);
+        if (pageIndex === -1) return;
+
+        const page = this.stagedPages[pageIndex];
+        console.log(`[Camera] Opening editor for page ${pageIndex + 1}`);
+
+        // Create or show image editor modal
+        this.showImageEditorModal(page, pageIndex);
+    }
+
+    /**
+     * Show the image editor modal
+     * @param {Object} page - Page object with imageData
+     * @param {number} pageIndex - Index of the page
+     */
+    showImageEditorModal(page, pageIndex) {
+        // Remove existing modal if any
+        const existingModal = document.getElementById('imageEditorModal');
+        if (existingModal) existingModal.remove();
+
+        const modal = document.createElement('div');
+        modal.id = 'imageEditorModal';
+        modal.className = 'image-editor-modal';
+        modal.innerHTML = `
+            <div class="image-editor-content">
+                <div class="image-editor-header">
+                    <h3>Edit Page ${pageIndex + 1}</h3>
+                    <button class="close-editor" aria-label="Close editor">×</button>
+                </div>
+                <div class="image-editor-canvas-container">
+                    <canvas id="editorCanvas"></canvas>
+                </div>
+                <div class="image-editor-controls">
+                    <div class="editor-control-group">
+                        <label>Brightness</label>
+                        <input type="range" id="brightnessSlider" min="-100" max="100" value="0">
+                        <span id="brightnessValue">0</span>
+                    </div>
+                    <div class="editor-control-group">
+                        <label>Contrast</label>
+                        <input type="range" id="contrastSlider" min="-100" max="100" value="0">
+                        <span id="contrastValue">0</span>
+                    </div>
+                    <div class="editor-buttons">
+                        <button class="editor-btn" id="grayscaleBtn">Grayscale</button>
+                        <button class="editor-btn" id="thresholdBtn">Document</button>
+                        <button class="editor-btn" id="resetBtn">Reset</button>
+                    </div>
+                </div>
+                <div class="image-editor-footer">
+                    <button class="btn-secondary" id="cancelEditBtn">Cancel</button>
+                    <button class="btn-primary" id="applyEditBtn">Apply</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Store original image data
+        const originalImageData = page.imageData;
+        let currentImageData = page.imageData;
+
+        // Initialize canvas
+        const canvas = document.getElementById('editorCanvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+            // Scale canvas to fit modal while maintaining aspect ratio
+            const maxWidth = Math.min(window.innerWidth * 0.8, 800);
+            const maxHeight = window.innerHeight * 0.5;
+            const scale = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+
+            canvas.width = img.width * scale;
+            canvas.height = img.height * scale;
+            canvas.dataset.scale = scale;
+            canvas.dataset.originalWidth = img.width;
+            canvas.dataset.originalHeight = img.height;
+
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        };
+        img.src = currentImageData;
+
+        // Apply filters function
+        const applyFilters = () => {
+            const brightness = parseInt(document.getElementById('brightnessSlider').value);
+            const contrast = parseInt(document.getElementById('contrastSlider').value);
+
+            document.getElementById('brightnessValue').textContent = brightness;
+            document.getElementById('contrastValue').textContent = contrast;
+
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.filter = `brightness(${100 + brightness}%) contrast(${100 + contrast}%)`;
+                ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+                ctx.filter = 'none';
+            };
+            tempImg.src = currentImageData;
+        };
+
+        // Event listeners
+        document.getElementById('brightnessSlider').addEventListener('input', applyFilters);
+        document.getElementById('contrastSlider').addEventListener('input', applyFilters);
+
+        document.getElementById('grayscaleBtn').addEventListener('click', () => {
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.filter = 'grayscale(100%)';
+                ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+                ctx.filter = 'none';
+
+                // Update current image data
+                currentImageData = this.getFullResolutionImage(originalImageData, 'grayscale(100%)');
+            };
+            tempImg.src = currentImageData;
+        });
+
+        document.getElementById('thresholdBtn').addEventListener('click', () => {
+            // Apply document enhancement (high contrast + grayscale)
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.filter = 'grayscale(100%) contrast(200%)';
+                ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+                ctx.filter = 'none';
+
+                currentImageData = this.getFullResolutionImage(originalImageData, 'grayscale(100%) contrast(200%)');
+            };
+            tempImg.src = originalImageData;
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            currentImageData = originalImageData;
+            document.getElementById('brightnessSlider').value = 0;
+            document.getElementById('contrastSlider').value = 0;
+            document.getElementById('brightnessValue').textContent = '0';
+            document.getElementById('contrastValue').textContent = '0';
+
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(tempImg, 0, 0, canvas.width, canvas.height);
+            };
+            tempImg.src = originalImageData;
+        });
+
+        // Close modal handlers
+        const closeModal = () => modal.remove();
+
+        document.querySelector('.close-editor').addEventListener('click', closeModal);
+        document.getElementById('cancelEditBtn').addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Apply changes
+        document.getElementById('applyEditBtn').addEventListener('click', () => {
+            const brightness = parseInt(document.getElementById('brightnessSlider').value);
+            const contrast = parseInt(document.getElementById('contrastSlider').value);
+
+            // Generate full resolution image with all filters
+            const filter = `brightness(${100 + brightness}%) contrast(${100 + contrast}%)`;
+            page.imageData = this.getFullResolutionImage(currentImageData, filter);
+
+            this.renderPageThumbnails();
+            closeModal();
+            console.log(`[Camera] Applied edits to page ${pageIndex + 1}`);
+        });
+
+        // Keyboard close
+        const handleKeydown = (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                document.removeEventListener('keydown', handleKeydown);
+            }
+        };
+        document.addEventListener('keydown', handleKeydown);
+    }
+
+    /**
+     * Apply filter to image at full resolution
+     * @param {string} imageData - Base64 image data
+     * @param {string} filter - CSS filter string
+     * @returns {string} Processed image as base64
+     */
+    getFullResolutionImage(imageData, filter) {
+        const img = new Image();
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Synchronous operation for simplicity
+        img.src = imageData;
+
+        canvas.width = img.width || 800;
+        canvas.height = img.height || 600;
+
+        if (filter) {
+            ctx.filter = filter;
+        }
+        ctx.drawImage(img, 0, 0);
+        ctx.filter = 'none';
+
+        return canvas.toDataURL('image/jpeg', 0.9);
     }
 
     handleDragStart(e) {
@@ -675,15 +963,34 @@ export class CameraManager {
             compression_profile: document.getElementById('cameraCompression')?.value || 'balanced'
         };
 
+        // Validate and extract base64 data from all pages
+        const validPages = this.stagedPages
+            .map((page, index) => {
+                const base64 = page.imageData.split(',')[1];
+                if (!base64) {
+                    console.error(`[Camera] Invalid image data format for page ${index + 1}`);
+                    return null;
+                }
+                return { index, base64 };
+            })
+            .filter(Boolean);
+
+        if (validPages.length === 0) {
+            console.error('[Camera] No valid pages to submit');
+            alert('Error: No valid images to submit. Please recapture.');
+            return;
+        }
+
+        if (validPages.length !== this.stagedPages.length) {
+            console.warn(`[Camera] ${this.stagedPages.length - validPages.length} pages had invalid data and were skipped`);
+        }
+
         // Create multi-file WebSocket message
         const message = {
             type: 'submit',
             multi_file_mode: true,
-            filenames: this.stagedPages.map((page, i) => `page_${String(i + 1).padStart(3, '0')}.jpg`),
-            filesData: this.stagedPages.map(page => {
-                // Remove data:image/jpeg;base64, prefix
-                return page.imageData.split(',')[1];
-            }),
+            filenames: validPages.map((p, i) => `page_${String(i + 1).padStart(3, '0')}.jpg`),
+            filesData: validPages.map(p => p.base64),
             config: config
         };
 

@@ -21,6 +21,10 @@ export class JobsManager {
         this.pollingInterval = null;
         this.keyboardNavigationDetected = false;
 
+        // CRITICAL: Prevent parallel requests (deadlock prevention)
+        this.isLoading = false;
+        this.pendingRefresh = false;
+
         // Auto-refresh settings (enhanced accessibility detection)
         // Disable auto-refresh if ANY assistive technology indicator is detected
         this.autoRefreshEnabled = this.detectAccessibilityPreferences();
@@ -178,12 +182,23 @@ export class JobsManager {
     }
 
     async loadJobs(forceRefresh = false, showLoadingIndicator = false) {
+        // CRITICAL: Prevent parallel requests to avoid deadlock/freeze
+        if (this.isLoading) {
+            console.log('[Jobs] Request already in progress, queuing refresh');
+            this.pendingRefresh = forceRefresh || this.pendingRefresh;
+            return;
+        }
+
         // Check cache
         const now = Date.now();
         if (!forceRefresh && now - this.lastFetchTime < this.cacheDuration) {
             console.log('[Jobs] Using cached job list');
             return;
         }
+
+        // Set loading flag
+        this.isLoading = true;
+        this.pendingRefresh = false;
 
         // Only show loading indicator if explicitly requested (initial load, manual refresh)
         // Silent loading for auto-refresh to avoid screenreader interruptions
@@ -217,6 +232,16 @@ export class JobsManager {
         } catch (error) {
             console.error('[Jobs] Failed to load jobs:', error);
             this.showError(error.message);
+        } finally {
+            // CRITICAL: Always release loading flag
+            this.isLoading = false;
+
+            // Process pending refresh if any
+            if (this.pendingRefresh) {
+                console.log('[Jobs] Processing pending refresh');
+                // Use setTimeout to avoid stack overflow
+                setTimeout(() => this.loadJobs(true, false), 100);
+            }
         }
     }
 
@@ -279,10 +304,12 @@ export class JobsManager {
                     const newRow = this.createJobRowElement(job);
                     existingRow.replaceWith(newRow);
 
-                    // Preserve expanded state
+                    // Preserve expanded state - defer to avoid blocking render loop
                     if (expandedJobId === job.job_id) {
                         this.expandedJobId = null; // Reset to trigger re-expansion
-                        this.toggleJobExpansion(job.job_id);
+                        // CRITICAL: Use setTimeout to avoid blocking the render loop
+                        // This prevents deadlock when toggleJobExpansion tries to modify DOM
+                        setTimeout(() => this.toggleJobExpansion(job.job_id), 0);
                     }
                 } else {
                     // No changes - keep existing row, just check position
@@ -348,15 +375,20 @@ export class JobsManager {
         this.updatePagination();
 
         // Apply i18n to dynamically created content
+        // CRITICAL: Defer to next frame to avoid DOM conflicts during render
         if (window.applyI18n) {
-            window.applyI18n();
+            requestAnimationFrame(() => {
+                if (window.applyI18n) {
+                    window.applyI18n();
+                }
+            });
         }
     }
 
     createJobRow(job) {
         const statusClass = job.status.toLowerCase();
         const statusText = t(`jobs.status.${job.status}`) || job.status;
-        const createdDate = new Date(job.created_at);
+        const createdDate = this.parseTimestamp(job.created_at);
         const relativeTime = this.getRelativeTime(createdDate);
         const duration = job.duration_seconds ? this.formatDuration(job.duration_seconds) : '-';
         const sizeInfo = this.formatSizeInfo(job);
@@ -472,6 +504,12 @@ export class JobsManager {
     async toggleJobExpansion(jobId) {
         console.log(`[Jobs] Toggle expansion for job: ${jobId}`);
 
+        // CRITICAL: Prevent expansion during loading to avoid race conditions
+        if (this.isLoading) {
+            console.log('[Jobs] Skipping expansion during load');
+            return;
+        }
+
         // Collapse if already expanded
         if (this.expandedJobId === jobId) {
             this.collapseJob();
@@ -489,6 +527,13 @@ export class JobsManager {
         // Load events if not cached
         if (!this.eventsCache.has(jobId)) {
             await this.loadJobEvents(jobId);
+        }
+
+        // CRITICAL: Check if we're still supposed to expand this job
+        // (could have changed during async loadJobEvents)
+        if (this.expandedJobId !== jobId) {
+            console.log('[Jobs] Expansion cancelled - state changed during load');
+            return;
         }
 
         // Render event panel
@@ -561,7 +606,7 @@ export class JobsManager {
         return events.map(event => {
             const icon = this.getEventIcon(event.event_type);
             const details = this.formatEventDetails(event.details);
-            const timestamp = new Date(event.timestamp).toLocaleTimeString();
+            const timestamp = this.parseTimestamp(event.timestamp).toLocaleTimeString();
             // Translate event message using i18n key
             const message = this.translateEventMessage(event);
 
@@ -800,9 +845,24 @@ export class JobsManager {
             // Refresh job list if the job is in current view
             const jobIndex = this.jobs.findIndex(j => j.job_id === message.job_id);
             if (jobIndex !== -1) {
-                this.loadJobs(true);
+                // CRITICAL: Debounce WebSocket-triggered refreshes to prevent flooding
+                this.debouncedRefresh();
             }
         }
+    }
+
+    /**
+     * Debounced refresh to prevent multiple rapid refreshes
+     * Coalesces multiple refresh requests within 500ms into one
+     */
+    debouncedRefresh() {
+        if (this._refreshDebounceTimer) {
+            clearTimeout(this._refreshDebounceTimer);
+        }
+        this._refreshDebounceTimer = setTimeout(() => {
+            this._refreshDebounceTimer = null;
+            this.loadJobs(true, false);
+        }, 500);
     }
 
     startPolling() {
@@ -884,6 +944,21 @@ export class JobsManager {
     // ============================================================================
     // Utility Methods
     // ============================================================================
+
+    /**
+     * Parse ISO timestamp ensuring UTC interpretation
+     * Handles timestamps with or without 'Z' suffix
+     * @param {string} timestamp - ISO 8601 timestamp string
+     * @returns {Date} Parsed Date object
+     */
+    parseTimestamp(timestamp) {
+        if (!timestamp) return new Date();
+        // If timestamp doesn't have timezone info, assume UTC
+        if (!timestamp.endsWith('Z') && !timestamp.includes('+') && !timestamp.includes('-', 10)) {
+            return new Date(timestamp + 'Z');
+        }
+        return new Date(timestamp);
+    }
 
     getRelativeTime(date) {
         const seconds = Math.floor((new Date() - date) / 1000);
