@@ -1,7 +1,68 @@
+/* ==============================================
+   Progressive Disclosure - Details/Summary
+   ============================================== */
 
-        .form-group {
-            margin-bottom: 25px;
-        }
+details {
+    margin-bottom: var(--space-lg, 24px);
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 8px;
+    background: var(--color-bg-secondary, #f9fafb);
+}
+
+details summary {
+    padding: var(--space-md, 16px);
+    cursor: pointer;
+    font-weight: 600;
+    color: var(--color-text, #333);
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm, 8px);
+    user-select: none;
+    list-style: none;
+}
+
+details summary::-webkit-details-marker {
+    display: none;
+}
+
+details summary::before {
+    content: '';
+    width: 0;
+    height: 0;
+    border-left: 6px solid var(--color-primary, #667eea);
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    transition: transform var(--transition-fast, 0.1s ease);
+}
+
+details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+details[open] summary {
+    border-bottom: 1px solid var(--color-border, #e5e7eb);
+}
+
+details > *:not(summary) {
+    padding: var(--space-md, 16px);
+}
+
+details .options-grid,
+details .form-group:first-of-type {
+    padding-top: var(--space-md, 16px);
+}
+
+details .form-group:last-child {
+    margin-bottom: 0;
+}
+
+/* ==============================================
+   Form Groups
+   ============================================== */
+
+.form-group {
+    margin-bottom: var(--space-lg, 24px);
+}
 
 
         label {

@@ -1,21 +1,50 @@
+/* ==============================================
+   Touch Feedback & Accessibility
+   ============================================== */
 
-        .button-group {
-            display: flex;
-            gap: 10px;
-            margin-top: 30px;
-        }
+/* Universal touch feedback for all buttons */
+button:active:not(:disabled),
+.btn:active:not(:disabled),
+.btn-primary:active:not(:disabled),
+.btn-secondary:active:not(:disabled),
+.action-btn:active:not(:disabled),
+.tab-button:active {
+    transform: scale(0.98);
+}
 
+/* Ensure 48px minimum touch targets on touch devices */
+@media (pointer: coarse) {
+    button,
+    .btn,
+    .btn-primary,
+    .btn-secondary,
+    .action-btn,
+    .tab-button,
+    .filter-btn {
+        min-height: 48px;
+    }
+}
 
-        button {
-            flex: 1;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+/* ==============================================
+   Button Groups & Base Styles
+   ============================================== */
+
+.button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 30px;
+}
+
+button {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
 
 
         .btn-convert {

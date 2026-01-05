@@ -1,31 +1,144 @@
+/* ==============================================
+   Responsive Design - Mobile & Tablet Optimizations
+   ============================================== */
 
-        /* Mobile responsive for accessibility controls */
-        @media (max-width: 600px) {
-            .a11y-controls-grid {
-                grid-template-columns: 1fr;
-            }
+/* ==============================================
+   Tablet (768px)
+   ============================================== */
+@media (max-width: 768px) {
+    /* Reduce welcome screen feature gaps */
+    .welcome-features {
+        gap: var(--space-md, 16px);
+    }
 
-            /* Account grid should use single column on mobile */
-            .account-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+    /* Account grid adjustments */
+    .account-grid {
+        gap: var(--space-md, 16px);
+    }
+}
 
+/* ==============================================
+   Mobile (600px)
+   ============================================== */
+@media (max-width: 600px) {
+    /* Single column grids */
+    .a11y-controls-grid,
+    .account-grid,
+    .camera-settings-grid {
+        grid-template-columns: 1fr;
+    }
 
-        /* Mobile optimizations */
-        @media (max-width: 600px) {
-            .debug-console {
-                max-height: 35vh;
-                font-size: 10px;
-            }
+    /* Reduce gaps */
+    .welcome-features {
+        gap: var(--space-sm, 8px);
+    }
 
-            .debug-console-content div {
-                font-size: 9px;
-            }
+    /* Debug console - smaller when shown */
+    .debug-console {
+        max-height: 30vh;
+        font-size: 10px;
+    }
 
-            .debug-toggle-btn,
-            .debug-clear-btn {
-                font-size: 10px;
-                padding: 4px 8px;
-            }
-        }
+    .debug-console-content div {
+        font-size: 9px;
+    }
+
+    .debug-toggle-btn,
+    .debug-clear-btn {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+
+    /* Smaller tab buttons */
+    .tab-button {
+        min-width: 70px;
+        padding: 10px 8px;
+        font-size: 13px;
+    }
+}
+
+/* ==============================================
+   Small Mobile (480px)
+   ============================================== */
+@media (max-width: 480px) {
+    /* Even smaller tab buttons */
+    .tab-button {
+        min-width: 60px;
+        padding: 8px 6px;
+        font-size: 12px;
+    }
+
+    /* Tighter feature spacing */
+    .welcome-features {
+        gap: var(--space-sm, 8px);
+    }
+
+    .feature-item {
+        padding: var(--space-md, 16px);
+    }
+
+    /* Reduce details padding */
+    details > *:not(summary) {
+        padding: var(--space-sm, 8px);
+    }
+
+    details summary {
+        padding: var(--space-sm, 8px) var(--space-md, 16px);
+    }
+}
+
+/* ==============================================
+   Safe Area Insets (iPhone Notch)
+   ============================================== */
+@supports (padding: env(safe-area-inset-top)) {
+    body {
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .container {
+        padding-left: max(var(--space-md, 16px), env(safe-area-inset-left));
+        padding-right: max(var(--space-md, 16px), env(safe-area-inset-right));
+    }
+
+    /* Fixed elements need safe area consideration */
+    .auth-bar,
+    .language-switcher {
+        padding-left: max(12px, env(safe-area-inset-left));
+        padding-right: max(12px, env(safe-area-inset-right));
+    }
+}
+
+/* ==============================================
+   Reduced Motion Preference
+   ============================================== */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+
+    /* Disable hover transforms */
+    button:hover,
+    .btn:hover,
+    .welcome-logo:hover {
+        transform: none !important;
+    }
+}
+
+/* ==============================================
+   Dark Mode Support (Future)
+   ============================================== */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --color-bg: #1f2937;
+        --color-bg-secondary: #374151;
+        --color-text: #f9fafb;
+        --color-text-secondary: #d1d5db;
+        --color-border: #4b5563;
+    }
+}
