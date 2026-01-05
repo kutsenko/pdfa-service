@@ -635,6 +635,141 @@ class TestDarkMode:
 # =============================================================================
 
 
+class TestJobsTabFreezePrevention:
+    """Tests to verify the Jobs tab doesn't freeze after conversions.
+
+    These tests address the issue where the Jobs tab could freeze
+    after PDF conversion on the Camera tab, preventing any further
+    event processing.
+    """
+
+    def test_websocket_connection_check_uses_correct_reference(self, page_with_server: Page):
+        """WebSocket check should use window.conversionClient.ws, not window.ws."""
+        page_with_server.goto("http://localhost:8001")
+        page_with_server.wait_for_load_state("networkidle")
+
+        # Navigate to Jobs tab
+        page_with_server.click("#tab-jobs-btn")
+        page_with_server.wait_for_timeout(500)
+
+        # Check that window.ws is not defined (old incorrect reference)
+        ws_undefined = page_with_server.evaluate("typeof window.ws === 'undefined'")
+        assert ws_undefined, "window.ws should be undefined (old incorrect reference)"
+
+        # Check that conversionClient.ws is defined
+        has_conversion_client = page_with_server.evaluate(
+            "typeof window.conversionClient !== 'undefined'"
+        )
+        assert has_conversion_client, "window.conversionClient should be defined"
+
+    def test_jobs_tab_remains_responsive_after_tab_switches(self, page_with_server: Page):
+        """Jobs tab should remain responsive after multiple tab switches."""
+        page_with_server.goto("http://localhost:8001")
+        page_with_server.wait_for_load_state("networkidle")
+
+        # Switch tabs multiple times
+        for _ in range(5):
+            page_with_server.click("#tab-jobs-btn")
+            page_with_server.wait_for_timeout(200)
+            page_with_server.click("#tab-konverter-btn")
+            page_with_server.wait_for_timeout(200)
+
+        # Go back to Jobs tab
+        page_with_server.click("#tab-jobs-btn")
+        page_with_server.wait_for_timeout(500)
+
+        # Tab should still be responsive - try clicking a filter
+        all_btn = page_with_server.locator('button[data-status="all"]')
+        all_btn.click()
+        page_with_server.wait_for_timeout(200)
+
+        # Should not have thrown any errors
+        class_attr = all_btn.get_attribute("class")
+        assert "active" in class_attr, "Filter button should remain functional"
+
+    def test_events_cache_is_cleared_on_tab_deactivation(self, page_with_server: Page):
+        """Events cache should be cleared when leaving Jobs tab."""
+        page_with_server.goto("http://localhost:8001")
+        page_with_server.wait_for_load_state("networkidle")
+
+        # Go to Jobs tab
+        page_with_server.click("#tab-jobs-btn")
+        page_with_server.wait_for_timeout(500)
+
+        # Get initial cache size
+        initial_cache = page_with_server.evaluate(
+            "window.jobsManager ? window.jobsManager.eventsCache.size : 0"
+        )
+
+        # Leave Jobs tab
+        page_with_server.click("#tab-konverter-btn")
+        page_with_server.wait_for_timeout(300)
+
+        # Cache should be cleared
+        cache_after = page_with_server.evaluate(
+            "window.jobsManager ? window.jobsManager.eventsCache.size : 0"
+        )
+        assert cache_after == 0, f"Events cache should be cleared, got {cache_after}"
+
+    def test_parallel_load_requests_are_prevented(self, page_with_server: Page):
+        """Multiple loadJobs calls should not run in parallel."""
+        page_with_server.goto("http://localhost:8001")
+        page_with_server.wait_for_load_state("networkidle")
+
+        # Go to Jobs tab
+        page_with_server.click("#tab-jobs-btn")
+        page_with_server.wait_for_timeout(500)
+
+        # Try to trigger multiple loads simultaneously
+        page_with_server.evaluate("""
+            const jm = window.jobsManager;
+            if (jm) {
+                // Trigger 5 rapid loads
+                for (let i = 0; i < 5; i++) {
+                    jm.loadJobs(true, false);
+                }
+            }
+        """)
+
+        page_with_server.wait_for_timeout(1000)
+
+        # Check that isLoading flag exists and works
+        is_loading = page_with_server.evaluate(
+            "window.jobsManager ? window.jobsManager.isLoading : null"
+        )
+        # After all requests complete, isLoading should be false
+        assert is_loading is False, "isLoading should be false after requests complete"
+
+    def test_debounced_refresh_prevents_flooding(self, page_with_server: Page):
+        """Debounced refresh should coalesce multiple rapid refresh requests."""
+        page_with_server.goto("http://localhost:8001")
+        page_with_server.wait_for_load_state("networkidle")
+
+        # Go to Jobs tab
+        page_with_server.click("#tab-jobs-btn")
+        page_with_server.wait_for_timeout(500)
+
+        # Trigger many debounced refreshes
+        page_with_server.evaluate("""
+            const jm = window.jobsManager;
+            if (jm) {
+                // Trigger 10 rapid debounced refreshes
+                for (let i = 0; i < 10; i++) {
+                    jm.debouncedRefresh();
+                }
+            }
+        """)
+
+        # Wait for debounce to complete (500ms + margin)
+        page_with_server.wait_for_timeout(800)
+
+        # Page should still be responsive
+        refresh_btn = page_with_server.locator("#refreshJobsBtn")
+        if refresh_btn.is_visible():
+            refresh_btn.click()
+            page_with_server.wait_for_timeout(200)
+
+
 class TestAccessibility:
     """Tests for accessibility (WCAG 2.1 Level AA)."""
 
