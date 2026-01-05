@@ -1,0 +1,16 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="amber-converter" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#D97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Amber background -->
+  <rect x="2" y="2" width="20" height="20" rx="4" fill="url(#amber-converter)"/>
+  <!-- Document shape -->
+  <path d="M8 6h5l3 3v9a1 1 0 01-1 1H8a1 1 0 01-1-1V7a1 1 0 011-1z" fill="#FFFFFF" fill-opacity="0.9"/>
+  <!-- Document fold -->
+  <path d="M13 6v3h3" fill="none" stroke="#D97706" stroke-width="1" stroke-linecap="round"/>
+  <!-- Arrow (convert) -->
+  <path d="M10 12h4m-1.5-1.5L14 12l-1.5 1.5" fill="none" stroke="#667eea" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

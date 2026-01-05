@@ -11,6 +11,27 @@
         }
 
 
+        .tab-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm, 8px);
+        }
+
+
+        /* Tab Icon Styling */
+        .tab-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+
+        .tab-text {
+            white-space: nowrap;
+        }
+
+
         .tab-button:hover {
             background: rgba(102, 126, 234, 0.05);
             color: var(--color-primary);
@@ -39,4 +60,28 @@
 
         .tab-panel.active {
             display: block;
+        }
+
+
+        /* ================================================== */
+        /* Mobile: Icon-Only Tab Buttons                      */
+        /* ================================================== */
+        @media (max-width: 600px) {
+            .tab-text {
+                display: none;
+            }
+
+            .tab-icon {
+                width: 24px;
+                height: 24px;
+            }
+
+            .tab-button {
+                min-width: 48px;
+                padding: 10px;
+            }
+
+            .tab-navigation {
+                justify-content: space-around;
+            }
         }
