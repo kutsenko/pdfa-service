@@ -390,7 +390,7 @@ body {
 
 
         .language-switcher {
-            position: absolute;
+            position: fixed;
             top: 20px;
             right: 20px;
             display: flex;
@@ -699,8 +699,9 @@ body {
 
 
         .login-screen p {
-            color: #666;
+            color: #333;
             margin-bottom: 30px;
+            font-size: 1.1rem;
         }
 
 
@@ -794,9 +795,9 @@ body {
 
 
         .welcome-cta {
-            color: var(--color-primary, #667eea);
+            color: #4a5568;
             font-size: 1.1rem;
-            font-weight: 500;
+            font-weight: 600;
             margin-top: 30px;
         }
 
