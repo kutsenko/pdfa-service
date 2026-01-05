@@ -87,6 +87,15 @@ export function applyTranslations(lang) {
         }
     });
 
+    // Translate alt attributes for images with data-i18n-alt
+    document.querySelectorAll('[data-i18n-alt]').forEach(element => {
+        const key = element.getAttribute('data-i18n-alt');
+        const translatedAlt = getNestedValue(t, key);
+        if (translatedAlt !== undefined) {
+            element.setAttribute('alt', translatedAlt);
+        }
+    });
+
     // Update page title
     const pageTitle = getNestedValue(t, 'page.title');
     if (pageTitle) {
