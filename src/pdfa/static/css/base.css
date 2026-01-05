@@ -1081,6 +1081,73 @@ body {
         }
 
 
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+            max-width: 350px;
+        }
+
+        .toast-visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .toast-info {
+            background: #e0f2fe;
+            color: #0369a1;
+            border-left: 4px solid #0ea5e9;
+        }
+
+        .toast-success {
+            background: #dcfce7;
+            color: #166534;
+            border-left: 4px solid #22c55e;
+        }
+
+        .toast-warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .toast-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border-left: 4px solid #ef4444;
+        }
+
+        @media (max-width: 480px) {
+            .toast-container {
+                left: 10px;
+                right: 10px;
+                top: 10px;
+            }
+
+            .toast {
+                max-width: 100%;
+            }
+        }
+
+
         /* Debug Console - Visible on-page console for iOS debugging */
         .debug-console {
             position: fixed;

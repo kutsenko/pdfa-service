@@ -252,21 +252,25 @@ export const translations = {
                     messages: {
                         format_conversion: {
                             none: 'No format conversion required (source is PDF)',
-                            docx: {
-                                success: 'DOCX converted to PDF ({pages} pages)'
-                            },
-                            xlsx: {
-                                success: 'XLSX converted to PDF ({pages} pages)'
-                            },
-                            pptx: {
-                                success: 'PPTX converted to PDF ({pages} slides)'
-                            },
-                            odt: {
-                                success: 'ODT converted to PDF ({pages} pages)'
-                            },
-                            generic: {
-                                success: '{format} converted to PDF'
-                            }
+                            docx: { success: 'DOCX converted to PDF ({pages} pages)' },
+                            xlsx: { success: 'XLSX converted to PDF ({pages} pages)' },
+                            pptx: { success: 'PPTX converted to PDF ({pages} slides)' },
+                            odt: { success: 'ODT converted to PDF ({pages} pages)' },
+                            ods: { success: 'ODS converted to PDF ({pages} pages)' },
+                            odp: { success: 'ODP converted to PDF ({pages} slides)' },
+                            rtf: { success: 'RTF converted to PDF ({pages} pages)' },
+                            txt: { success: 'TXT converted to PDF ({pages} pages)' },
+                            jpg: { success: 'JPG image converted to PDF' },
+                            jpeg: { success: 'JPEG image converted to PDF' },
+                            png: { success: 'PNG image converted to PDF' },
+                            tiff: { success: 'TIFF image converted to PDF' },
+                            tif: { success: 'TIF image converted to PDF' },
+                            webp: { success: 'WebP image converted to PDF' },
+                            bmp: { success: 'BMP image converted to PDF' },
+                            gif: { success: 'GIF image converted to PDF' },
+                            heic: { success: 'HEIC image converted to PDF' },
+                            svg: { success: 'SVG image converted to PDF' },
+                            generic: { success: '{format} converted to PDF' }
                         },
                         ocr_decision: {
                             skip: {
@@ -299,11 +303,32 @@ export const translations = {
                         },
                         passthrough_mode: {
                             valid_pdfa: {
+                                pdfa_1b: 'Passthrough: already PDF/A-1b compliant',
                                 pdfa_2b: 'Passthrough: already PDF/A-2b compliant',
                                 pdfa_3b: 'Passthrough: already PDF/A-3b compliant'
+                            },
+                            already_compliant: {
+                                pdfa_1b: 'Passthrough: document is PDF/A-1b compliant',
+                                pdfa_2b: 'Passthrough: document is PDF/A-2b compliant',
+                                pdfa_3b: 'Passthrough: document is PDF/A-3b compliant'
+                            },
+                            pdf_output_no_ocr: {
+                                pdf: 'Passthrough: PDF output without OCR'
                             }
                         },
                         fallback_applied: {
+                            tier1: {
+                                initial_attempt: 'Processing with standard settings'
+                            },
+                            tier2: {
+                                ghostscript_error: 'Fallback Tier 2: retrying after Ghostscript error',
+                                conversion_failed: 'Fallback Tier 2: retrying with simplified settings',
+                                ocr_failed: 'Fallback Tier 2: proceeding without OCR'
+                            },
+                            tier3: {
+                                tier2_failed: 'Fallback Tier 3: last resort processing',
+                                all_options_exhausted: 'Fallback Tier 3: minimal processing mode'
+                            },
                             ocr_failed: {
                                 skip_ocr: 'Fallback: OCR failed, proceeding without OCR'
                             },
@@ -624,21 +649,25 @@ export const translations = {
                     messages: {
                         format_conversion: {
                             none: 'Keine Formatkonvertierung erforderlich (Quelle ist PDF)',
-                            docx: {
-                                success: 'DOCX in PDF konvertiert ({pages} Seiten)'
-                            },
-                            xlsx: {
-                                success: 'XLSX in PDF konvertiert ({pages} Seiten)'
-                            },
-                            pptx: {
-                                success: 'PPTX in PDF konvertiert ({pages} Folien)'
-                            },
-                            odt: {
-                                success: 'ODT in PDF konvertiert ({pages} Seiten)'
-                            },
-                            generic: {
-                                success: '{format} in PDF konvertiert'
-                            }
+                            docx: { success: 'DOCX in PDF konvertiert ({pages} Seiten)' },
+                            xlsx: { success: 'XLSX in PDF konvertiert ({pages} Seiten)' },
+                            pptx: { success: 'PPTX in PDF konvertiert ({pages} Folien)' },
+                            odt: { success: 'ODT in PDF konvertiert ({pages} Seiten)' },
+                            ods: { success: 'ODS in PDF konvertiert ({pages} Seiten)' },
+                            odp: { success: 'ODP in PDF konvertiert ({pages} Folien)' },
+                            rtf: { success: 'RTF in PDF konvertiert ({pages} Seiten)' },
+                            txt: { success: 'TXT in PDF konvertiert ({pages} Seiten)' },
+                            jpg: { success: 'JPG-Bild in PDF konvertiert' },
+                            jpeg: { success: 'JPEG-Bild in PDF konvertiert' },
+                            png: { success: 'PNG-Bild in PDF konvertiert' },
+                            tiff: { success: 'TIFF-Bild in PDF konvertiert' },
+                            tif: { success: 'TIF-Bild in PDF konvertiert' },
+                            webp: { success: 'WebP-Bild in PDF konvertiert' },
+                            bmp: { success: 'BMP-Bild in PDF konvertiert' },
+                            gif: { success: 'GIF-Bild in PDF konvertiert' },
+                            heic: { success: 'HEIC-Bild in PDF konvertiert' },
+                            svg: { success: 'SVG-Bild in PDF konvertiert' },
+                            generic: { success: '{format} in PDF konvertiert' }
                         },
                         ocr_decision: {
                             skip: {
@@ -671,11 +700,32 @@ export const translations = {
                         },
                         passthrough_mode: {
                             valid_pdfa: {
+                                pdfa_1b: 'Passthrough: bereits PDF/A-1b-konform',
                                 pdfa_2b: 'Passthrough: bereits PDF/A-2b-konform',
                                 pdfa_3b: 'Passthrough: bereits PDF/A-3b-konform'
+                            },
+                            already_compliant: {
+                                pdfa_1b: 'Passthrough: Dokument ist PDF/A-1b-konform',
+                                pdfa_2b: 'Passthrough: Dokument ist PDF/A-2b-konform',
+                                pdfa_3b: 'Passthrough: Dokument ist PDF/A-3b-konform'
+                            },
+                            pdf_output_no_ocr: {
+                                pdf: 'Passthrough: PDF-Ausgabe ohne OCR'
                             }
                         },
                         fallback_applied: {
+                            tier1: {
+                                initial_attempt: 'Verarbeitung mit Standardeinstellungen'
+                            },
+                            tier2: {
+                                ghostscript_error: 'Fallback Stufe 2: Wiederholung nach Ghostscript-Fehler',
+                                conversion_failed: 'Fallback Stufe 2: Wiederholung mit vereinfachten Einstellungen',
+                                ocr_failed: 'Fallback Stufe 2: Fortfahren ohne OCR'
+                            },
+                            tier3: {
+                                tier2_failed: 'Fallback Stufe 3: letzte Verarbeitungsoption',
+                                all_options_exhausted: 'Fallback Stufe 3: minimaler Verarbeitungsmodus'
+                            },
                             ocr_failed: {
                                 skip_ocr: 'Fallback: OCR fehlgeschlagen, fortfahren ohne OCR'
                             },
@@ -996,21 +1046,25 @@ export const translations = {
                     messages: {
                         format_conversion: {
                             none: 'No se requiere conversión de formato (la fuente es PDF)',
-                            docx: {
-                                success: 'DOCX convertido a PDF ({pages} páginas)'
-                            },
-                            xlsx: {
-                                success: 'XLSX convertido a PDF ({pages} páginas)'
-                            },
-                            pptx: {
-                                success: 'PPTX convertido a PDF ({pages} diapositivas)'
-                            },
-                            odt: {
-                                success: 'ODT convertido a PDF ({pages} páginas)'
-                            },
-                            generic: {
-                                success: '{format} convertido a PDF'
-                            }
+                            docx: { success: 'DOCX convertido a PDF ({pages} páginas)' },
+                            xlsx: { success: 'XLSX convertido a PDF ({pages} páginas)' },
+                            pptx: { success: 'PPTX convertido a PDF ({pages} diapositivas)' },
+                            odt: { success: 'ODT convertido a PDF ({pages} páginas)' },
+                            ods: { success: 'ODS convertido a PDF ({pages} páginas)' },
+                            odp: { success: 'ODP convertido a PDF ({pages} diapositivas)' },
+                            rtf: { success: 'RTF convertido a PDF ({pages} páginas)' },
+                            txt: { success: 'TXT convertido a PDF ({pages} páginas)' },
+                            jpg: { success: 'Imagen JPG convertida a PDF' },
+                            jpeg: { success: 'Imagen JPEG convertida a PDF' },
+                            png: { success: 'Imagen PNG convertida a PDF' },
+                            tiff: { success: 'Imagen TIFF convertida a PDF' },
+                            tif: { success: 'Imagen TIF convertida a PDF' },
+                            webp: { success: 'Imagen WebP convertida a PDF' },
+                            bmp: { success: 'Imagen BMP convertida a PDF' },
+                            gif: { success: 'Imagen GIF convertida a PDF' },
+                            heic: { success: 'Imagen HEIC convertida a PDF' },
+                            svg: { success: 'Imagen SVG convertida a PDF' },
+                            generic: { success: '{format} convertido a PDF' }
                         },
                         ocr_decision: {
                             skip: {
@@ -1043,11 +1097,32 @@ export const translations = {
                         },
                         passthrough_mode: {
                             valid_pdfa: {
+                                pdfa_1b: 'Passthrough: ya cumple con PDF/A-1b',
                                 pdfa_2b: 'Passthrough: ya cumple con PDF/A-2b',
                                 pdfa_3b: 'Passthrough: ya cumple con PDF/A-3b'
+                            },
+                            already_compliant: {
+                                pdfa_1b: 'Passthrough: documento cumple con PDF/A-1b',
+                                pdfa_2b: 'Passthrough: documento cumple con PDF/A-2b',
+                                pdfa_3b: 'Passthrough: documento cumple con PDF/A-3b'
+                            },
+                            pdf_output_no_ocr: {
+                                pdf: 'Passthrough: salida PDF sin OCR'
                             }
                         },
                         fallback_applied: {
+                            tier1: {
+                                initial_attempt: 'Procesando con configuración estándar'
+                            },
+                            tier2: {
+                                ghostscript_error: 'Fallback Nivel 2: reintentando después de error de Ghostscript',
+                                conversion_failed: 'Fallback Nivel 2: reintentando con configuración simplificada',
+                                ocr_failed: 'Fallback Nivel 2: continuando sin OCR'
+                            },
+                            tier3: {
+                                tier2_failed: 'Fallback Nivel 3: último recurso de procesamiento',
+                                all_options_exhausted: 'Fallback Nivel 3: modo de procesamiento mínimo'
+                            },
                             ocr_failed: {
                                 skip_ocr: 'Fallback: OCR falló, continuando sin OCR'
                             },
@@ -1368,21 +1443,25 @@ export const translations = {
                     messages: {
                         format_conversion: {
                             none: 'Aucune conversion de format requise (la source est PDF)',
-                            docx: {
-                                success: 'DOCX converti en PDF ({pages} pages)'
-                            },
-                            xlsx: {
-                                success: 'XLSX converti en PDF ({pages} pages)'
-                            },
-                            pptx: {
-                                success: 'PPTX converti en PDF ({pages} diapositives)'
-                            },
-                            odt: {
-                                success: 'ODT converti en PDF ({pages} pages)'
-                            },
-                            generic: {
-                                success: '{format} converti en PDF'
-                            }
+                            docx: { success: 'DOCX converti en PDF ({pages} pages)' },
+                            xlsx: { success: 'XLSX converti en PDF ({pages} pages)' },
+                            pptx: { success: 'PPTX converti en PDF ({pages} diapositives)' },
+                            odt: { success: 'ODT converti en PDF ({pages} pages)' },
+                            ods: { success: 'ODS converti en PDF ({pages} pages)' },
+                            odp: { success: 'ODP converti en PDF ({pages} diapositives)' },
+                            rtf: { success: 'RTF converti en PDF ({pages} pages)' },
+                            txt: { success: 'TXT converti en PDF ({pages} pages)' },
+                            jpg: { success: 'Image JPG convertie en PDF' },
+                            jpeg: { success: 'Image JPEG convertie en PDF' },
+                            png: { success: 'Image PNG convertie en PDF' },
+                            tiff: { success: 'Image TIFF convertie en PDF' },
+                            tif: { success: 'Image TIF convertie en PDF' },
+                            webp: { success: 'Image WebP convertie en PDF' },
+                            bmp: { success: 'Image BMP convertie en PDF' },
+                            gif: { success: 'Image GIF convertie en PDF' },
+                            heic: { success: 'Image HEIC convertie en PDF' },
+                            svg: { success: 'Image SVG convertie en PDF' },
+                            generic: { success: '{format} converti en PDF' }
                         },
                         ocr_decision: {
                             skip: {
@@ -1415,11 +1494,32 @@ export const translations = {
                         },
                         passthrough_mode: {
                             valid_pdfa: {
+                                pdfa_1b: 'Passthrough: déjà conforme PDF/A-1b',
                                 pdfa_2b: 'Passthrough: déjà conforme PDF/A-2b',
                                 pdfa_3b: 'Passthrough: déjà conforme PDF/A-3b'
+                            },
+                            already_compliant: {
+                                pdfa_1b: 'Passthrough: document conforme PDF/A-1b',
+                                pdfa_2b: 'Passthrough: document conforme PDF/A-2b',
+                                pdfa_3b: 'Passthrough: document conforme PDF/A-3b'
+                            },
+                            pdf_output_no_ocr: {
+                                pdf: 'Passthrough: sortie PDF sans OCR'
                             }
                         },
                         fallback_applied: {
+                            tier1: {
+                                initial_attempt: 'Traitement avec paramètres standards'
+                            },
+                            tier2: {
+                                ghostscript_error: 'Fallback Niveau 2: nouvelle tentative après erreur Ghostscript',
+                                conversion_failed: 'Fallback Niveau 2: nouvelle tentative avec paramètres simplifiés',
+                                ocr_failed: 'Fallback Niveau 2: continuation sans OCR'
+                            },
+                            tier3: {
+                                tier2_failed: 'Fallback Niveau 3: traitement de dernière recours',
+                                all_options_exhausted: 'Fallback Niveau 3: mode de traitement minimal'
+                            },
                             ocr_failed: {
                                 skip_ocr: 'Fallback: OCR échoué, continuation sans OCR'
                             },

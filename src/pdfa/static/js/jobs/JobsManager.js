@@ -3,7 +3,8 @@
  * Handles jobs tab, job list display, filtering, pagination, and retry functionality
  */
 
-import { t, formatFileSize, showStatus } from '../utils/helpers.js';
+import { t, formatFileSize, showStatus, showToast, getNestedValue } from '../utils/helpers.js';
+import { translations } from '../i18n/translations.js';
 
 export class JobsManager {
     constructor(authManager) {
@@ -561,12 +562,14 @@ export class JobsManager {
             const icon = this.getEventIcon(event.event_type);
             const details = this.formatEventDetails(event.details);
             const timestamp = new Date(event.timestamp).toLocaleTimeString();
+            // Translate event message using i18n key
+            const message = this.translateEventMessage(event);
 
             return `
                 <div class="event-item">
                     <div class="event-icon" aria-hidden="true">${icon}</div>
                     <div class="event-content">
-                        <div class="event-message">${this.escapeHtml(event.message)}</div>
+                        <div class="event-message">${this.escapeHtml(message)}</div>
                         <div class="event-timestamp">${timestamp}</div>
                         ${details ? `<div class="event-details">${details}</div>` : ''}
                     </div>
@@ -591,9 +594,66 @@ export class JobsManager {
     formatEventDetails(details) {
         if (!details || Object.keys(details).length === 0) return '';
 
-        return Object.entries(details)
+        // Filter out internal i18n keys
+        const filtered = Object.entries(details)
+            .filter(([key]) => !key.startsWith('_i18n'))
             .map(([key, value]) => `${key}: ${value}`)
             .join(' | ');
+
+        return filtered;
+    }
+
+    /**
+     * Translate event message using i18n key or fallback to English
+     * @param {Object} event - Event object with message and details
+     * @returns {string} Translated message
+     */
+    translateEventMessage(event) {
+        // Check if translations are available
+        if (typeof translations === 'undefined' || typeof window.currentLang === 'undefined') {
+            return event.message;
+        }
+
+        // Try to get translation from i18n key
+        if (event.details && event.details._i18n_key) {
+            const key = event.details._i18n_key;
+            const params = event.details._i18n_params || {};
+
+            // Navigate nested key (e.g., "ocr_decision.skip.tagged_pdf")
+            const keys = key.split('.');
+            let translation = translations[window.currentLang]?.events?.messages;
+
+            for (const k of keys) {
+                if (translation && translation[k]) {
+                    translation = translation[k];
+                } else {
+                    translation = null;
+                    break;
+                }
+            }
+
+            // If translation found, substitute parameters
+            if (translation && typeof translation === 'string') {
+                return this.substituteParams(translation, params);
+            }
+        }
+
+        // Fallback to English message from backend
+        return event.message;
+    }
+
+    /**
+     * Substitute parameters in translation template
+     * @param {string} template - Template with {placeholders}
+     * @param {Object} params - Parameter values
+     * @returns {string} Template with substituted values
+     */
+    substituteParams(template, params) {
+        let result = template;
+        for (const [key, value] of Object.entries(params)) {
+            result = result.replace(new RegExp(`\\{${key}\\}`, 'g'), value);
+        }
+        return result;
     }
 
     async downloadJob(jobId, filename) {
