@@ -25,7 +25,7 @@
     .welcome-screen {
         padding: 24px 16px;
         margin: 10px;
-        margin-top: 120px; /* Space for login bar */
+        margin-top: 145px; /* Space for login bar (~135px content height on mobile) */
         border-radius: 8px;
     }
 
