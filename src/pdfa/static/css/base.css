@@ -713,9 +713,13 @@ body {
         /* Welcome Screen (shown when not authenticated) */
         .welcome-screen {
             display: none;
-            padding: 60px 20px;
-            max-width: 1200px;
+            padding: 40px 30px;
+            max-width: 800px;
+            width: 100%;
             margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         }
 
 
@@ -734,10 +738,10 @@ body {
 
         .welcome-description {
             color: #555;
-            font-size: 1.15rem;
+            font-size: 1.1rem;
             line-height: 1.6;
-            margin-bottom: 40px;
-            max-width: 800px;
+            margin-bottom: 24px;
+            max-width: 700px;
             margin-left: auto;
             margin-right: auto;
         }
@@ -745,25 +749,25 @@ body {
 
         .welcome-features {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-bottom: 50px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
             text-align: left;
         }
 
 
         .feature-item {
             padding: 20px;
-            background: rgba(59, 130, 246, 0.05);
+            background: rgba(102, 126, 234, 0.05);
             border-radius: 12px;
-            border: 1px solid rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.15);
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
 
         .feature-item:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
         }
 
 
@@ -790,10 +794,10 @@ body {
 
 
         .welcome-cta {
-            color: #3b82f6;
+            color: var(--color-primary, #667eea);
             font-size: 1.1rem;
             font-weight: 500;
-            margin-top: 40px;
+            margin-top: 30px;
         }
 
 
@@ -811,13 +815,13 @@ body {
 
 
         body.dark-mode .feature-item {
-            background: rgba(59, 130, 246, 0.1);
-            border-color: rgba(59, 130, 246, 0.2);
+            background: rgba(102, 126, 234, 0.15);
+            border-color: rgba(102, 126, 234, 0.25);
         }
 
 
         body.dark-mode .welcome-cta {
-            color: #60a5fa;
+            color: #a5b4fc;
         }
 
 
