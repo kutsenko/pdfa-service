@@ -36,7 +36,7 @@
 
 
         .event-list-toggle:focus {
-            outline: 2px solid #667eea;
+            outline: 2px solid var(--color-primary);
             outline-offset: -2px;
         }
 
@@ -53,7 +53,7 @@
             min-width: 1.5rem;
             height: 1.5rem;
             padding: 0 0.5rem;
-            background: #667eea;
+            background: var(--color-primary);
             color: white;
             border-radius: 12px;
             font-size: 0.85rem;
@@ -128,13 +128,13 @@
         .event-details summary {
             cursor: pointer;
             font-weight: 500;
-            color: #667eea;
+            color: var(--color-primary);
             user-select: none;
         }
 
 
         .event-details summary:focus {
-            outline: 2px solid #667eea;
+            outline: 2px solid var(--color-primary);
             outline-offset: 2px;
         }
 
@@ -172,12 +172,12 @@
 
 
         .event-fallback_applied {
-            --event-color: #ef4444; /* Red */
+            --event-color: var(--color-danger); /* Red */
         }
 
 
         .event-job_timeout {
-            --event-color: #ef4444; /* Red */
+            --event-color: var(--color-danger); /* Red */
         }
 
 
@@ -386,20 +386,20 @@
 
         .filter-btn:hover {
             background: var(--hover-bg, #f5f5f5);
-            border-color: var(--primary-color, #007bff);
+            border-color: var(--color-primary);
         }
 
 
         .filter-btn.active {
-            background: var(--primary-color, #007bff);
+            background: var(--color-primary);
             color: white;
-            border-color: var(--primary-color, #007bff);
+            border-color: var(--color-primary);
             font-weight: 500;
         }
 
 
         .filter-btn:focus {
-            outline: 2px solid var(--primary-color, #007bff);
+            outline: 2px solid var(--color-primary);
             outline-offset: 2px;
         }
 
@@ -450,7 +450,7 @@
 
 
         .jobs-table tbody tr.job-row:focus {
-            outline: 2px solid var(--primary-color, #007bff);
+            outline: 2px solid var(--color-primary);
             outline-offset: -2px;
         }
 
@@ -475,7 +475,7 @@
         .event-timeline {
             padding: 1.5rem;
             background: var(--event-timeline-bg, #f8f9fa);
-            border-left: 4px solid var(--primary-color, #007bff);
+            border-left: 4px solid var(--color-primary);
             max-height: 400px;
             overflow-y: auto;
         }

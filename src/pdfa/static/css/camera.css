@@ -192,15 +192,6 @@
             background: #28a745;
         }
 
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-            50% {
-                opacity: 0.5;
-            }
-        }
-
         .countdown {
             font-size: 14px;
             color: #6c757d;
