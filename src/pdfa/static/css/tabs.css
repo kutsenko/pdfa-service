@@ -13,20 +13,20 @@
 
         .tab-button:hover {
             background: rgba(102, 126, 234, 0.05);
-            color: #667eea;
+            color: var(--color-primary);
         }
 
 
         .tab-button:focus {
-            outline: 2px solid #667eea;
+            outline: 2px solid var(--color-primary);
             outline-offset: -2px;
             z-index: 1;
         }
 
 
         .tab-button.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
             background: rgba(102, 126, 234, 0.08);
         }
 
