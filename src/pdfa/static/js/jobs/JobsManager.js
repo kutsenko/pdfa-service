@@ -407,6 +407,9 @@ export class JobsManager {
         const duration = job.duration_seconds ? this.formatDuration(job.duration_seconds) : '-';
         const sizeInfo = this.formatSizeInfo(job);
         const eventsCount = job.events_count || 0;
+        const eventsText = eventsCount === 1
+            ? t('jobs.events.countSingular')
+            : t('jobs.events.count', { count: eventsCount });
 
         const downloadBtn = job.status === 'completed'
             ? `<button class="action-btn download download-btn" data-job-id="${job.job_id}" data-filename="${job.filename}" data-i18n="jobs.actions.download">Download</button>`
@@ -425,7 +428,7 @@ export class JobsManager {
                 <td role="cell" data-label="Created" title="${createdDate.toLocaleString()}">${relativeTime}</td>
                 <td role="cell" data-label="Duration">${duration}</td>
                 <td role="cell" data-label="Size" class="hide-mobile">${sizeInfo}</td>
-                <td role="cell" data-label="Events"><span class="badge">${eventsCount} events</span></td>
+                <td role="cell" data-label="Events"><span class="badge">${eventsText}</span></td>
                 <td role="cell" data-label="Actions" class="actions">
                     ${downloadBtn}
                     ${retryBtn}

@@ -1434,8 +1434,14 @@ async def process_conversion_job(job_id: str) -> None:
 
         # Check for multi-image mode first (input_paths contains multiple images)
         # Note: job.filename may be "X_pages.pdf" for multi-image jobs, so we check input_paths
-        elif job.input_paths and len(job.input_paths) > 1 and is_image_file(job.input_paths[0].name):
-            logger.info(f"Multi-image job detected: {len(job.input_paths)} images for job {job_id}")
+        elif (
+            job.input_paths
+            and len(job.input_paths) > 1
+            and is_image_file(job.input_paths[0].name)
+        ):
+            logger.info(
+                f"Multi-image job detected: {len(job.input_paths)} images for job {job_id}"
+            )
             pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
 
             # Track conversion time
@@ -1443,9 +1449,7 @@ async def process_conversion_job(job_id: str) -> None:
 
             start_time = time.time()
 
-            await asyncio.to_thread(
-                convert_images_to_pdf, job.input_paths, pdf_path
-            )
+            await asyncio.to_thread(convert_images_to_pdf, job.input_paths, pdf_path)
 
             conversion_time = time.time() - start_time
 
@@ -1460,7 +1464,9 @@ async def process_conversion_job(job_id: str) -> None:
                 num_images=len(job.input_paths),
             )
 
-        elif is_image_file(job.filename) or (job.input_path and is_image_file(job.input_path.name)):
+        elif is_image_file(job.filename) or (
+            job.input_path and is_image_file(job.input_path.name)
+        ):
             logger.info(f"Converting single image to PDF for job {job_id}")
             pdf_path = job.input_path.parent / f"{job.input_path.stem}.pdf"
 
@@ -1938,6 +1944,7 @@ async def get_job_history(
             "compression_ratio": job.compression_ratio,
             "error": job.error,
             "config": job.config,
+            "events_count": job.events_count or 0,
         }
         for job in jobs
     ]

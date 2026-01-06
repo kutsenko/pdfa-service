@@ -382,6 +382,32 @@ function initJobsTabObserver() {
 }
 
 // ============================================================================
+// Event List Toggle Initialization
+// ============================================================================
+
+/**
+ * Initialize the event list toggle button in the conversion progress panel
+ */
+function initEventListToggle() {
+    const eventListToggle = document.getElementById('eventListToggle');
+    if (eventListToggle) {
+        eventListToggle.addEventListener('click', () => {
+            if (window.conversionClient) {
+                window.conversionClient.toggleEventList();
+
+                // Update toggle icon
+                const icon = eventListToggle.querySelector('.toggle-icon');
+                const isExpanded = eventListToggle.getAttribute('aria-expanded') === 'true';
+                if (icon) {
+                    icon.textContent = isExpanded ? '▼' : '▶';
+                }
+            }
+        });
+        console.log('[Events] Event list toggle initialized');
+    }
+}
+
+// ============================================================================
 // Debug Console Initialization (iOS Debugging)
 // ============================================================================
 
@@ -506,6 +532,9 @@ async function initializeApp() {
         accountManager.init();
         jobsManager.init();
         cameraManager.init();
+
+        // Initialize event list toggle button
+        initEventListToggle();
 
         // Initialize file upload handlers
         initFileUpload();
