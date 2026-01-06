@@ -4,6 +4,7 @@
  */
 
 import { showStatus, t, formatFileSize } from '../utils/helpers.js';
+import { translations } from '../i18n/translations.js';
 
 export class ConversionClient {
     constructor(authManager) {
@@ -317,6 +318,7 @@ export class ConversionClient {
              */
             translateProgressStep(step) {
                 // Check if translations are available
+                const currentLang = window.currentLang;
                 if (typeof translations === 'undefined' || typeof currentLang === 'undefined') {
                     return step; // Return original if translations not loaded
                 }
@@ -913,6 +915,7 @@ export class ConversionClient {
              */
             translateEventMessage(event) {
                 // Check if translations are available
+                const currentLang = window.currentLang;
                 if (typeof translations === 'undefined' || typeof currentLang === 'undefined') {
                     return event.message; // Return original message if translations not loaded
                 }
