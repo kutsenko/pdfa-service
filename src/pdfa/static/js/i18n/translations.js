@@ -225,6 +225,8 @@ export const translations = {
                 'jobs.actions.expand': 'Expand',
                 'jobs.actions.collapse': 'Collapse',
                 'jobs.events.empty': 'No events recorded',
+                'jobs.events.count': '{count} events',
+                'jobs.events.countSingular': '1 event',
                 'jobs.download.error': 'Download failed. Please try again.',
                 'jobs.retry.notification': 'Please upload {filename} to retry this conversion',
                 'jobs.retry.error': 'Failed to load job details. Please try again.',
@@ -304,11 +306,19 @@ export const translations = {
                                 user_request: 'High compression: requested by user'
                             },
                             balanced: {
-                                default: 'Balanced compression: optimal quality/size trade-off'
+                                default: 'Balanced compression: optimal quality/size trade-off',
+                                user_selected: 'Balanced compression selected'
                             },
                             low: {
                                 small_file: 'Low compression: file size {size_mb} MB',
                                 user_request: 'Low compression: quality priority'
+                            },
+                            preserve: {
+                                auto_switched_for_tagged_pdf: 'Compression auto-switched to preserve (tagged PDF)',
+                                user_selected: 'Preserve mode: no recompression'
+                            },
+                            quality: {
+                                user_selected: 'High quality compression selected'
                             }
                         },
                         passthrough_mode: {
@@ -632,6 +642,8 @@ export const translations = {
                 'jobs.actions.expand': 'Erweitern',
                 'jobs.actions.collapse': 'Einklappen',
                 'jobs.events.empty': 'Keine Ereignisse aufgezeichnet',
+                'jobs.events.count': '{count} Ereignisse',
+                'jobs.events.countSingular': '1 Ereignis',
                 'jobs.download.error': 'Download fehlgeschlagen. Bitte erneut versuchen.',
                 'jobs.retry.notification': 'Bitte laden Sie {filename} hoch, um diese Konvertierung zu wiederholen',
                 'jobs.retry.error': 'Fehler beim Laden der Auftragsdetails. Bitte erneut versuchen.',
@@ -711,11 +723,19 @@ export const translations = {
                                 user_request: 'Hohe Komprimierung: vom Benutzer angefordert'
                             },
                             balanced: {
-                                default: 'Ausgewogene Komprimierung: optimaler Qualität/Größe-Kompromiss'
+                                default: 'Ausgewogene Komprimierung: optimaler Qualität/Größe-Kompromiss',
+                                user_selected: 'Ausgewogene Komprimierung gewählt'
                             },
                             low: {
                                 small_file: 'Niedrige Komprimierung: Dateigröße {size_mb} MB',
                                 user_request: 'Niedrige Komprimierung: Qualität priorisiert'
+                            },
+                            preserve: {
+                                auto_switched_for_tagged_pdf: 'Komprimierung auf Erhalt umgestellt (getaggtes PDF)',
+                                user_selected: 'Erhaltungsmodus: keine Rekomprimierung'
+                            },
+                            quality: {
+                                user_selected: 'Hohe Qualität Komprimierung gewählt'
                             }
                         },
                         passthrough_mode: {
@@ -1039,6 +1059,8 @@ export const translations = {
                 'jobs.actions.expand': 'Expandir',
                 'jobs.actions.collapse': 'Contraer',
                 'jobs.events.empty': 'No hay eventos registrados',
+                'jobs.events.count': '{count} eventos',
+                'jobs.events.countSingular': '1 evento',
                 'jobs.download.error': 'Error al descargar. Inténtelo de nuevo.',
                 'jobs.retry.notification': 'Por favor suba {filename} para reintentar esta conversión',
                 'jobs.retry.error': 'Error al cargar los detalles del trabajo. Inténtelo de nuevo.',
@@ -1118,11 +1140,19 @@ export const translations = {
                                 user_request: 'Compresión alta: solicitada por el usuario'
                             },
                             balanced: {
-                                default: 'Compresión equilibrada: compensación óptima calidad/tamaño'
+                                default: 'Compresión equilibrada: compensación óptima calidad/tamaño',
+                                user_selected: 'Compresión equilibrada seleccionada'
                             },
                             low: {
                                 small_file: 'Compresión baja: tamaño de archivo {size_mb} MB',
                                 user_request: 'Compresión baja: prioridad de calidad'
+                            },
+                            preserve: {
+                                auto_switched_for_tagged_pdf: 'Compresión cambiada a preservar (PDF etiquetado)',
+                                user_selected: 'Modo preservar: sin recompresión'
+                            },
+                            quality: {
+                                user_selected: 'Compresión de alta calidad seleccionada'
                             }
                         },
                         passthrough_mode: {
@@ -1446,6 +1476,8 @@ export const translations = {
                 'jobs.actions.expand': 'Développer les événements',
                 'jobs.actions.collapse': 'Réduire les événements',
                 'jobs.events.empty': 'Aucun événement enregistré pour cette tâche',
+                'jobs.events.count': '{count} événements',
+                'jobs.events.countSingular': '1 événement',
                 'jobs.download.error': 'Échec du téléchargement. Veuillez réessayer.',
                 'jobs.retry.notification': 'Veuillez télécharger {filename} pour réessayer cette conversion',
                 'jobs.retry.error': 'Échec du chargement des détails de la tâche. Veuillez réessayer.',
@@ -1525,11 +1557,19 @@ export const translations = {
                                 user_request: 'Compression élevée: demandée par l\'utilisateur'
                             },
                             balanced: {
-                                default: 'Compression équilibrée: compromis optimal qualité/taille'
+                                default: 'Compression équilibrée: compromis optimal qualité/taille',
+                                user_selected: 'Compression équilibrée sélectionnée'
                             },
                             low: {
                                 small_file: 'Compression faible: taille du fichier {size_mb} MB',
                                 user_request: 'Compression faible: priorité à la qualité'
+                            },
+                            preserve: {
+                                auto_switched_for_tagged_pdf: 'Compression basculée vers préserver (PDF balisé)',
+                                user_selected: 'Mode préserver: pas de recompression'
+                            },
+                            quality: {
+                                user_selected: 'Compression haute qualité sélectionnée'
                             }
                         },
                         passthrough_mode: {
