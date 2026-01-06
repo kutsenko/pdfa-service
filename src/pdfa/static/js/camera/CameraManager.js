@@ -998,16 +998,21 @@ export class CameraManager {
             window.conversionClient.ws.send(JSON.stringify(message));
             console.log('[Camera] Multi-page job submitted');
 
+            // Show floating progress bar (unified behavior)
+            if (window.floatingProgressBar) {
+                const filename = this.stagedPages.length === 1
+                    ? 'camera_scan.pdf'
+                    : `camera_scan_${this.stagedPages.length}pages.pdf`;
+                window.floatingProgressBar.show(filename);
+            }
+
             // Clear staging after successful submission
             this.stagedPages = [];
             this.renderPageThumbnails();
             this.updateSubmitButton();
 
-            // Switch to Jobs tab to see progress
-            const jobsTabBtn = document.getElementById('tab-jobs-btn');
-            if (jobsTabBtn) {
-                jobsTabBtn.click();
-            }
+            // No longer auto-navigate to Jobs tab - user stays on Camera tab
+            // and sees progress in floating progress bar
         } else {
             console.error('[Camera] WebSocket not connected');
             alert('Connection error. Please ensure you are connected.');

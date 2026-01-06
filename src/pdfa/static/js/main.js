@@ -22,6 +22,7 @@ import { AccountManager } from './account/AccountManager.js';
 import { JobsManager } from './jobs/JobsManager.js';
 import { CameraManager } from './camera/CameraManager.js';
 import { AccessibleCameraAssistant } from './camera/AccessibleCameraAssistant.js';
+import { FloatingProgressBar } from './ui/FloatingProgressBar.js';
 
 // ============================================================================
 // Language Detection and Setup
@@ -52,6 +53,9 @@ window.jobsManager = jobsManager;
 
 const cameraManager = new CameraManager();
 window.cameraManager = cameraManager;
+
+// FloatingProgressBar will be initialized after DOM is ready
+let floatingProgressBar = null;
 
 // Note: ConversionClient will be initialized after auth check
 
@@ -532,6 +536,10 @@ async function initializeApp() {
         accountManager.init();
         jobsManager.init();
         cameraManager.init();
+
+        // Initialize floating progress bar
+        floatingProgressBar = new FloatingProgressBar();
+        window.floatingProgressBar = floatingProgressBar;
 
         // Initialize event list toggle button
         initEventListToggle();
