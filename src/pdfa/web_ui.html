@@ -1090,6 +1090,85 @@
         </div>
     </div>
 
+    <!-- Floating Progress Bar (visible across all tabs) -->
+    <div id="floatingProgressBar"
+         class="floating-progress-bar"
+         role="region"
+         aria-label="Conversion Progress"
+         aria-live="polite">
+        <!-- Header (always visible) -->
+        <div class="fpb-header">
+            <div class="fpb-header-left">
+                <span class="fpb-icon" aria-hidden="true">📄</span>
+                <span class="fpb-filename"></span>
+                <span class="fpb-mini-progress"></span>
+            </div>
+            <div class="fpb-header-right">
+                <button class="fpb-header-btn fpb-minimize-btn"
+                        aria-label="Minimize"
+                        data-i18n-aria="floatingProgress.minimize">▼</button>
+                <button class="fpb-header-btn fpb-close-btn"
+                        aria-label="Close"
+                        data-i18n-aria="floatingProgress.close">×</button>
+            </div>
+        </div>
+
+        <!-- Main content -->
+        <div class="fpb-content">
+            <!-- Processing state -->
+            <div class="fpb-processing">
+                <div class="fpb-progress-section">
+                    <div class="fpb-progress-info">
+                        <span class="fpb-step" data-i18n="floatingProgress.starting">Starting...</span>
+                        <span class="fpb-percentage">0%</span>
+                    </div>
+                    <div class="fpb-progress-track" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                        <div class="fpb-progress-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Events section -->
+                <div class="fpb-events-section">
+                    <button class="fpb-events-toggle" aria-expanded="false">
+                        <span class="toggle-icon">▶</span>
+                        <span data-i18n="floatingProgress.events">Events</span>
+                        <span class="fpb-events-count">(0)</span>
+                    </button>
+                    <div class="fpb-events-list" role="log" aria-live="polite"></div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="fpb-actions">
+                    <button class="fpb-cancel-btn" data-i18n="floatingProgress.cancel">Cancel</button>
+                    <button class="fpb-jobs-btn" data-i18n="floatingProgress.goToJobs">Go to Jobs</button>
+                </div>
+            </div>
+
+            <!-- Completed state -->
+            <div class="fpb-completed">
+                <div class="fpb-completed-content">
+                    <div class="fpb-completed-info">
+                        <span class="fpb-completed-icon" aria-hidden="true">✅</span>
+                        <div class="fpb-completed-text">
+                            <span class="fpb-completed-title" data-i18n="floatingProgress.complete">Conversion complete!</span>
+                            <span class="fpb-completed-filename"></span>
+                        </div>
+                    </div>
+                    <div class="fpb-completed-actions">
+                        <button class="fpb-download-btn">
+                            <span aria-hidden="true">📥</span>
+                            <span data-i18n="floatingProgress.download">Download</span>
+                        </button>
+                        <button class="fpb-view-btn">
+                            <span aria-hidden="true">👁️</span>
+                            <span data-i18n="floatingProgress.view">View</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="/static/js/main.js"></script>
 </body>
 </html>

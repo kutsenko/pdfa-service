@@ -243,6 +243,11 @@ export class ConversionClient {
                 // Show progress container
                 this.showProgress();
 
+                // Show floating progress bar
+                if (window.floatingProgressBar) {
+                    window.floatingProgressBar.show(file.name);
+                }
+
                 // Base64-encode file
                 const base64 = await this.fileToBase64(file);
 
@@ -296,6 +301,15 @@ export class ConversionClient {
                     total: message.total,
                     message: message.message
                 });
+
+                // Update floating progress bar
+                if (window.floatingProgressBar) {
+                    window.floatingProgressBar.updateProgress(
+                        message.percentage,
+                        translatedStep,
+                        message.message
+                    );
+                }
             }
 
             /**
@@ -317,6 +331,15 @@ export class ConversionClient {
             handleCompleted(message) {
                 console.log('[handleCompleted] Called with message:', message);
                 this.hideProgress();
+
+                // Update floating progress bar
+                if (window.floatingProgressBar) {
+                    window.floatingProgressBar.onComplete({
+                        download_url: message.download_url,
+                        view_url: message.download_url,
+                        filename: message.filename
+                    });
+                }
 
                 // Store download info for modal (NEW)
                 this.lastDownloadUrl = message.download_url;
@@ -416,6 +439,11 @@ export class ConversionClient {
                     errorMsg = t('error.job_cancelled');
                 }
 
+                // Update floating progress bar
+                if (window.floatingProgressBar) {
+                    window.floatingProgressBar.onError({ message: errorMsg });
+                }
+
                 showStatus(t('status.error', { message: errorMsg }), 'error');
 
                 // Announce error to screen readers
@@ -426,6 +454,12 @@ export class ConversionClient {
 
             handleCancelled(message) {
                 this.hideProgress();
+
+                // Update floating progress bar
+                if (window.floatingProgressBar) {
+                    window.floatingProgressBar.onCancelled();
+                }
+
                 showStatus(t('status.cancelled'), 'error');
 
                 // Announce cancellation to screen readers
@@ -798,6 +832,16 @@ export class ConversionClient {
                 // Show container if first event
                 if (this.events.length === 1) {
                     this.showEventListContainer();
+                }
+
+                // Update floating progress bar
+                if (window.floatingProgressBar) {
+                    const localizedMessage = this.translateEventMessage(message);
+                    window.floatingProgressBar.addEvent({
+                        type: message.event_type,
+                        message: localizedMessage,
+                        timestamp: message.timestamp
+                    });
                 }
 
                 // Announce to screen reader (selective)

@@ -643,7 +643,9 @@ class TestJobsTabFreezePrevention:
     event processing.
     """
 
-    def test_websocket_connection_check_uses_correct_reference(self, page_with_server: Page):
+    def test_websocket_connection_check_uses_correct_reference(
+        self, page_with_server: Page
+    ):
         """WebSocket check should use window.conversionClient.ws, not window.ws."""
         page_with_server.goto("http://localhost:8001")
         page_with_server.wait_for_load_state("networkidle")
@@ -662,7 +664,9 @@ class TestJobsTabFreezePrevention:
         )
         assert has_conversion_client, "window.conversionClient should be defined"
 
-    def test_jobs_tab_remains_responsive_after_tab_switches(self, page_with_server: Page):
+    def test_jobs_tab_remains_responsive_after_tab_switches(
+        self, page_with_server: Page
+    ):
         """Jobs tab should remain responsive after multiple tab switches."""
         page_with_server.goto("http://localhost:8001")
         page_with_server.wait_for_load_state("networkidle")
@@ -696,11 +700,6 @@ class TestJobsTabFreezePrevention:
         page_with_server.click("#tab-jobs-btn")
         page_with_server.wait_for_timeout(500)
 
-        # Get initial cache size
-        initial_cache = page_with_server.evaluate(
-            "window.jobsManager ? window.jobsManager.eventsCache.size : 0"
-        )
-
         # Leave Jobs tab
         page_with_server.click("#tab-konverter-btn")
         page_with_server.wait_for_timeout(300)
@@ -721,7 +720,8 @@ class TestJobsTabFreezePrevention:
         page_with_server.wait_for_timeout(500)
 
         # Try to trigger multiple loads simultaneously
-        page_with_server.evaluate("""
+        page_with_server.evaluate(
+            """
             const jm = window.jobsManager;
             if (jm) {
                 // Trigger 5 rapid loads
@@ -729,7 +729,8 @@ class TestJobsTabFreezePrevention:
                     jm.loadJobs(true, false);
                 }
             }
-        """)
+        """
+        )
 
         page_with_server.wait_for_timeout(1000)
 
@@ -750,7 +751,8 @@ class TestJobsTabFreezePrevention:
         page_with_server.wait_for_timeout(500)
 
         # Trigger many debounced refreshes
-        page_with_server.evaluate("""
+        page_with_server.evaluate(
+            """
             const jm = window.jobsManager;
             if (jm) {
                 // Trigger 10 rapid debounced refreshes
@@ -758,7 +760,8 @@ class TestJobsTabFreezePrevention:
                     jm.debouncedRefresh();
                 }
             }
-        """)
+        """
+        )
 
         # Wait for debounce to complete (500ms + margin)
         page_with_server.wait_for_timeout(800)
