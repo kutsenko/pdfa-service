@@ -2101,6 +2101,26 @@ async def get_job_status(
     if job.status == "failed" and hasattr(job, "error_message"):
         response["error"] = job.error_message
 
+    # Fetch events from MongoDB
+    try:
+        job_repo = JobRepository()
+        job_doc = await job_repo.get_job(job_id)
+        if job_doc and job_doc.events:
+            response["events"] = [
+                {
+                    "event_type": event.event_type,
+                    "timestamp": event.timestamp.isoformat(),
+                    "message": event.message,
+                    "details": event.details,
+                }
+                for event in job_doc.events
+            ]
+        else:
+            response["events"] = []
+    except Exception as e:
+        logger.warning(f"Failed to fetch events for job {job_id}: {e}")
+        response["events"] = []
+
     logger.debug(f"Status query for job {job_id}: {job.status}")
 
     return response
