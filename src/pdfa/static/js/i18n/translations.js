@@ -99,6 +99,7 @@ export const translations = {
                 'placeholder.kamera.title': 'Camera Scanner',
                 'placeholder.kamera.description': 'Coming soon: Upload documents directly from your camera or scanner',
                 // Camera Tab translations
+                'camera.title': 'Camera',
                 'camera.start': 'Start Camera',
                 'camera.stop': 'Stop Camera',
                 'camera.capture': 'Capture',
@@ -529,6 +530,7 @@ export const translations = {
                 'placeholder.kamera.title': 'Kamera-Scanner',
                 'placeholder.kamera.description': 'Demnächst: Dokumente direkt von Ihrer Kamera oder Ihrem Scanner hochladen',
                 // Kamera-Tab-Übersetzungen
+                'camera.title': 'Kamera',
                 'camera.start': 'Kamera starten',
                 'camera.stop': 'Kamera stoppen',
                 'camera.capture': 'Aufnehmen',
@@ -959,6 +961,7 @@ export const translations = {
                 'placeholder.kamera.title': 'Escáner de Cámara',
                 'placeholder.kamera.description': 'Próximamente: Cargue documentos directamente desde su cámara o escáner',
                 // Traducciones de la pestaña Cámara
+                'camera.title': 'Cámara',
                 'camera.start': 'Iniciar Cámara',
                 'camera.stop': 'Detener Cámara',
                 'camera.capture': 'Capturar',
@@ -1389,6 +1392,7 @@ export const translations = {
                 'placeholder.kamera.title': 'Scanner de Caméra',
                 'placeholder.kamera.description': 'Bientôt disponible : Téléchargez des documents directement depuis votre caméra ou scanner',
                 // Traductions de l'onglet Caméra
+                'camera.title': 'Caméra',
                 'camera.start': 'Démarrer la Caméra',
                 'camera.stop': 'Arrêter la Caméra',
                 'camera.capture': 'Capturer',

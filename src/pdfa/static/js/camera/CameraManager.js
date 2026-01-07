@@ -60,9 +60,11 @@ export class CameraManager {
         this.a11yAssistant = new AccessibleCameraAssistant(this);
         await this.a11yAssistant.init();
 
-        // Hide mobile pairing option on mobile devices (not useful there)
+        // Adjust UI for mobile devices
         if (CameraManager.isMobileDevice()) {
-            console.log('[Camera] Mobile device detected - hiding mobile pairing option');
+            console.log('[Camera] Mobile device detected - adjusting UI');
+
+            // Hide mobile pairing option (not useful on mobile)
             const mobilePairingCard = document.getElementById('mobilePairingCard');
             const mobilePairingSection = document.getElementById('mobilePairingSection');
             if (mobilePairingCard) {
@@ -70,6 +72,13 @@ export class CameraManager {
             }
             if (mobilePairingSection) {
                 mobilePairingSection.style.display = 'none';
+            }
+
+            // Change "Desktop-Kamera" to just "Kamera" on mobile
+            const desktopCameraTitle = document.querySelector('[data-i18n="camera.desktop.title"]');
+            if (desktopCameraTitle) {
+                desktopCameraTitle.setAttribute('data-i18n', 'camera.title');
+                desktopCameraTitle.textContent = t('camera.title');
             }
         } else {
             // Initialize mobile pairing manager only on desktop
