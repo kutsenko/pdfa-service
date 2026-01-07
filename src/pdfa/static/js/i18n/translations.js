@@ -385,14 +385,6 @@ export const translations = {
                         }
                     }
                 },
-                // Modal translations
-                modal: {
-                    title: 'Conversion Summary',
-                    description: 'Your document was successfully converted. Here\'s what happened:',
-                    downloadButton: '📥 Download',
-                    okButton: 'OK',
-                    opened: 'Dialog opened: Conversion Summary'
-                },
                 // Form labels
                 'form.pdfType': 'PDF Type',
                 'pdf.standard': 'Standard PDF',
@@ -815,14 +807,6 @@ export const translations = {
                             }
                         }
                     }
-                },
-                // Modal-Übersetzungen
-                modal: {
-                    title: 'Konvertierungs-Zusammenfassung',
-                    description: 'Ihr Dokument wurde erfolgreich konvertiert. Das ist passiert:',
-                    downloadButton: '📥 Herunterladen',
-                    okButton: 'OK',
-                    opened: 'Dialog geöffnet: Konvertierungs-Zusammenfassung'
                 },
                 // Formular-Labels
                 'form.pdfType': 'PDF-Typ',
@@ -1247,14 +1231,6 @@ export const translations = {
                         }
                     }
                 },
-                // Traducciones del modal
-                modal: {
-                    title: 'Resumen de Conversión',
-                    description: 'Su documento se convirtió exitosamente. Esto es lo que sucedió:',
-                    downloadButton: '📥 Descargar',
-                    okButton: 'OK',
-                    opened: 'Diálogo abierto: Resumen de Conversión'
-                },
                 // Etiquetas de formulario
                 'form.pdfType': 'Tipo de PDF',
                 'pdf.standard': 'PDF Estándar',
@@ -1677,14 +1653,6 @@ export const translations = {
                             }
                         }
                     }
-                },
-                // Traductions du modal
-                modal: {
-                    title: 'Résumé de Conversion',
-                    description: 'Votre document a été converti avec succès. Voici ce qui s\'est passé:',
-                    downloadButton: '📥 Télécharger',
-                    okButton: 'OK',
-                    opened: 'Dialogue ouvert: Résumé de Conversion'
                 },
                 // Étiquettes de formulaire
                 'form.pdfType': 'Type de PDF',
