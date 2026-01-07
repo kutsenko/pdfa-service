@@ -515,7 +515,14 @@ export class JobsManager {
             });
         }
 
-        // Expand button - handler is managed by toggleJobExpansion
+        // Expand button
+        const expandBtn = row.querySelector('.expand-btn');
+        if (expandBtn) {
+            expandBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.toggleJobExpansion(jobId);
+            });
+        }
     }
 
     async toggleJobExpansion(jobId) {

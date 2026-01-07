@@ -87,6 +87,13 @@ export class FloatingProgressBar {
         this.container.classList.add('visible');
         this.container.classList.remove('minimized', 'completed', 'error');
 
+        // Accessibility: make visible to screen readers
+        this.container.setAttribute('aria-hidden', 'false');
+        const content = this.container.querySelector('.fpb-content');
+        if (content) {
+            content.setAttribute('aria-hidden', 'false');
+        }
+
         // Show processing UI, hide completed UI
         this.showProcessingUI();
 
@@ -101,6 +108,9 @@ export class FloatingProgressBar {
         this.currentJob = null;
         this.events = [];
 
+        // Accessibility: hide from screen readers
+        this.container.setAttribute('aria-hidden', 'true');
+
         console.log('[FloatingProgressBar] Hidden');
     }
 
@@ -110,13 +120,20 @@ export class FloatingProgressBar {
         this.isMinimized = !this.isMinimized;
         this.container.classList.toggle('minimized', this.isMinimized);
 
-        // Update button icon
+        // Update button icon and aria-expanded state
         const minimizeBtn = this.container.querySelector('.fpb-minimize-btn');
         if (minimizeBtn) {
             minimizeBtn.textContent = this.isMinimized ? '▲' : '▼';
             minimizeBtn.setAttribute('aria-label',
                 this.isMinimized ? t('floatingProgress.expand') : t('floatingProgress.minimize')
             );
+            minimizeBtn.setAttribute('aria-expanded', (!this.isMinimized).toString());
+        }
+
+        // Accessibility: hide content from screen readers when minimized
+        const content = this.container.querySelector('.fpb-content');
+        if (content) {
+            content.setAttribute('aria-hidden', this.isMinimized.toString());
         }
     }
 
