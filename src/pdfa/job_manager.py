@@ -145,6 +145,9 @@ class JobManager:
         self.timeout_task: asyncio.Task | None = None
         self.keepalive_task: asyncio.Task | None = None
 
+        # Track pending MongoDB persistence tasks for each job
+        self._persistence_tasks: dict[str, asyncio.Task] = {}
+
     def create_job(
         self,
         filename: str,
@@ -227,13 +230,14 @@ class JobManager:
         self.jobs[job_id] = job
 
         # Persist to MongoDB (async, non-blocking)
-        # Only persist if there's a running event loop (skip in synchronous tests)
+        # Store the task so it can be awaited before events are logged
         try:
-            asyncio.create_task(
+            task = asyncio.create_task(
                 self._persist_job_creation(
                     job_id, persist_filename, config, user_id, file_size
                 )
             )
+            self._persistence_tasks[job_id] = task
         except RuntimeError:
             # No event loop running (e.g., in synchronous tests)
             pass
@@ -293,6 +297,29 @@ class JobManager:
             )
         except Exception as e:
             logger.error(f"Failed to persist job creation to MongoDB: {e}")
+
+    async def ensure_job_persisted(self, job_id: str) -> None:
+        """Wait for job to be persisted to MongoDB.
+
+        This should be called before starting conversion to ensure
+        the job document exists before events are logged.
+
+        Args:
+            job_id: Job identifier
+
+        """
+        task = self._persistence_tasks.get(job_id)
+        if task and not task.done():
+            try:
+                await task
+            except Exception as e:
+                logger.error(f"Job persistence failed for {job_id}: {e}")
+            finally:
+                # Clean up the task reference
+                self._persistence_tasks.pop(job_id, None)
+        elif job_id in self._persistence_tasks:
+            # Task is done, clean up
+            self._persistence_tasks.pop(job_id, None)
 
     def get_job(self, job_id: str) -> Job:
         """Get a job by ID.
