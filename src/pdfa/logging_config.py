@@ -72,6 +72,58 @@ def configure_logging(
         file_handler.setFormatter(file_formatter)
         root_logger.addHandler(file_handler)
 
+    # Configure Uvicorn loggers to use our format
+    # Uvicorn creates its own handlers, so we need to reconfigure them
+    _configure_uvicorn_logging(context_filter, console_handler, level)
+
+
+def _configure_uvicorn_logging(
+    context_filter: RequestContextFilter,
+    console_handler: logging.Handler,
+    level: int,
+) -> None:
+    """Configure Uvicorn's loggers to use our MDC-style format.
+
+    Uvicorn creates separate loggers for access and error logs.
+    We reconfigure them to use our handlers with context information.
+    """
+    # Uvicorn access log format (includes request details)
+    access_formatter = logging.Formatter(
+        "%(asctime)s [%(levelname)s] %(user_email)s %(client_ip)s "
+        "uvicorn.access: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+
+    # Configure uvicorn.access logger
+    access_logger = logging.getLogger("uvicorn.access")
+    access_logger.handlers.clear()
+    access_handler = logging.StreamHandler(sys.stderr)
+    access_handler.setLevel(level)
+    access_handler.addFilter(context_filter)
+    access_handler.setFormatter(access_formatter)
+    access_logger.addHandler(access_handler)
+    access_logger.propagate = False  # Don't propagate to root to avoid duplicate logs
+
+    # Configure uvicorn.error logger
+    error_logger = logging.getLogger("uvicorn.error")
+    error_logger.handlers.clear()
+    error_handler = logging.StreamHandler(sys.stderr)
+    error_handler.setLevel(level)
+    error_handler.addFilter(context_filter)
+    error_handler.setFormatter(console_handler.formatter)
+    error_logger.addHandler(error_handler)
+    error_logger.propagate = False  # Don't propagate to root to avoid duplicate logs
+
+    # Configure uvicorn main logger
+    uvicorn_logger = logging.getLogger("uvicorn")
+    uvicorn_logger.handlers.clear()
+    uvicorn_handler = logging.StreamHandler(sys.stderr)
+    uvicorn_handler.setLevel(level)
+    uvicorn_handler.addFilter(context_filter)
+    uvicorn_handler.setFormatter(console_handler.formatter)
+    uvicorn_logger.addHandler(uvicorn_handler)
+    uvicorn_logger.propagate = False
+
 
 def get_logger(name: str) -> logging.Logger:
     """Get a logger instance for a module.
