@@ -285,9 +285,9 @@ jobs:
           fi
 
       - name: Check PR Description
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          PR_BODY="${{ github.event.pull_request.body }}"
-
           if [ -z "$PR_BODY" ]; then
             echo "::error::PR description is empty. Please add a description with:"
             echo "  - Summary of changes"
