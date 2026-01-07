@@ -46,72 +46,12 @@
         }
 
 
-        .modal-description {
-            margin: 0 0 1rem 0;
-            color: #6b7280;
-            font-size: 0.95rem;
-        }
-
-
-        .modal-event-list {
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
-
-
         .modal-footer {
             padding: 1rem 1.5rem;
             border-top: 1px solid #e5e7eb;
             display: flex;
             justify-content: flex-end;
             gap: 0.75rem;
-        }
-
-
-        .modal-download-btn,
-        .modal-ok-btn {
-            border: none;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-
-        .modal-download-btn {
-            background: #10b981;
-            color: white;
-        }
-
-
-        .modal-download-btn:hover {
-            background: #059669;
-        }
-
-
-        .modal-download-btn:focus {
-            outline: 2px solid #10b981;
-            outline-offset: 2px;
-        }
-
-
-        .modal-ok-btn {
-            background: #667eea;
-            color: white;
-        }
-
-
-        .modal-ok-btn:hover {
-            background: #5568d3;
-        }
-
-
-        .modal-ok-btn:focus {
-            outline: 2px solid #667eea;
-            outline-offset: 2px;
         }
 
 
