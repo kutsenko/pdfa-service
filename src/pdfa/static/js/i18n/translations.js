@@ -157,7 +157,7 @@ export const translations = {
                 'camera.errors.noPages': 'Please capture at least one page',
                 // Camera Intro Cards
                 'camera.desktop.title': 'Desktop Camera',
-                'camera.desktop.description': 'Use your webcam to scan documents directly on your computer. Ideal for quick capture of single pages.',
+                'camera.desktop.description': 'Use your camera to scan documents directly on your computer. Ideal for quick capture of single pages.',
                 'camera.desktop.action': '▶ Start Camera',
                 'camera.mobile.title': 'Connect Mobile',
                 'camera.mobile.description': 'Connect your smartphone as a wireless scanner. Scan documents with your better phone camera and transfer them automatically.',
@@ -587,7 +587,7 @@ export const translations = {
                 'camera.errors.noPages': 'Bitte mindestens eine Seite aufnehmen',
                 // Kamera-Einführungskarten
                 'camera.desktop.title': 'Desktop-Kamera',
-                'camera.desktop.description': 'Nutzen Sie Ihre Webcam, um Dokumente direkt am Computer zu scannen. Ideal für schnelle Erfassung einzelner Seiten.',
+                'camera.desktop.description': 'Nutzen Sie Ihre Kamera, um Dokumente direkt am Computer zu scannen. Ideal für schnelle Erfassung einzelner Seiten.',
                 'camera.desktop.action': '▶ Kamera starten',
                 'camera.mobile.title': 'Mobile verbinden',
                 'camera.mobile.description': 'Verbinden Sie Ihr Smartphone als kabellosen Scanner. Scannen Sie Dokumente mit der besseren Handykamera und übertragen Sie sie automatisch.',
@@ -1017,7 +1017,7 @@ export const translations = {
                 'camera.errors.noPages': 'Por favor, capture al menos una página',
                 // Tarjetas de introducción de cámara
                 'camera.desktop.title': 'Cámara de Escritorio',
-                'camera.desktop.description': 'Use su webcam para escanear documentos directamente en su computadora. Ideal para captura rápida de páginas individuales.',
+                'camera.desktop.description': 'Use su cámara para escanear documentos directamente en su computadora. Ideal para captura rápida de páginas individuales.',
                 'camera.desktop.action': '▶ Iniciar Cámara',
                 'camera.mobile.title': 'Conectar Móvil',
                 'camera.mobile.description': 'Conecte su smartphone como escáner inalámbrico. Escanee documentos con la mejor cámara del teléfono y transfiéralos automáticamente.',
@@ -1447,7 +1447,7 @@ export const translations = {
                 'camera.errors.noPages': 'Veuillez capturer au moins une page',
                 // Cartes d'introduction de caméra
                 'camera.desktop.title': 'Caméra Bureau',
-                'camera.desktop.description': 'Utilisez votre webcam pour numériser des documents directement sur votre ordinateur. Idéal pour la capture rapide de pages individuelles.',
+                'camera.desktop.description': 'Utilisez votre caméra pour numériser des documents directement sur votre ordinateur. Idéal pour la capture rapide de pages individuelles.',
                 'camera.desktop.action': '▶ Démarrer la Caméra',
                 'camera.mobile.title': 'Connecter Mobile',
                 'camera.mobile.description': 'Connectez votre smartphone comme scanner sans fil. Numérisez des documents avec la meilleure caméra du téléphone et transférez-les automatiquement.',

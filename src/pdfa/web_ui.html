@@ -407,8 +407,8 @@
                         </button>
                     </div>
 
-                    <!-- Mobile Pairing Card -->
-                    <div class="camera-option-card">
+                    <!-- Mobile Pairing Card (hidden on mobile devices) -->
+                    <div class="camera-option-card" id="mobilePairingCard">
                         <div class="option-header">
                             <span class="option-icon-emoji" aria-hidden="true">📱</span>
                             <h3 data-i18n="camera.mobile.title">Mobile verbinden</h3>
@@ -423,8 +423,8 @@
                 </div>
             </div>
 
-            <!-- Camera Controls Section -->
-            <div id="cameraControls" class="camera-controls">
+            <!-- Camera Controls Section (shown after card click) -->
+            <div id="cameraControls" class="camera-controls" hidden>
                 <div class="camera-preview-container">
                     <video id="cameraPreview"
                            class="camera-preview"
@@ -468,8 +468,8 @@
                 </div>
             </div>
 
-            <!-- Mobile Pairing Section -->
-            <div id="mobilePairingSection" class="mobile-pairing">
+            <!-- Mobile Pairing Section (shown after card click) -->
+            <div id="mobilePairingSection" class="mobile-pairing" hidden>
                 <h3 data-i18n="camera.pairing.title">📱 Link Mobile Device</h3>
 
                 <button id="startPairingBtn"

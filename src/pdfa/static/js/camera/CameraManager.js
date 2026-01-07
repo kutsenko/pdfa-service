@@ -18,6 +18,15 @@ export class CameraManager {
         this.nextPageId = 1;
     }
 
+    /**
+     * Detect if running on a mobile device
+     * Used to hide mobile pairing option (not needed on mobile)
+     */
+    static isMobileDevice() {
+        return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+            || (navigator.maxTouchPoints > 0 && window.innerWidth < 768);
+    }
+
     async init() {
         console.log('[Camera] Initializing CameraManager');
 
@@ -51,8 +60,21 @@ export class CameraManager {
         this.a11yAssistant = new AccessibleCameraAssistant(this);
         await this.a11yAssistant.init();
 
-        // Initialize mobile pairing manager
-        this.pairingManager = new MobilePairingManager(this);
+        // Hide mobile pairing option on mobile devices (not useful there)
+        if (CameraManager.isMobileDevice()) {
+            console.log('[Camera] Mobile device detected - hiding mobile pairing option');
+            const mobilePairingCard = document.getElementById('mobilePairingCard');
+            const mobilePairingSection = document.getElementById('mobilePairingSection');
+            if (mobilePairingCard) {
+                mobilePairingCard.style.display = 'none';
+            }
+            if (mobilePairingSection) {
+                mobilePairingSection.style.display = 'none';
+            }
+        } else {
+            // Initialize mobile pairing manager only on desktop
+            this.pairingManager = new MobilePairingManager(this);
+        }
 
         console.log('[Camera] CameraManager initialized');
     }
@@ -91,9 +113,10 @@ export class CameraManager {
         const quickStartBtn = document.getElementById('quickStartCamera');
         if (quickStartBtn) {
             quickStartBtn.addEventListener('click', () => {
-                // Scroll to camera controls section
+                // Show camera controls section
                 const cameraControls = document.getElementById('cameraControls');
                 if (cameraControls) {
+                    cameraControls.hidden = false;
                     cameraControls.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
                 // Start camera after a short delay for smooth UX

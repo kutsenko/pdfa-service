@@ -43,9 +43,10 @@ export class MobilePairingManager {
         if (quickStartBtn) {
             quickStartBtn.addEventListener('click', () => {
                 console.log('[Pairing] Quick start button clicked');
-                // Scroll to mobile pairing section
+                // Show and scroll to mobile pairing section
                 const pairingSection = document.getElementById('mobilePairingSection');
                 if (pairingSection) {
+                    pairingSection.hidden = false;
                     pairingSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 }
                 // Start pairing after a short delay for smooth UX
