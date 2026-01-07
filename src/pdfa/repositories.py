@@ -426,14 +426,25 @@ class JobRepository:
         db = get_db()
         event_dict = event.model_dump()
 
-        await db.jobs.update_one(
+        # Use upsert to handle race condition where events are logged
+        # before job document is created in MongoDB
+        result = await db.jobs.update_one(
             {"job_id": job_id},
             {"$push": {"events": event_dict}},
+            upsert=False,  # Don't create new doc, just update if exists
         )
 
-        logger.debug(
-            f"Event logged for job {job_id}: {event.event_type} - {event.message}"
-        )
+        if result.matched_count == 0:
+            # Job document doesn't exist yet - this can happen due to race condition
+            # between async job creation and event logging
+            logger.warning(
+                f"Event logged for non-existent job {job_id} (race condition): "
+                f"{event.event_type}"
+            )
+        else:
+            logger.debug(
+                f"Event logged for job {job_id}: {event.event_type} - {event.message}"
+            )
 
 
 class OAuthStateRepository:

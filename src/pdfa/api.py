@@ -1339,6 +1339,10 @@ async def process_conversion_job(job_id: str) -> None:
             # Can't update status or broadcast since job doesn't exist
             return
 
+        # Ensure job document exists in MongoDB before logging events
+        # This prevents race condition where events are logged before job is persisted
+        await job_manager.ensure_job_persisted(job_id)
+
         # Update status to processing - catch any errors here too
         try:
             await job_manager.update_job_status(job_id, "processing")
@@ -2105,6 +2109,11 @@ async def get_job_status(
     try:
         job_repo = JobRepository()
         job_doc = await job_repo.get_job(job_id)
+        logger.info(
+            f"Job status query: job_id={job_id}, "
+            f"job_doc_found={job_doc is not None}, "
+            f"events_count={len(job_doc.events) if job_doc and job_doc.events else 0}"
+        )
         if job_doc and job_doc.events:
             response["events"] = [
                 {
@@ -2121,7 +2130,9 @@ async def get_job_status(
         logger.warning(f"Failed to fetch events for job {job_id}: {e}")
         response["events"] = []
 
-    logger.debug(f"Status query for job {job_id}: {job.status}")
+    logger.debug(
+        f"Status query for job {job_id}: {job.status}, events={len(response.get('events', []))}"
+    )
 
     return response
 
