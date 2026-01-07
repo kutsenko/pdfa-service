@@ -57,11 +57,24 @@ async def log_format_conversion_event(
     else:
         message = f"No format conversion required (source is {source_format.upper()})"
 
-    # Build details
+    # Build i18n key for localization
+    i18n_key = (
+        f"format_conversion.{source_format}.success"
+        if conversion_required
+        else "format_conversion.none"
+    )
+    i18n_params = {
+        "source_format": source_format,
+        "target_format": target_format,
+    }
+
+    # Build details (include i18n info for later retrieval from MongoDB)
     details: dict[str, Any] = {
         "source_format": source_format,
         "target_format": target_format,
         "conversion_required": conversion_required,
+        "_i18n_key": i18n_key,
+        "_i18n_params": i18n_params,
     }
     if converter:
         details["converter"] = converter
@@ -89,18 +102,7 @@ async def log_format_conversion_event(
             event_type=event.event_type,
             timestamp=event.timestamp.isoformat(),
             message=event.message,
-            details={
-                **event.details,
-                "_i18n_key": (
-                    f"{event.event_type}.{source_format}.success"
-                    if conversion_required
-                    else f"{event.event_type}.none"
-                ),
-                "_i18n_params": {
-                    "source_format": source_format,
-                    "target_format": target_format,
-                },
-            },
+            details=event.details,
         )
 
         await asyncio.wait_for(
@@ -150,10 +152,16 @@ async def log_ocr_decision_event(
         }.get(reason, reason)
         message = f"OCR will be performed: {reason_text}"
 
-    # Build details
+    # Build i18n key for localization
+    i18n_key = f"ocr_decision.{decision}.{reason}"
+    i18n_params = {"decision": decision, "reason": reason}
+
+    # Build details (include i18n info for later retrieval from MongoDB)
     details: dict[str, Any] = {
         "decision": decision,
         "reason": reason,
+        "_i18n_key": i18n_key,
+        "_i18n_params": i18n_params,
         **kwargs,
     }
 
@@ -178,11 +186,7 @@ async def log_ocr_decision_event(
             event_type=event.event_type,
             timestamp=event.timestamp.isoformat(),
             message=event.message,
-            details={
-                **event.details,
-                "_i18n_key": f"{event.event_type}.{decision}.{reason}",
-                "_i18n_params": {"decision": decision, "reason": reason},
-            },
+            details=event.details,
         )
 
         # Best-effort async broadcast (non-blocking)
@@ -233,10 +237,16 @@ async def log_compression_selected_event(
     else:
         message = f"Compression profile selected: {profile}"
 
-    # Build details
+    # Build i18n key for localization
+    i18n_key = f"compression_selected.{profile}.{reason}"
+    i18n_params = {"profile": profile, "reason": reason}
+
+    # Build details (include i18n info for later retrieval from MongoDB)
     details: dict[str, Any] = {
         "profile": profile,
         "reason": reason,
+        "_i18n_key": i18n_key,
+        "_i18n_params": i18n_params,
     }
     if original_profile:
         details["original_profile"] = original_profile
@@ -264,11 +274,7 @@ async def log_compression_selected_event(
             event_type=event.event_type,
             timestamp=event.timestamp.isoformat(),
             message=event.message,
-            details={
-                **event.details,
-                "_i18n_key": f"{event.event_type}.{profile}.{reason}",
-                "_i18n_params": {"profile": profile, "reason": reason},
-            },
+            details=event.details,
         )
 
         await asyncio.wait_for(
@@ -324,7 +330,11 @@ async def log_passthrough_mode_event(
     else:
         message = "Pass-through mode not applicable"
 
-    # Build details
+    # Build i18n key for localization
+    i18n_key = f"passthrough_mode.{reason}.{pdfa_level}"
+    i18n_params = {"reason": reason, "pdfa_level": pdfa_level}
+
+    # Build details (include i18n info for later retrieval from MongoDB)
     details: dict[str, Any] = {
         "enabled": enabled,
         "reason": reason,
@@ -332,6 +342,8 @@ async def log_passthrough_mode_event(
         "ocr_enabled": ocr_enabled,
         "has_tags": has_tags,
         "tags_preserved": tags_preserved,
+        "_i18n_key": i18n_key,
+        "_i18n_params": i18n_params,
     }
 
     # Create and persist event
@@ -355,11 +367,7 @@ async def log_passthrough_mode_event(
             event_type=event.event_type,
             timestamp=event.timestamp.isoformat(),
             message=event.message,
-            details={
-                **event.details,
-                "_i18n_key": f"{event.event_type}.{reason}.{pdfa_level}",
-                "_i18n_params": {"reason": reason, "pdfa_level": pdfa_level},
-            },
+            details=event.details,
         )
 
         await asyncio.wait_for(
@@ -417,10 +425,16 @@ async def log_fallback_applied_event(
     else:
         message = f"Fallback tier {tier} applied"
 
-    # Build details
+    # Build i18n key for localization
+    i18n_key = f"fallback_applied.tier{tier}.{reason}"
+    i18n_params = {"tier": tier, "reason": reason}
+
+    # Build details (include i18n info for later retrieval from MongoDB)
     details: dict[str, Any] = {
         "tier": tier,
         "reason": reason,
+        "_i18n_key": i18n_key,
+        "_i18n_params": i18n_params,
     }
     if original_error:
         details["original_error"] = original_error
@@ -454,11 +468,7 @@ async def log_fallback_applied_event(
             event_type=event.event_type,
             timestamp=event.timestamp.isoformat(),
             message=event.message,
-            details={
-                **event.details,
-                "_i18n_key": f"{event.event_type}.tier{tier}.{reason}",
-                "_i18n_params": {"tier": tier, "reason": reason},
-            },
+            details=event.details,
         )
 
         await asyncio.wait_for(
@@ -493,10 +503,16 @@ async def log_job_timeout_event(
     """
     message = f"Job timeout after {timeout_seconds}s (runtime: {runtime_seconds:.0f}s)"
 
+    # Build i18n key for localization
+    i18n_key = "job_timeout.exceeded.max_duration"
+    i18n_params = {"timeout_sec": timeout_seconds}
+
     details: dict[str, Any] = {
         "timeout_seconds": timeout_seconds,
         "runtime_seconds": runtime_seconds,
         "job_cancelled": True,
+        "_i18n_key": i18n_key,
+        "_i18n_params": i18n_params,
     }
 
     # Create and persist event
@@ -520,11 +536,7 @@ async def log_job_timeout_event(
             event_type=event.event_type,
             timestamp=event.timestamp.isoformat(),
             message=event.message,
-            details={
-                **event.details,
-                "_i18n_key": f"{event.event_type}.exceeded.max_duration",
-                "_i18n_params": {"timeout_sec": timeout_seconds},
-            },
+            details=event.details,
         )
 
         await asyncio.wait_for(
@@ -577,9 +589,15 @@ async def log_job_cleanup_event(
     else:
         message = f"Job cleaned up: {trigger}"
 
-    # Build details
+    # Build i18n key for localization
+    i18n_key = f"job_cleanup.{trigger}.success"
+    i18n_params = {"trigger": trigger}
+
+    # Build details (include i18n info for later retrieval from MongoDB)
     details: dict[str, Any] = {
         "trigger": trigger,
+        "_i18n_key": i18n_key,
+        "_i18n_params": i18n_params,
     }
     if ttl_seconds is not None:
         details["ttl_seconds"] = ttl_seconds
@@ -611,11 +629,7 @@ async def log_job_cleanup_event(
             event_type=event.event_type,
             timestamp=event.timestamp.isoformat(),
             message=event.message,
-            details={
-                **event.details,
-                "_i18n_key": f"{event.event_type}.{trigger}.success",
-                "_i18n_params": {"trigger": trigger},
-            },
+            details=event.details,
         )
 
         await asyncio.wait_for(
