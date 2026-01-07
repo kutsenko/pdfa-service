@@ -244,6 +244,8 @@ async def request_context_middleware(request: Request, call_next):
     and client IP from headers, making them available in all log messages
     within the request scope (similar to Java MDC).
 
+    When authentication is disabled, uses the default user email.
+
     """
     user_email = "-"
     client_ip = "-"
@@ -268,9 +270,12 @@ async def request_context_middleware(request: Request, call_next):
                 # This is safe because we only use it for logging, not authorization
                 payload = jwt.get_unverified_claims(token)
                 user_email = payload.get("email", "-")
-            except Exception:
-                # Token parsing failed - use default
-                pass
+            except Exception as e:
+                # Token parsing failed - log for debugging
+                logger.debug(f"JWT parsing failed: {e}")
+        elif pdfa.auth.auth_config and not pdfa.auth.auth_config.enabled:
+            # Auth disabled - use default user email for logging
+            user_email = pdfa.auth.auth_config.default_user_email
 
         # Set context for this request
         set_request_context(user_email=user_email, client_ip=client_ip)
