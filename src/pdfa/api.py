@@ -299,10 +299,6 @@ class RequestContextMiddleware:
             clear_request_context()
 
 
-# Add the middleware to the app
-app = RequestContextMiddleware(app)
-
-
 # Mount static files for modular web UI
 static_path = Path(__file__).parent / "static"
 if static_path.exists():
@@ -2181,3 +2177,8 @@ async def download_result(
         media_type="application/pdf",
         filename=filename,
     )
+
+
+# Wrap the app with request context middleware (must be done after all routes are defined)
+# This enables MDC-style logging with user email and client IP in all log messages
+app = RequestContextMiddleware(app)
