@@ -107,9 +107,7 @@ class TestLoggingIntegration:
         # Add a handler with the filter
         handler = logging.StreamHandler()
         handler.addFilter(RequestContextFilter())
-        formatter = logging.Formatter(
-            "%(user_email)s %(client_ip)s %(message)s"
-        )
+        formatter = logging.Formatter("%(user_email)s %(client_ip)s %(message)s")
         handler.setFormatter(formatter)
         test_logger.addHandler(handler)
 
