@@ -74,6 +74,10 @@ from pdfa.repositories import (
     UserPreferencesRepository,
     UserRepository,
 )
+from pdfa.request_context import (
+    clear_request_context,
+    set_request_context,
+)
 from pdfa.user_models import User
 from pdfa.websocket_protocol import (
     AuthMessage,
@@ -229,6 +233,55 @@ async def cache_control_middleware(request: Request, call_next):
         response.headers["Expires"] = "0"
 
     return response
+
+
+# Middleware to set request context for MDC-style logging
+@app.middleware("http")
+async def request_context_middleware(request: Request, call_next):
+    """Set request context (user email, client IP) for all log messages.
+
+    This middleware extracts user information from the JWT token (if present)
+    and client IP from headers, making them available in all log messages
+    within the request scope (similar to Java MDC).
+
+    """
+    user_email = "-"
+    client_ip = "-"
+
+    try:
+        # Extract client IP (priority: X-Forwarded-For, then direct IP)
+        forwarded_for = request.headers.get("x-forwarded-for")
+        if forwarded_for:
+            client_ip = forwarded_for.split(",")[0].strip()
+        elif request.client:
+            client_ip = request.client.host
+
+        # Try to extract user email from JWT token (without raising errors)
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header[7:]  # Remove "Bearer " prefix
+            try:
+                # Import here to avoid circular imports
+                from jose import jwt
+
+                # Decode without verification to get email (validation happens in endpoints)
+                # This is safe because we only use it for logging, not authorization
+                payload = jwt.get_unverified_claims(token)
+                user_email = payload.get("email", "-")
+            except Exception:
+                # Token parsing failed - use default
+                pass
+
+        # Set context for this request
+        set_request_context(user_email=user_email, client_ip=client_ip)
+
+        # Process the request
+        response = await call_next(request)
+        return response
+
+    finally:
+        # Always clear context after request completes
+        clear_request_context()
 
 
 # Mount static files for modular web UI

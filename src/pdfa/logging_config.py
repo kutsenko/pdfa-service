@@ -1,4 +1,7 @@
-"""Logging configuration for pdfa service."""
+"""Logging configuration for pdfa service.
+
+Includes MDC-style request context logging with user email and client IP.
+"""
 
 from __future__ import annotations
 
@@ -6,6 +9,8 @@ import logging
 import logging.handlers
 import sys
 from pathlib import Path
+
+from pdfa.request_context import RequestContextFilter
 
 
 def configure_logging(
@@ -18,6 +23,14 @@ def configure_logging(
         level: Logging level (default: logging.INFO).
         log_file: Optional path to write logs to file (default: None, logs to stderr).
 
+    Log format includes:
+        - Timestamp
+        - Log level
+        - User email (from request context, "-" if not in request)
+        - Client IP (from request context, "-" if not in request)
+        - Logger name
+        - Message
+
     """
     root_logger = logging.getLogger()
     root_logger.setLevel(level)
@@ -25,11 +38,16 @@ def configure_logging(
     # Remove any existing handlers
     root_logger.handlers.clear()
 
+    # Create context filter for MDC-style logging
+    context_filter = RequestContextFilter()
+
     # Console handler (always to stderr)
     console_handler = logging.StreamHandler(sys.stderr)
     console_handler.setLevel(level)
+    console_handler.addFilter(context_filter)
     console_formatter = logging.Formatter(
-        "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+        "%(asctime)s [%(levelname)s] %(user_email)s %(client_ip)s "
+        "%(name)s: %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
     console_handler.setFormatter(console_formatter)
@@ -45,9 +63,10 @@ def configure_logging(
             backupCount=5,
         )
         file_handler.setLevel(level)
+        file_handler.addFilter(context_filter)
         file_formatter = logging.Formatter(
-            "%(asctime)s [%(levelname)s] %(name)s: %(message)s "
-            "(%(filename)s:%(lineno)d)",
+            "%(asctime)s [%(levelname)s] %(user_email)s %(client_ip)s %(name)s: "
+            "%(message)s (%(filename)s:%(lineno)d)",
             datefmt="%Y-%m-%d %H:%M:%S",
         )
         file_handler.setFormatter(file_formatter)
