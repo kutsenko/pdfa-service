@@ -235,58 +235,72 @@ async def cache_control_middleware(request: Request, call_next):
     return response
 
 
-# Middleware to set request context for MDC-style logging
-@app.middleware("http")
-async def request_context_middleware(request: Request, call_next):
-    """Set request context (user email, client IP) for all log messages.
+# Pure ASGI middleware for request context (MDC-style logging)
+# Note: We use pure ASGI middleware instead of @app.middleware("http")
+# because BaseHTTPMiddleware runs downstream in a separate task,
+# which breaks contextvars propagation.
+
+
+class RequestContextMiddleware:
+    """ASGI middleware to set request context for MDC-style logging.
 
     This middleware extracts user information from the JWT token (if present)
     and client IP from headers, making them available in all log messages
     within the request scope (similar to Java MDC).
 
-    When authentication is disabled, uses the default user email.
-
+    Using pure ASGI middleware ensures context variables are properly
+    propagated to all downstream handlers.
     """
-    user_email = "-"
-    client_ip = "-"
 
-    try:
-        # Extract client IP (priority: X-Forwarded-For, then direct IP)
-        forwarded_for = request.headers.get("x-forwarded-for")
-        if forwarded_for:
-            client_ip = forwarded_for.split(",")[0].strip()
-        elif request.client:
-            client_ip = request.client.host
+    def __init__(self, app):
+        """Initialize middleware with the ASGI app."""
+        self.app = app
 
-        # Try to extract user email from JWT token (without raising errors)
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header[7:]  # Remove "Bearer " prefix
-            try:
-                # Import here to avoid circular imports
-                from jose import jwt
+    async def __call__(self, scope, receive, send):
+        if scope["type"] not in ("http", "websocket"):
+            await self.app(scope, receive, send)
+            return
 
-                # Decode without verification to get email (validation happens in endpoints)
-                # This is safe because we only use it for logging, not authorization
-                payload = jwt.get_unverified_claims(token)
-                user_email = payload.get("email", "-")
-            except Exception as e:
-                # Token parsing failed - log for debugging
-                logger.debug(f"JWT parsing failed: {e}")
-        elif pdfa.auth.auth_config and not pdfa.auth.auth_config.enabled:
-            # Auth disabled - use default user email for logging
-            user_email = pdfa.auth.auth_config.default_user_email
+        user_email = "-"
+        client_ip = "-"
 
-        # Set context for this request
-        set_request_context(user_email=user_email, client_ip=client_ip)
+        try:
+            # Extract client IP from scope
+            headers = dict(scope.get("headers", []))
 
-        # Process the request
-        response = await call_next(request)
-        return response
+            # Check X-Forwarded-For header (for reverse proxy)
+            forwarded_for = headers.get(b"x-forwarded-for", b"").decode()
+            if forwarded_for:
+                client_ip = forwarded_for.split(",")[0].strip()
+            elif scope.get("client"):
+                client_ip = scope["client"][0]
 
-    finally:
-        # Always clear context after request completes
-        clear_request_context()
+            # Try to extract user email from JWT token
+            auth_header = headers.get(b"authorization", b"").decode()
+            if auth_header and auth_header.startswith("Bearer "):
+                token = auth_header[7:]
+                try:
+                    from jose import jwt
+
+                    payload = jwt.get_unverified_claims(token)
+                    user_email = payload.get("email", "-")
+                except Exception:
+                    pass
+            elif pdfa.auth.auth_config and not pdfa.auth.auth_config.enabled:
+                user_email = pdfa.auth.auth_config.default_user_email
+
+            # Set context for this request
+            set_request_context(user_email=user_email, client_ip=client_ip)
+
+            # Process the request
+            await self.app(scope, receive, send)
+
+        finally:
+            clear_request_context()
+
+
+# Add the middleware to the app
+app = RequestContextMiddleware(app)
 
 
 # Mount static files for modular web UI
