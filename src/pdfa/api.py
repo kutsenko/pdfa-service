@@ -256,6 +256,14 @@ class RequestContextMiddleware:
         """Initialize middleware with the ASGI app."""
         self.app = app
 
+    def __getattr__(self, name):
+        """Delegate attribute access to the wrapped app.
+
+        This allows tests and other code to access FastAPI-specific attributes
+        like dependency_overrides, routes, and state through the middleware.
+        """
+        return getattr(self.app, name)
+
     async def __call__(self, scope, receive, send):
         if scope["type"] not in ("http", "websocket"):
             await self.app(scope, receive, send)
